@@ -1,0 +1,67 @@
+class Solution {
+    public List<List<String>> groupAnagrams(String[] strs) {
+
+        Map<String, List<String>> map = new HashMap<>();
+
+        for (String s : strs) {
+
+            char[] arr = s.toCharArray();
+
+            Arrays.sort(arr);
+
+            String key = new String(arr);
+
+            if (!map.containsKey(key)) {
+                map.put(key, new ArrayList<>());
+            }
+
+            map.get(key).add(s);
+        }
+
+        return new ArrayList<>(map.values());
+    }
+}
+// class Solution {
+//     public List<List<String>> groupAnagrams(String[] strs) {
+
+//         // HashMap to store:
+//         // Key   -> frequency pattern of a word
+//         // Value -> list of words having the same pattern
+//         Map<String, List<String>> map = new HashMap<>();
+
+//         // Traverse every word in the input array
+//         for (String s : strs) {
+
+//             // Array to store frequency of each letter (a-z)
+//             int[] count = new int[26];
+
+//             // Count frequency of every character in the current word
+//             for (char c : s.toCharArray()) {
+//                 count[c - 'a']++;
+//             }
+
+//             // Build a unique key using the frequency array
+//             StringBuilder sb = new StringBuilder();
+
+//             // Convert frequency array into a string
+//             for (int i : count) {
+//                 sb.append("#");   // Separator to avoid confusion
+//                 sb.append(i);     // Add frequency
+//             }
+
+//             // Final key representing the current word
+//             String key = sb.toString();
+
+//             // If this key is not present, create a new list
+//             if (!map.containsKey(key)) {
+//                 map.put(key, new ArrayList<String>());
+//             }
+
+//             // Add the current word to its corresponding group
+//             map.get(key).add(s);
+//         }
+
+//         // Return all grouped anagrams as a list
+//         return new ArrayList<>(map.values());
+//     }
+// }
