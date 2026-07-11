@@ -1,23 +1,36 @@
 class Solution {
     public List<List<String>> groupAnagrams(String[] strs) {
 
+        // Create a HashMap to store groups of anagrams.
+        // The 'Key' is the sorted version of a word (e.g., "eat" becomes "aet").
+        // The 'Value' is a List of all words that match that sorted key.
         Map<String, List<String>> map = new HashMap<>();
 
+        // Loop through every string in the input array
         for (String s : strs) {
 
+            // Convert the current string into a character array so we can sort it
             char[] arr = s.toCharArray();
 
+            // Sort the characters alphabetically.
+            // Anagrams like "eat", "tea", and "ate" all become "aet" after sorting.
             Arrays.sort(arr);
 
+            // Convert the sorted character array back into a string to use as a map key
             String key = new String(arr);
 
+            // Check if this sorted key already exists in our map
             if (!map.containsKey(key)) {
+                // If not, create a new empty list for this key
                 map.put(key, new ArrayList<>());
             }
 
+            // Add the original string (s) to the list associated with this key
+            // This groups all words that sort to the same string together
             map.get(key).add(s);
         }
 
+        // Return all the grouped lists (the values of the map) as a single List
         return new ArrayList<>(map.values());
     }
 }
