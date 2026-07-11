@@ -1,21 +1,43 @@
 class Solution {
+    // This method checks if string 's' is an anagram of string 't'
     public boolean isAnagram(String s, String t) {
-        int n=s.length();
-        int m=t.length();
+        // Get the length of the first string
+        int n = s.length();
+        // Get the length of the second string
+        int m = t.length();
 
-        HashMap<Character,Integer>map1=new HashMap<>();
-        HashMap<Character,Integer>map2=new HashMap<>();
-        for(int i=0;i<n;i++){
-            char ch=s.charAt(i);
-            map1.put(ch,map1.getOrDefault(ch,0)+1);
+        // Create a HashMap to store character counts for the first string
+        // Key is the character, Value is how many times it appears
+        HashMap<Character, Integer> map1 = new HashMap<>();
+        // Create a second HashMap for the second string
+        HashMap<Character, Integer> map2 = new HashMap<>();
+
+        // Loop through every character in the first string 's'
+        for (int i = 0; i < n; i++) {
+            // Get the current character from string 's'
+            char ch = s.charAt(i);
+            // Add the character to map1, increasing its count by 1
+            // If it doesn't exist yet, start the count at 0 then add 1
+            map1.put(ch, map1.getOrDefault(ch, 0) + 1);
         }
-        for(int i=0;i<m;i++){
-            char ch=t.charAt(i);
-            map2.put(ch,map2.getOrDefault(ch,0)+1);
+
+        // Loop through every character in the second string 't'
+        for (int i = 0; i < m; i++) {
+            // Get the current character from string 't'
+            char ch = t.charAt(i);
+            // Add the character to map2, increasing its count by 1
+            // If it doesn't exist yet, start the count at 0 then add 1
+            map2.put(ch, map2.getOrDefault(ch, 0) + 1);
         }
-        if(map1.equals(map2)){
-              return true;
+
+        // Compare the two maps:
+        // If they contain exactly the same characters with the same counts,
+        // the strings are anagrams.
+        if (map1.equals(map2)) {
+            return true; // They match perfectly
         }
-       return false;
+        
+        // If the maps are different, the strings are not anagrams
+        return false;
     }
 }
