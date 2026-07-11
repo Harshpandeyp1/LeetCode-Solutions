@@ -1,27 +1,48 @@
 class Solution {
+    // Method to find the intersection of two integer arrays
     public int[] intersection(int[] nums1, int[] nums2) {
-        int n=nums1.length;
-        int m=nums2.length;
+        // Get the length of the first array
+        int n = nums1.length;
+        // Get the length of the second array
+        int m = nums2.length;
 
-        HashSet<Integer>set=new HashSet<>();
+        // Create a HashSet to store unique elements from the first array
+        HashSet<Integer> set = new HashSet<>();
+        // Create another HashSet to store the intersection elements (ensures uniqueness in result)
         HashSet<Integer> ans = new HashSet<>();
-                 
-        for(int i=0;i<n;i++){
-            
+
+        // Loop through every element in the first array
+        for (int i = 0; i < n; i++) {
+            // Add the current element to the 'set'
+            // If the element already exists, it won't be added again (handles duplicates automatically)
             set.add(nums1[i]);
         }
-        for(int i=0;i<m;i++){
-            if(set.contains(nums2[i])){
-               ans.add(nums2[i]);
+
+        // Loop through every element in the second array
+        for (int i = 0; i < m; i++) {
+            // Check if the current element from nums2 exists in the 'set' created from nums1
+            if (set.contains(nums2[i])) {
+                // If it exists, add it to the 'ans' set
+                // Using a set here ensures the result contains only unique intersection values
+                ans.add(nums2[i]);
             }
         }
-         int[] result = new int[ans.size()];
+
+        // Create a new integer array to hold the final result
+        // The size matches the number of unique intersection elements found
+        int[] result = new int[ans.size()];
+        // Initialize an index variable to track the position in the result array
         int index = 0;
 
-     for(int num : ans){
-        result[index++] = num;
-}
-        
+        // Iterate over each element in the 'ans' set
+        for (int num : ans) {
+            // Add the element to the result array at the current index
+            result[index] = num;
+            // Increment the index for the next element
+            index++;
+        }
+
+        // Return the final array containing the unique intersection elements
         return result;
     }
 }
