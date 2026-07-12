@@ -1,0 +1,56 @@
+// Custom class to hold an element and its frequency together
+class Number implements Comparable<Number> {
+    int element;  // the actual number from nums
+    int freq;     // how many times it appears
+
+    // Constructor to create a Number object with element and its frequency
+    Number(int element, int freq) {
+        this.element = element;
+        this.freq = freq;
+    }
+
+    // Defines how two Number objects are compared for ordering in the heap
+    public int compareTo(Number that) {
+        // that.freq - this.freq means: higher frequency comes first (max-heap behavior)
+        // if this.freq > that.freq, result is negative -> this comes before that
+        return that.freq - this.freq;
+    }
+}
+
+class Solution {
+    public int[] topKFrequent(int[] nums, int k) {
+        // PriorityQueue will act as a max-heap based on frequency (due to compareTo above)
+        PriorityQueue<Number> pq = new PriorityQueue<>();
+
+        // HashMap to store frequency count of each element: key = number, value = count
+        HashMap<Integer, Integer> map = new HashMap<>();
+
+        // Step 1: Count frequency of every element in nums
+        for (int element : nums) {
+            // if element already in map, increment its count; otherwise start at 0 and add 1
+            map.put(element, map.getOrDefault(element, 0) + 1);
+        }
+
+        // Step 2: Convert each (element, frequency) pair into a Number object
+        // and insert it into the priority queue
+        for (Map.Entry<Integer, Integer> entry : map.entrySet()) {
+            // entry.getKey() = the number itself, entry.getValue() = its frequency
+            Number number = new Number(entry.getKey(), entry.getValue());
+            pq.offer(number); // add to the heap; heap reorders itself based on compareTo
+        }
+
+        // Array to store the final top-k frequent elements
+        int res[] = new int[k];
+        int index = 0; // tracks how many elements we've added to res so far
+
+        // Step 3: Poll the top k elements from the heap (highest frequency first)
+        while (index < k) {
+            Number number = pq.poll(); // removes and returns the Number with highest freq
+            res[index] = number.element; // store just the element (not the frequency) in result
+            index++; // move to next slot in res
+        }
+
+        // Return the array containing the k most frequent elements
+        return res;
+    }
+}
