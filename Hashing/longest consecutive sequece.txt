@@ -1,0 +1,40 @@
+class Solution {
+    public int longestConsecutive(int[] nums) {
+        int n = nums.length;
+        int longestlength = 0; // This will store the maximum length found so far
+        
+        // Create a HashSet to store all numbers. 
+        // This allows us to check if a number exists in O(1) time.
+        Set<Integer> set = new HashSet<>();
+        
+        // Add all numbers from the input array into the set
+        for (int num : nums) {
+            set.add(num);
+        }
+        
+        // Iterate through each unique number in the set
+        for (int num : set) {
+            
+            // CRITICAL STEP: Only start counting if 'num' is the start of a sequence.
+            // We check if (num - 1) exists. If it does, then 'num' is not the start,
+            // so we skip it to avoid redundant work.
+            if (!set.contains(num - 1)) {
+                
+                int currnums = num;      // Start tracking from the current number
+                int currstreak = 1;      // The sequence length is at least 1 (the number itself)
+
+                // Keep checking for the next number (num+1, num+2, etc.) in the set
+                while (set.contains(currnums + 1)) {
+                    currnums++;          // Move to the next number in the sequence
+                    currstreak++;        // Increase the streak count
+                }
+                
+                // Update the global maximum length if the current streak is longer
+                longestlength = Math.max(longestlength, currstreak);
+            }
+        }
+        
+        // Return the length of the longest consecutive sequence found
+        return longestlength;
+    }
+}
