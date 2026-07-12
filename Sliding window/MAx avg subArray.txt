@@ -1,0 +1,38 @@
+You are given an integer array nums consisting of n elements, and an integer k.
+
+Find a contiguous subarray whose length is equal to k that has the maximum average value and return this value. Any answer with a calculation error less than 10-5 will be accepted.
+
+
+
+
+class Solution {
+    public double findMaxAverage(int[] nums, int k) {
+        int curr = 0; // Variable to store the sum of the current window
+        int res = 0;  // Variable to store the maximum sum found so far
+        int n = nums.length;
+
+        // Step 1: Calculate the sum of the first 'k' elements (the first window)
+        for (int i = 0; i < k; i++) {
+            curr += nums[i];
+        }
+        
+        // Initialize the maximum sum with the sum of the first window
+        res = curr;
+
+        // Step 2: Slide the window across the rest of the array
+        // Start from index 'k' (the element right after the first window)
+        for (int i = k; i < n; i++) {
+            // Update current sum:
+            // Add the new element entering the window (nums[i])
+            // Subtract the element leaving the window (nums[i-k])
+            curr = curr + nums[i] - nums[i - k];
+            
+            // Update the maximum sum if the current window's sum is larger
+            res = Math.max(res, curr);
+        }
+
+        // Step 3: Return the maximum average
+        // Cast 'res' to double before dividing to ensure decimal precision
+        return (double) res / k;
+    }
+}
