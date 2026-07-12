@@ -1,0 +1,54 @@
+class Solution {
+    public int findMaxLength(int[] nums) {
+
+        // HashMap stores:
+        // Key   -> current prefix sum
+        // Value -> first index where this prefix sum appeared
+        HashMap<Integer, Integer> map = new HashMap<>();
+
+        // Prefix sum 0 is considered before the array starts
+        // This helps when a valid subarray starts from index 0
+        map.put(0, -1);
+
+        // Stores the maximum length of a valid subarray
+        int maxLen = 0;
+
+        // Prefix sum
+        // Treat 0 as -1 and 1 as +1
+        int sum = 0;
+
+        int n = nums.length;
+
+        // Traverse the array
+        for (int i = 0; i < n; i++) {
+
+            // Convert:
+            // 0 -> -1
+            // 1 -> +1
+            // This makes equal number of 0s and 1s give a sum of 0
+            sum = sum + ((nums[i] == 0) ? -1 : 1);
+
+            // If this prefix sum was seen before,
+            // then the subarray between the previous index and current index
+            // has equal numbers of 0s and 1s
+            if (map.containsKey(sum)) {
+
+                // Calculate the length of the current valid subarray
+                int len = i - map.get(sum);
+
+                // Update the maximum length if needed
+                maxLen = Math.max(maxLen, len);
+
+            } else {
+
+                // Store the first occurrence of this prefix sum
+                // We store only the first occurrence because it gives
+                // the longest possible subarray later
+                map.put(sum, i);
+            }
+        }
+
+        // Return the longest length found
+        return maxLen;
+    }
+}
