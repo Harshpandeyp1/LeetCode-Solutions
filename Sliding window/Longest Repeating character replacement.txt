@@ -1,0 +1,49 @@
+You are given a string s and an integer k. You can choose any character of the string and change it to any other uppercase English character. You can perform this operation at most k times.
+
+Return the length of the longest substring containing the same letter you can get after performing the above operations.
+
+
+class Solution {
+    public int characterReplacement(String s, int k) {
+        int n = s.length();
+        int left = 0; // Left pointer of the sliding window
+        
+        // Array to store the frequency of each character ('A' to 'Z')
+        // Index 0 represents 'A', 1 represents 'B', etc.
+        int[] freq = new int[26];
+        
+        int maxfreq = 0; // The highest frequency of a single character found in the current window
+        int maxwindow = 0; // The maximum valid window size found so far
+
+        // 'right' pointer moves from start to end of the string
+        for (int right = 0; right < n; right++) {
+            // Add the current character to our frequency count
+            // 'A' has ASCII value 65. Subtracting 'A' gives us the index (0-25)
+            freq[s.charAt(right) - 'A']++;
+            
+            // Update maxfreq to be the highest count of any single character in the current window
+            maxfreq = Math.max(maxfreq, freq[s.charAt(right) - 'A']);
+            
+            // Calculate the current window length
+            int windowlength = right - left + 1;
+
+            // CHECK IF THE WINDOW IS VALID:
+            // To make all characters in the window the same, we need to replace:
+            // (Total Window Length) - (Count of the Most Frequent Character)
+            // If replacements needed > k, the window is too big/unstable
+            if (windowlength - maxfreq > k) {
+                // Shrink the window from the left
+                freq[s.charAt(left) - 'A']--; // Remove the leftmost character from counts
+                left++;                       // Move left pointer to the right
+            }
+
+            // Recalculate window length after potential shrinking
+            windowlength = right - left + 1;
+            
+            // Update the global maximum window size found
+            maxwindow = Math.max(maxwindow, windowlength);
+        }
+        
+        return maxwindow;
+    }
+}
