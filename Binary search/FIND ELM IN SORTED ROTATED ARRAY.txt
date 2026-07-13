@@ -1,0 +1,37 @@
+There is an integer array nums sorted in ascending order (with distinct values).
+
+Prior to being passed to your function, nums is possibly left rotated at an unknown index k (1 <= k < nums.length) such that the resulting array is [nums[k], nums[k+1], ..., nums[n-1], nums[0], nums[1], ..., nums[k-1]] (0-indexed). For example, [0,1,2,4,5,6,7] might be left rotated by 3 indices and become [4,5,6,7,0,1,2].
+
+Given the array nums after the possible rotation and an integer target, return the index of target if it is in nums, or -1 if it is not in nums.
+
+You must write an algorithm with O(log n) runtime complexity.
+class Solution {
+    public int search(int[] nums, int target) {
+        int left = 0, right = nums.length - 1;
+
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+
+            if (nums[mid] == target) return mid; // found it directly
+
+            // check which half is sorted: left half or right half
+            if (nums[left] <= nums[mid]) {
+                // left half (left to mid) is sorted
+                if (nums[left] <= target && target < nums[mid]) {
+                    right = mid - 1; // target lies in the sorted left half
+                } else {
+                    left = mid + 1;  // target must be in the right half
+                }
+            } else {
+                // right half (mid to right) is sorted
+                if (nums[mid] < target && target <= nums[right]) {
+                    left = mid + 1;  // target lies in the sorted right half
+                } else {
+                    right = mid - 1; // target must be in the left half
+                }
+            }
+        }
+        return -1; // target not found
+    }
+}
+Since the array is sorted but rotated at some unknown point, it's no longer fully sorted end-to-end — but here's the key insight: whenever you split the array at any mid, at least one of the two halves (left-to-mid or mid-to-right) is guaranteed to be a normal, fully sorted sequence, even though the other half contains the rotation break. So at every step of the binary search, we first ask a purely structural question — "which half is sorted?" — by comparing nums[left] with nums[mid] (this comparison never involves target, since it's just about the shape of the array). Once we know which half is sorted, we ask the second question — "could the target actually be hiding inside that sorted half?" — by checking if target falls within the range of that half's first and last elements. If it does, we confidently search inside that sorted half since we know its exact bounds; if it doesn't, we know the target must lie in the other (unsorted-looking) half, so we search there instead. By always identifying the sorted half first and only then checking if target belongs in it, we safely eliminate one half of the array at each step — giving us the required O(log n) time complexity, just like standard binary search, but adapted to handle the rotation.

@@ -1,0 +1,67 @@
+You are given an m x n integer matrix matrix with the following two properties:
+
+Each row is sorted in non-decreasing order.
+The first integer of each row is greater than the last integer of the previous row.
+Given an integer target, return true if target is in matrix or false otherwise.
+
+You must write a solution in O(log(m * n)) time complexity
+
+
+class Solution {
+    public boolean searchMatrix(int[][] matrix, int target) {
+        // Step 1: find which row could possibly contain the target
+        int rowindx = searchtherow(matrix, target);
+        
+        // Step 2: if we found a valid row, search inside that row
+        if (rowindx != -1) {
+            return rowbinarysearch(rowindx, matrix, target);
+        }
+        else {
+            // no row can contain the target, so return false
+            return false;
+        }
+    }
+
+    // This function finds the row where target COULD lie
+    private int searchtherow(int[][] matrix, int target) {
+        int low = 0;                      // start from the first row
+        int high = matrix.length - 1;     // end at the last row
+
+        while (low <= high) {
+            int mid = low + (high - low) / 2;  // pick the middle row (avoids overflow)
+
+            // check if target lies between the first and last element of this row
+            if (matrix[mid][0] <= target && target <= matrix[mid][matrix[0].length - 1]) {
+                return mid;  // target can only be in this row, so return its index
+            }
+            // if the row's first element is smaller than target, target must be in a lower row
+            else if (matrix[mid][0] < target) low = mid + 1;
+            // if the row's first element is bigger than target, target must be in an upper row
+            else if (matrix[mid][0] > target) high = mid - 1;
+        }
+        return -1;  // no such row found, target doesn't exist in matrix
+    }
+
+    // This function does normal binary search inside a single row
+    private boolean rowbinarysearch(int rowindx, int[][] matrix, int target) {
+        int low = 0;                                  // start of the row
+        int high = matrix[rowindx].length - 1;         // end of the row
+
+        while (low <= high) {
+            int mid = low + (high - low) / 2;   // pick middle element of the row
+
+            if (matrix[rowindx][mid] == target) return true;  // found the target!
+            
+            // if middle element is bigger, search left half
+            else if (matrix[rowindx][mid] > target) high = mid - 1;
+            
+            // otherwise search right half
+            else {
+                low = mid + 1;
+            }
+        }
+        return false;  // target not found in this row
+    }
+}
+
+//Since the matrix is sorted such that each row's values increase left to right, and each row starts where the previous row ends (i.e., the whole matrix reads like one big sorted list split into rows), we don't need to scan every row. Instead, we first do a binary search across the rows to figure out which single row could possibly hold the target — by checking if the target lies between that row's first and last elements. Once we've narrowed it down to one candidate row, we do a second, ordinary binary search within that row to check if the target actually exists. This two-step binary search (row-level, then column-level) gives an overall time complexity of O(log(m) + log(n)), which is much faster than scanning the whole matrix.
