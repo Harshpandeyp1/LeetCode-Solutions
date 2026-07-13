@@ -1,0 +1,80 @@
+A conveyor belt has packages that must be shipped from one port to another within days days.
+
+The ith package on the conveyor belt has a weight of weights[i]. Each day, we load the ship with packages on the conveyor belt (in the order given by weights). We may not load more weight than the maximum weight capacity of the ship.
+
+Return the least weight capacity of the ship that will result in all the packages on the conveyor belt being shipped within days days.
+
+
+
+class Solution {
+    public int shipWithinDays(int[] weights, int days) {
+        // minCap = smallest possible ship capacity
+        // it must be at least the heaviest single package,
+        // otherwise that package can never be loaded
+        int minCap = 0;
+
+        // maxCap = largest possible ship capacity
+        // this means shipping everything in a single day
+        int maxCap = 0;
+
+        for (int weight : weights) {
+            minCap = Math.max(minCap, weight); // track the heaviest package
+            maxCap += weight;                  // sum of all packages
+        }
+
+        // Binary search on the answer (the ship capacity)
+        // We are searching for the SMALLEST capacity that
+        // can still ship everything within 'days' days
+        while (minCap < maxCap) {
+
+            // mid = capacity we are testing right now
+            int mid = minCap + (maxCap - minCap) / 2;
+
+            // day = how many days it takes to ship everything
+            // if the ship capacity is 'mid'
+            int day = 1;
+
+            // sum = weight loaded on the ship for the current day
+            int sum = 0;
+
+            for (int weight : weights) {
+                // if adding this package overflows today's capacity,
+                // start a new day
+                if (sum + weight > mid) {
+                    day++;     // move to next day
+                    sum = 0;   // reset today's load
+                }
+                sum += weight; // load the package today
+            }
+
+            // Now check: did capacity 'mid' need more days than allowed?
+            if (day > days) {
+                // mid is too small, ship needs bigger capacity
+                minCap = mid + 1;
+            } else {
+                // mid works fine (or even has room to spare)
+                // try to see if a smaller capacity also works
+                maxCap = mid;
+            }
+        }
+
+        // minCap == maxCap here, this is the smallest capacity
+        // that ships everything within the allowed days
+        return minCap;
+    }
+}
+
+
+Approach (in simple words):
+Instead of trying every possible capacity one by one (slow), we guess smartly using binary search.
+
+The answer (ship capacity) always lies between two limits:
+
+Lower limit → the heaviest single package (ship must at least hold that).
+Upper limit → total weight of everything (ship it all in one day).
+
+
+We pick a capacity in the middle (mid) and simulate: "If the ship could carry mid weight per day, how many days would it take?"
+If it takes more days than allowed, mid is too small → search in the bigger half.
+If it takes days within the allowed limit, mid works → try an even smaller capacity, so search in the smaller half.
+We keep shrinking the range until minCap and maxCap meet — that meeting point is the smallest capacity that still finishes shipping on time.

@@ -1,0 +1,47 @@
+rec
+class Solution {
+    public int search(int[] nums, int target) {
+        return binarySearch(nums, target, 0, nums.length - 1);
+    }
+    
+    private int binarySearch(int[] nums, int target, int left, int right) {
+        // Base case: search space is empty, target not found
+        if (left > right) {
+            return -1;
+        }
+        
+        int mid = left + (right - left) / 2;
+        
+        if (nums[mid] == target) {
+            return mid;
+        } else if (target < nums[mid]) {
+            return binarySearch(nums, target, left, mid - 1);  // search left half
+        } else {
+            return binarySearch(nums, target, mid + 1, right); // search right half
+        }
+    }
+}
+
+
+
+iteration
+
+class Solution {
+    public int search(int[] nums, int target) {
+        int n = nums.length;
+        int left = 0;
+        int right = n - 1;
+
+        while (left <= right) {
+            int mid = left + (right - left) / 2; // avoids overflow, recalculated each iteration
+            if (target == nums[mid]) {
+                return mid;
+            } else if (target < nums[mid]) {
+                right = mid - 1; // search left half
+            } else {
+                left = mid + 1;  // search right half
+            }
+        }
+        return -1; // not found
+    }
+}
