@@ -1,0 +1,51 @@
+Koko loves to eat bananas. There are n piles of bananas, the ith pile has piles[i] bananas. The guards have gone and will come back in h hours.
+
+Koko can decide her bananas-per-hour eating speed of k. Each hour, she chooses some pile of bananas and eats k bananas from that pile. If the pile has less than k bananas, she eats all of them instead and will not eat any more bananas during this hour.
+
+Koko likes to eat slowly but still wants to finish eating all the bananas before the guards return.
+
+Return the minimum integer k such that she can eat all the bananas within h hours.
+
+
+
+class Solution {
+    public int minEatingSpeed(int[] piles, int h) {
+        int minspeed = 1;      // slowest possible eating speed (1 banana/hour)
+
+        int maxspeed = 0;      // we'll find the largest pile, since eating at
+                                // that speed guarantees finishing any single pile in 1 hour
+        for (int pile : piles) {
+            maxspeed = Math.max(maxspeed, pile);   // track the biggest pile size
+        }
+
+        // binary search over the possible eating speeds (1 to maxspeed)
+        while (minspeed < maxspeed) {
+            int mid = minspeed + (maxspeed - minspeed) / 2;  // try this speed
+
+            // check if eating at speed 'mid' lets Koko finish within h hours
+            if (eatintime(piles, h, mid)) {
+                maxspeed = mid;      // this speed works, try to find a smaller (slower) one
+            } else {
+                minspeed = mid + 1;  // too slow, need to eat faster
+            }
+        }
+        return minspeed;   // minspeed == maxspeed now, this is the minimum valid speed
+    }
+
+    // helper function: checks if Koko can eat all piles within h hours at given speed
+    private boolean eatintime(int[] piles, int h, int speed) {
+        int hours = 0;   // total hours needed
+
+        for (int pile : piles) {
+            // ceil(pile/speed) gives hours needed for this one pile
+            // (if pile isn't perfectly divisible by speed, she needs one extra hour)
+            hours += (int) Math.ceil((double) pile / speed);
+        }
+        return hours <= h;   // true if total hours fit within the allowed h hours
+    }
+}
+
+
+
+Approach in a paragraph:
+The key realization is that as Koko's eating speed increases, the total hours needed to finish all piles can only decrease or stay the same — it's a monotonic relationship. This means we don't need to try every possible speed one by one; instead we can binary search directly over the range of possible speeds, from 1 (slowest) to max(piles) (fast enough to finish any single pile in one hour). For each candidate speed (mid), we simulate how many total hours she'd need by summing up ceil(pile/speed) for every pile — using ceiling because even a small leftover amount from a pile still requires a full extra hour. If that total is within the allowed h hours, this speed is fast enough, so we record it and try to search for an even smaller (slower) speed that still works, by shrinking maxspeed down to mid. If it's not fast enough, we know we need to increase the speed, so we push minspeed up past mid. We keep narrowing this range until minspeed and maxspeed converge, at which point that value is the smallest speed that still lets her finish in time — giving us the answer in O(n log(max(piles))) time instead of a much slower linear scan through every possible speed.
