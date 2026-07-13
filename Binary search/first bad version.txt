@@ -1,0 +1,37 @@
+/* The isBadVersion API is defined in the parent class VersionControl.
+      boolean isBadVersion(int version); */
+
+ppublic class Solution extends VersionControl {
+    public int firstBadVersion(int n) {
+        int low = 1;      // smallest possible version number
+        int high = n;     // largest possible version number
+        int result = n;   // stores the best "bad version" candidate found so far
+                           // (default n, though it will always get overwritten
+                           // since the problem guarantees at least one bad version)
+        int mid = 0;
+
+        while (low <= high) {
+            // Overflow-safe midpoint calculation.
+            // (low + high) could overflow int range if both are large,
+            // so we compute it as low + half the difference instead.
+            mid = low + (high - low) / 2;
+
+            if (isBadVersion(mid)) {
+                // mid is bad, so it's a valid candidate for "first bad version"
+                result = mid;
+
+                // but there might be an even earlier bad version,
+                // so keep searching the left half
+                high = mid - 1;
+            } else {
+                // mid is good, so the first bad version (if any)
+                // must be somewhere after mid
+                low = mid + 1;
+            }
+        }
+
+        // low has moved past high, meaning the search space is exhausted.
+        // result holds the smallest version for which isBadVersion() returned true.
+        return result;
+    }
+}
