@@ -1,0 +1,73 @@
+Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid.
+
+An input string is valid if:
+
+Open brackets must be closed by the same type of brackets.
+Open brackets must be closed in the correct order.
+Every close bracket has a corresponding open bracket of the same type.
+ 
+
+
+
+
+class Solution {
+    public boolean isValid(String s) {
+        int n = s.length();
+
+        // stack keeps track of opening brackets we're still waiting to close
+        Stack<Character> stack = new Stack<>();
+
+        for (int i = 0; i < n; i++) {
+
+            // case 1: current character is an opening bracket
+            // just push it onto the stack, we'll need to match it later
+            if (s.charAt(i) == '(' || s.charAt(i) == '{' || s.charAt(i) == '[') {
+                stack.push(s.charAt(i));
+            }
+
+            // case 2: current character is a closing bracket
+            else if (s.charAt(i) == ')' || s.charAt(i) == '}' || s.charAt(i) == ']') {
+
+                // if stack is empty, there's no opening bracket to match with
+                // e.g. a string starting with ')' is instantly invalid
+                if (stack.isEmpty()) {
+                    return false;
+                }
+
+                // pop the most recent unmatched opening bracket
+                char top = stack.pop();
+
+                // now check if it's the CORRECT match for the current closing bracket
+                // if not, brackets are mismatched (like "(]") -> invalid
+                if (s.charAt(i) == ')' && top != '(') return false;
+                if (s.charAt(i) == '}' && top != '{') return false;
+                if (s.charAt(i) == ']' && top != '[') return false;
+            }
+        }
+
+        // after scanning the whole string:
+        // if stack is empty -> every opening bracket found its match
+        // if stack still has elements -> some opening brackets were never closed
+        return stack.isEmpty();
+    }
+}
+
+
+Approach (in simple words):
+
+We use a stack to remember opening brackets that are "still waiting" to be closed. Think of it like a pile of open tasks — the most recently opened one must be the next one closed.
+Walk through the string one character at a time:
+
+Opening bracket ((, {, [) → push it onto the stack. We're not done with it yet.
+Closing bracket (), }, ]) →
+
+First check: is the stack empty? If yes, there's nothing to close — invalid right away.
+Otherwise, pop the top of the stack (the most recently opened bracket) and check it's the correct match for this closing bracket. If it's the wrong type (like popping '(' but seeing ']'), it's invalid.
+
+
+
+
+After processing the entire string:
+
+If the stack is empty, everything that was opened got properly closed in the right order → valid.
+If the stack still has leftover brackets, some opening bracket never got closed → invalid.
