@@ -1,0 +1,64 @@
+Design a stack that supports push, pop, top, and retrieving the minimum element in constant time.
+
+Implement the MinStack class:
+
+MinStack() initializes the stack object.
+void push(int value) pushes the element value onto the stack.
+void pop() removes the element on the top of the stack.
+int top() gets the top element of the stack.
+int getMin() retrieves the minimum element in the stack.
+You must implement a solution with O(1) time complexity for each function.
+
+ 
+
+class MinStack {
+
+    private Stack<Integer> stack;   // holds all the actual values
+    private Stack<Integer> minStack; // holds the current minimum at each point
+
+    public MinStack() {
+        // both stacks start empty
+        stack = new Stack<>();
+        minStack = new Stack<>();
+    }
+
+    public void push(int value) {
+        // always push the value onto the main stack
+        stack.push(value);
+
+        // for the min stack, push the smaller of (new value, current min)
+        // if minStack is empty, this new value IS the current min
+        if (minStack.isEmpty()) {
+            minStack.push(value);
+        } else {
+            minStack.push(Math.min(value, minStack.peek()));
+        }
+    }
+
+    public void pop() {
+        // remove the top value from both stacks together
+        // this keeps them always in sync (same size, same order)
+        stack.pop();
+        minStack.pop();
+    }
+
+    public int top() {
+        // just look at (don't remove) the top of the main stack
+        return stack.peek();
+    }
+
+    public int getMin() {
+        // the top of minStack always holds the current minimum
+        // for whatever values are currently in the main stack
+        return minStack.peek();
+    }
+}
+
+/**
+ * Your MinStack object will be instantiated and called as such:
+ * MinStack obj = new MinStack();
+ * obj.push(value);
+ * obj.pop();
+ * int param_3 = obj.top();
+ * int param_4 = obj.getMin();
+ */
