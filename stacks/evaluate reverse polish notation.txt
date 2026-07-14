@@ -1,0 +1,56 @@
+You are given an array of strings tokens that represents an arithmetic expression in a Reverse Polish Notation.
+
+Evaluate the expression. Return an integer that represents the value of the expression.
+
+Note that:
+
+The valid operators are '+', '-', '*', and '/'.
+Each operand may be an integer or another expression.
+The division between two integers always truncates toward zero.
+There will not be any division by zero.
+The input represents a valid arithmetic expression in a reverse polish notation.
+The answer and all the intermediate calculations can be represented in a 32-bit integer.
+
+
+
+class Solution {
+    public int evalRPN(String[] tokens) {
+
+        // Stack holds operands waiting to be combined
+        Stack<Integer> st = new Stack<>();
+
+        // Used to quickly check "is this token an operator?"
+        // Note: String.indexOf(String) checks for a substring match,
+        // so numeric tokens (even "-3") won't falsely match here,
+        // since "-3" never occurs as a substring of "+-*/".
+        String operators = "+-*/";
+
+        for (String token : tokens) {
+
+            if (operators.indexOf(token) != -1) {
+                // Token is an operator: pop the two most recent operands.
+                // d2 was pushed last -> it's the right-hand operand.
+                // d1 was pushed before it -> it's the left-hand operand.
+                int d2 = st.pop();
+                int d1 = st.pop();
+
+                int res = 0;
+                if (token.equals("+")) res = d1 + d2;
+                else if (token.equals("-")) res = d1 - d2;
+                else if (token.equals("*")) res = d1 * d2;
+                else if (token.equals("/")) res = d1 / d2; // truncates toward zero in Java, matches problem spec
+
+                // Push the computed result back — it becomes an operand
+                // for a future operator later in the expression.
+                st.push(res);
+            } else {
+                // Token is a number: parse and push onto the stack.
+                st.push(Integer.parseInt(token));
+            }
+        }
+
+        // After processing all tokens, exactly one value remains:
+        // the final result of the expression.
+        return st.peek();
+    }
+}
