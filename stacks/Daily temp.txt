@@ -1,0 +1,42 @@
+Given an array of integers temperatures represents the daily temperatures, return an array answer such that answer[i] is the number of days you have to wait after the ith day to get a warmer temperature. If there is no future day for which this is possible, keep answer[i] == 0 instead.
+
+
+
+
+class Solution {
+    public int[] dailyTemperatures(int[] temperatures) {
+        int n = temperatures.length;
+        int[] result = new int[n];
+
+        // Stack stores INDICES, kept so that temperatures at those
+        // indices are in increasing order from top to bottom as we
+        // scan right-to-left (top of stack = nearest day so far that
+        // could be someone's "next warmer day").
+        Stack<Integer> st = new Stack<>();
+
+        for (int indx = n - 1; indx >= 0; indx--) {
+
+            // Discard indices whose temperature is <= today's temperature.
+            // They can never be the "next warmer day" for anything to the
+            // left of indx, because indx itself is closer and at least as warm,
+            // so indx takes over that role.
+            while (!st.isEmpty() && temperatures[indx] >= temperatures[st.peek()]) {
+                st.pop();
+            }
+
+            // After popping, whatever remains on top of the stack (if any)
+            // is the nearest day to the right that's strictly warmer.
+            // The distance in days is simply (that index - indx).
+            if (!st.isEmpty()) {
+                result[indx] = st.peek() - indx;
+            }
+            // else: result[indx] stays 0 (default), meaning no warmer day ahead.
+
+            // indx is now a candidate "next warmer day" for elements
+            // further to the left, so push it.
+            st.push(indx);
+        }
+
+        return result;
+    }
+}
