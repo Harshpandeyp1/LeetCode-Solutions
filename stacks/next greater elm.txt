@@ -1,0 +1,59 @@
+he next greater element of some element x in an array is the first greater element that is to the right of x in the same array.
+
+You are given two distinct 0-indexed integer arrays nums1 and nums2, where nums1 is a subset of nums2.
+
+For each 0 <= i < nums1.length, find the index j such that nums1[i] == nums2[j] and determine the next greater element of nums2[j] in nums2. If there is no next greater element, then the answer for this query is -1.
+
+Return an array ans of length nums1.length such that ans[i] is the next greater element as described above.
+
+class Solution {
+    public int[] nextGreaterElement(int[] nums1, int[] nums2) {
+        int n = nums1.length, m = nums2.length;
+        if (n == 0 || m == 0) return new int[0];
+
+        // Map from a value in nums2 -> its next greater element (-1 if none)
+        Map<Integer, Integer> map = new HashMap<>();
+
+        // Stack holds "candidate" values that could be the next-greater
+        // for something further to the left. Kept monotonically
+        // decreasing from bottom to top.
+        Deque<Integer> st = new ArrayDeque<>();
+
+        // Scan right to left
+        for (int i = m - 1; i >= 0; i--) {
+            int x = nums2[i];
+
+            // Discard everything on the stack that is <= x.
+            // These values can never be the "next greater" for any
+            // element to the left of x, because x itself is closer
+            // and bigger, so x takes over that role.
+            while (!st.isEmpty() && st.peek() <= x) {
+                st.pop();
+            }
+
+            // After popping, whatever remains on top (if anything)
+            // is the nearest bigger value to the right of x.
+            map.put(x, st.isEmpty() ? -1 : st.peek());
+
+            // x itself is now a candidate "next greater" for
+            // elements further to the left, so push it.
+            st.push(x);
+        }
+
+        // Build the result for nums1 using the precomputed map
+        int[] result = new int[n];
+        for (int i = 0; i < n; i++) {
+            result[i] = map.get(nums1[i]);
+        }
+        return result;
+    }
+}
+
+
+Approach summary
+
+Precompute next-greater-element for every value in nums2 using a monotonic decreasing stack, scanned right to left, in O(m) time and space.
+Pop stack elements <= current because they're now "dead" candidates — a bigger, closer number has taken over.
+Whatever's left on top of the stack after popping is the answer for the current element.
+Push the current element so it can serve as a candidate for elements to its left.
+Look up each nums1[i] in the map — O(n).
