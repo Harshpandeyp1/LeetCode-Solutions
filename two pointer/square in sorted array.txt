@@ -1,0 +1,68 @@
+Given an integer array nums sorted in non-decreasing order, return an array of the squares of each number sorted in non-decreasing order.
+
+
+
+class Solution {
+    public int[] sortedSquares(int[] nums) {
+        /*
+         * Approach (in simple words):
+         * -----------------------------
+         * The input array is already SORTED, but it may contain
+         * NEGATIVE numbers. When we square negative numbers, they can
+         * become LARGER than positive numbers (e.g., -10 squared = 100,
+         * which is bigger than 5 squared = 25).
+         *
+         * Key Insight:
+         * -------------
+         * In a sorted array, the LARGEST squared values will always come
+         * from one of the TWO EXTREME ENDS:
+         *   - The leftmost element (most negative, e.g., -10)
+         *   - The rightmost element (most positive, e.g., 10)
+         *
+         * So instead of sorting after squaring (O(n log n)), we can use
+         * TWO POINTERS — one starting from the LEFT, one from the RIGHT —
+         * and compare which side has the bigger ABSOLUTE value.
+         *
+         * Whichever side has the bigger absolute value will produce the
+         * bigger square, so we place that squared value at the END of
+         * our result array (since we're building result from LARGEST to
+         * SMALLEST), then move that pointer inward.
+         *
+         * We repeat this until both pointers meet, filling the result
+         * array from the back (rightmost index) to the front.
+         *
+         * This way we do it in a single pass — O(n) time — no sorting needed!
+         */
+
+        int n = nums.length;
+        
+        int r1 = 0;       // left pointer (start of array)
+        int r2 = n - 1;   // right pointer (end of array)
+        int w = n - 1;    // write pointer -> fills result array from the END (largest values go last)
+        
+        int[] ans = new int[n];
+
+        // Keep comparing both ends until pointers cross
+        while (r1 <= r2) {
+            
+            // Compare ABSOLUTE values at both ends.
+            // Whichever is bigger will produce the bigger square.
+            if (Math.abs(nums[r1]) > Math.abs(nums[r2])) {
+                
+                // Left side has bigger magnitude -> its square is the largest remaining value
+                ans[w] = nums[r1] * nums[r1];
+                r1++; // move left pointer inward
+                
+            } else {
+                
+                // Right side has bigger (or equal) magnitude -> its square goes in
+                ans[w] = nums[r2] * nums[r2];
+                r2--; // move right pointer inward
+            }
+            
+            w--; // move write pointer one step left (next largest value goes here)
+        }
+        
+        return ans;
+    }
+}
