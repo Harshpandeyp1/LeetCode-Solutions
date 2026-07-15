@@ -1,0 +1,54 @@
+We are given an array asteroids of integers representing asteroids in a row. The indices of the asteroid in the array represent their relative position in space.
+
+For each asteroid, the absolute value represents its size, and the sign represents its direction (positive meaning right, negative meaning left). Each asteroid moves at the same speed.
+
+Find out the state of the asteroids after all collisions. If two asteroids meet, the smaller one will explode. If both are the same size, both will explode. Two asteroids moving in the same direction will never meet.
+
+ 
+import java.util.Stack;
+
+class Solution {
+    public int[] asteroidCollision(int[] asteroids) {
+        // stack will hold the asteroids that are still alive so far
+        Stack<Integer> st = new Stack<>();
+
+        // go through every asteroid one by one
+        for (int a : asteroids) {
+
+            // keep destroying the top asteroid as long as:
+            // - stack is not empty
+            // - current asteroid 'a' is moving left (negative)
+            // - top asteroid is moving right (positive)
+            // - top asteroid is smaller than current one, so top explodes
+            while (!st.isEmpty() && a < 0 && st.peek() > 0 && st.peek() < -a) {
+                st.pop(); // top asteroid explodes, remove it
+            }
+
+            // check if there is still a possible collision
+            // (top moving right, current moving left)
+            if (!st.isEmpty() && a < 0 && st.peek() > 0) {
+
+                // if both are exactly equal size, both explode
+                if (st.peek() == -a) {
+                    st.pop(); // remove the top, and current 'a' also dies (not pushed)
+                }
+                // else: top is bigger than current 'a'
+                // so current 'a' explodes silently, we do nothing (not pushed)
+            }
+            else {
+                // no collision happened, so current asteroid survives
+                // push it on the stack
+                st.push(a);
+            }
+        }
+
+        // stack now has only the surviving asteroids
+        // but stack order is reversed, so we fill array from the back
+        int[] ans = new int[st.size()];
+        for (int i = st.size() - 1; i >= 0; i--) {
+            ans[i] = st.pop();
+        }
+
+        return ans; // final list of surviving asteroids
+    }
+}
