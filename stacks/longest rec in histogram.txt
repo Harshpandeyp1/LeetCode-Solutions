@@ -1,0 +1,490 @@
+Given an array of integers heights representing the histogram's bar height where the width of each bar is 1, return the area of the largest rectangle in the histogram.
+
+
+class Solution {
+    public int largestRectangleArea(int[] heights) {
+        // stack will store indices of bars
+        Stack<Integer> st = new Stack<Integer>();
+        int n = heights.length;
+        int max = Integer.MIN_VALUE;
+
+        // we go one step extra (i == n) to force-empty the stack at the end
+        for (int i = 0; i <= n; i++) {
+
+            // when i == n, pretend there's a bar of height 0
+            // this makes sure every remaining bar in the stack gets processed
+            int elm = (i == n) ? 0 : heights[i];
+
+            // if current bar is smaller than the bar on top of stack,
+            // it means the top bar can't extend further right
+            // so calculate its area now, before removing it
+            while (!st.isEmpty() && heights[st.peek()] > elm) {
+
+                int h = heights[st.pop()]; // height of the bar we are closing
+
+                // after popping, new top of stack is the nearest smaller bar on left
+                // if stack becomes empty, it means bar had no smaller bar on left (wall = -1)
+                int ps = (st.isEmpty()) ? -1 : st.peek();
+
+                // width = distance between left wall and right wall
+                int w = i - ps - 1;
+
+                // area using this bar as the smallest height
+                max = Math.max(max, h * w);
+            }
+
+            // push current index, its turn to be checked later
+            st.push(i);
+        }
+
+        // if array was empty, max stays MIN_VALUE, so return 0 instead
+        return (max == Integer.MIN_VALUE) ? 0 : max;
+    }
+}
+
+add coment in this cde in easy
+
+
+Resolved to annotate code sections comprehensively
+Resolved to annotate code sections comprehensively
+Here's your working code with simple, plain-English comments added — nothing else changed:
+
+java
+import java.util.Stack;
+
+class Solution {
+    public int[] asteroidCollision(int[] asteroids) {
+        // stack will hold the asteroids that are still alive so far
+        Stack<Integer> st = new Stack<>();
+
+        // go through every asteroid one by one
+        for (int a : asteroids) {
+
+            // keep destroying the top asteroid as long as:
+            // - stack is not empty
+            // - current asteroid 'a' is moving left (negative)
+            // - top asteroid is moving right (positive)
+            // - top asteroid is smaller than current one, so top explodes
+            while (!st.isEmpty() && a < 0 && st.peek() > 0 && st.peek() < -a) {
+                st.pop(); // top asteroid explodes, remove it
+            }
+
+            // check if there is still a possible collision
+            // (top moving right, current moving left)
+            if (!st.isEmpty() && a < 0 && st.peek() > 0) {
+
+                // if both are exactly equal size, both explode
+                if (st.peek() == -a) {
+                    st.pop(); // remove the top, and current 'a' also dies (not pushed)
+                }
+                // else: top is bigger than current 'a'
+                // so current 'a' explodes silently, we do nothing (not pushed)
+            }
+            else {
+                // no collision happened, so current asteroid survives
+                // push it on the stack
+                st.push(a);
+            }
+        }
+
+        // stack now has only the surviving asteroids
+        // but stack order is reversed, so we fill array from the back
+        int[] ans = new int[st.size()];
+        for (int i = st.size() - 1; i >= 0; i--) {
+            ans[i] = st.pop();
+        }
+
+        return ans; // final list of surviving asteroids
+    }
+}
+Simple summary of the idea in one line each:
+
+Moving right (+) asteroids just get pushed — nothing can stop them yet.
+Moving left (-) asteroids fight everything on top of the stack that's moving right.
+Smaller one explodes, equal ones both explode, and if the left-mover wins against everything, it finally gets pushed.
+class Solution {
+    public int largestRectangleArea(int[] heights) {
+        int ns[]=findNextSmaller(heights);
+        int ps[]=findPrevSmaller(heights);
+        int max=Integer.MIN_VALUE;
+        for(int i=0;i<heights.length;i++){
+            int h=heights[i];
+            int w=ns[i]-ps[i]-1;
+            max=Math.min(max,(h*w));
+        }
+        return max;
+    }
+    public static int[] findPrevSmaller(int arr[]) 
+    { 
+        // Your code goes here
+            int n = arr.length;
+        Stack<Integer> stack = new Stack<>();
+        int res[] = new int[n];
+        for(int i=0;i<n;i++){
+            while(!stack.isEmpty() && arr[stack.peek()]>= arr[i]) {
+                stack.pop();
+            }
+            
+            if(stack.isEmpty()) {
+                res[i] = -1;
+            } else {
+                res[i] = stack.peek();
+            }
+            
+            stack.push(i);
+        }
+        return res;
+    } 
+
+    public static int[] findNextSmaller(int arr[]) 
+    { 
+        // Your code goes here
+            int n = arr.length;
+        Stack<Integer> stack = new Stack<>();
+        int res[] = new int[n];
+        for(int i=n-1;i>=0;i--){
+            while(!stack.isEmpty() && arr[stack.peek()]>= arr[i]) {
+                stack.pop();
+            }
+            
+            if(stack.isEmpty()) {
+                res[i] = n;
+            } else {
+                res[i] = stack.peek();
+            }
+            
+            stack.push(i);
+        }
+        return res;
+    }
+}
+Show more
+
+Pinpointed Math.min bug; helper functions validated correctly
+Pinpointed Math.min bug; helper functions validated correctly
+Good progress — your helper functions (findNextSmaller and findPrevSmaller) are both correct, textbook implementations of a monotonic stack. There's just one bug, and it's a small one.
+
+The bug
+java
+max=Math.min(max,(h*w));
+You initialized max to Integer.MIN_VALUE and want the largest area — but you're using Math.min instead of Math.max. Since max starts at the smallest possible int, Math.min will basically always just keep it at Integer.MIN_VALUE (because nothing can be smaller), so your function will always return garbage.
+
+The fix
+java
+max = Math.max(max, (h * w));
+That's the only change needed. Full corrected code:
+
+java
+class Solution {
+    public int largestRectangleArea(int[] heights) {
+        int ns[] = findNextSmaller(heights);
+        int ps[] = findPrevSmaller(heights);
+        int max = Integer.MIN_VALUE;
+        for (int i = 0; i < heights.length; i++) {
+            int h = heights[i];
+            int w = ns[i] - ps[i] - 1;
+            max = Math.max(max, (h * w)); // fixed: was Math.min
+        }
+        return max;
+    }
+
+    public static int[] findPrevSmaller(int arr[]) {
+        int n = arr.length;
+        Stack<Integer> stack = new Stack<>();
+        int res[] = new int[n];
+        for (int i = 0; i < n; i++) {
+            while (!stack.isEmpty() && arr[stack.peek()] >= arr[i]) {
+                stack.pop();
+            }
+            if (stack.isEmpty()) {
+                res[i] = -1;
+            } else {
+                res[i] = stack.peek();
+            }
+            stack.push(i);
+        }
+        return res;
+    }
+
+    public static int[] findNextSmaller(int arr[]) {
+        int n = arr.length;
+        Stack<Integer> stack = new Stack<>();
+        int res[] = new int[n];
+        for (int i = n - 1; i >= 0; i--) {
+            while (!stack.isEmpty() && arr[stack.peek()] >= arr[i]) {
+                stack.pop();
+            }
+            if (stack.isEmpty()) {
+                res[i] = n;
+            } else {
+                res[i] = stack.peek();
+            }
+            stack.push(i);
+        }
+        return res;
+    }
+}
+Why your approach is a nice clean pattern
+For each bar, you're asking: "how wide can a rectangle be, using this bar's height, before hitting something shorter on either side?"
+
+ps[i] = index of nearest bar to the left that's strictly shorter (the wall you can't cross)
+ns[i] = index of nearest bar to the right that's strictly shorter (the other wall)
+Width = everything strictly between those two walls → ns[i] - ps[i] - 1
+This is the same "monotonic stack" idea from the asteroid problem — you maintain a stack where relationships are always increasing (heights), and pop whenever a smaller value invalidates what's on top. It shows up constantly: previous/next greater or smaller element, histogram area, trapping rain water, stock span — all the same skeleton.
+
+add comment in code in easy lang andalso the approach
+
+
+Resolved to clarify code comments and methodology approach
+Resolved to clarify code comments and methodology approach
+Here's your code with simple comments added, plus the approach explained in easy language below.
+
+java
+class Solution {
+    public int largestRectangleArea(int[] heights) {
+        // for every bar, find index of nearest smaller bar on the right
+        int ns[] = findNextSmaller(heights);
+        // for every bar, find index of nearest smaller bar on the left
+        int ps[] = findPrevSmaller(heights);
+
+        int max = Integer.MIN_VALUE;
+
+        // check every bar as if it is the shortest bar of some rectangle
+        for (int i = 0; i < heights.length; i++) {
+            int h = heights[i]; // height of current bar
+
+            // width = distance between left wall and right wall (excluding walls)
+            int w = ns[i] - ps[i] - 1;
+
+            // area of rectangle using this bar as the smallest height
+            max = Math.max(max, (h * w)); // fixed: use max, not min
+        }
+
+        return max; // biggest rectangle found
+    }
+
+    // this finds, for every index, the nearest bar on the LEFT
+    // that is smaller than the current bar
+    public static int[] findPrevSmaller(int arr[]) {
+        int n = arr.length;
+        Stack<Integer> stack = new Stack<>(); // stores indices
+        int res[] = new int[n];
+
+        for (int i = 0; i < n; i++) {
+
+            // remove all bars from stack that are >= current bar
+            // because they can't be "smaller" wall for current bar
+            while (!stack.isEmpty() && arr[stack.peek()] >= arr[i]) {
+                stack.pop();
+            }
+
+            // if nothing left in stack, no smaller bar exists on the left
+            if (stack.isEmpty()) {
+                res[i] = -1;
+            } else {
+                // top of stack is the nearest smaller bar on left
+                res[i] = stack.peek();
+            }
+
+            // push current index for future bars to compare with
+            stack.push(i);
+        }
+        return res;
+    }
+
+    // this finds, for every index, the nearest bar on the RIGHT
+    // that is smaller than the current bar
+    public static int[] findNextSmaller(int arr[]) {
+        int n = arr.length;
+        Stack<Integer> stack = new Stack<>(); // stores indices
+        int res[] = new int[n];
+
+        // go from right side to left side this time
+        for (int i = n - 1; i >= 0; i--) {
+
+            // remove all bars from stack that are >= current bar
+            while (!stack.isEmpty() && arr[stack.peek()] >= arr[i]) {
+                stack.pop();
+            }
+
+            // if nothing left, no smaller bar exists on the right
+            if (stack.isEmpty()) {
+                res[i] = n; // n means "no wall, goes till the end"
+            } else {
+                res[i] = stack.peek();
+            }
+
+            stack.push(i);
+        }
+        return res;
+    }
+}
+Easy language approach
+Imagine bars of a histogram standing next to each other. You want the biggest rectangle you can draw using these bars.
+
+Simple idea: For every bar, imagine it is the shortest bar of some rectangle. If it's the shortest, the rectangle can stretch left and right until it hits a bar that is even shorter than it (because a shorter bar would break the rectangle's height).
+
+So for every bar we need to know:
+
+How far can I go left? → stop at the first bar on the left that is smaller than me. This is ps[i] (previous smaller).
+How far can I go right? → stop at the first bar on the right that is smaller than me. This is ns[i] (next smaller).
+Width = everything between those two walls → ns[i] - ps[i] - 1
+Area = height * width
+We do this for every bar and keep the biggest area found.
+
+Why use a stack to find "nearest smaller bar"?
+
+Think of the stack as a list of bars we are "not sure about yet." We go through bars one by one:
+
+If a new bar is smaller than the bar on top of the stack, that top bar can never be useful anymore (something smaller came and ruined its chances) — so we pop it out.
+Once we stop popping, whatever is left on top of the stack is the nearest smaller bar.
+Then we push the current bar's index, so future bars can compare with it too.
+This way, we only look at each bar a small number of times (once pushed, once popped) — much faster than comparing every bar with every other bar.
+
+class Solution {
+    public int largestRectangleArea(int[] heights) {
+        Stack<Integer>st=new Stack<Integer>();
+        int n=heights.length;
+        int max=Integer.MIN_VALUE;
+        for(int i=0;i<=n;i++){
+            int elm=(i==n)?0:heights[i];
+            while(!st.isEmpty()&&heights[st.peek()]>elm){
+                int h=heights[st.pop()];
+                int ps=(st.isEmpty())?-1:st.peek();
+                int w=i-ps-1;
+                max=Math.max(max,h*w);
+            }
+            st.push(i);
+        }
+        return (max==Integer.MIN_VALUE)?0:max;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// int ns[] = findNextSmaller(heights);
+//         int ps[] = findPrevSmaller(heights);
+//         int max = Integer.MIN_VALUE;
+//         for (int i = 0; i < heights.length; i++) {
+//             int h = heights[i];
+//             int w = ns[i] - ps[i] - 1;
+//             max = Math.max(max, (h * w)); // fixed: was Math.min
+//         }
+//         return max;
+//     }
+
+//     public static int[] findPrevSmaller(int arr[]) {
+//         int n = arr.length;
+//         Stack<Integer> stack = new Stack<>();
+//         int res[] = new int[n];
+//         for (int i = 0; i < n; i++) {
+//             while (!stack.isEmpty() && arr[stack.peek()] >= arr[i]) {
+//                 stack.pop();
+//             }
+//             if (stack.isEmpty()) {
+//                 res[i] = -1;
+//             } else {
+//                 res[i] = stack.peek();
+//             }
+//             stack.push(i);
+//         }
+//         return res;
+//     }
+
+//     public static int[] findNextSmaller(int arr[]) {
+//         int n = arr.length;
+//         Stack<Integer> stack = new Stack<>();
+//         int res[] = new int[n];
+//         for (int i = n - 1; i >= 0; i--) {
+//             while (!stack.isEmpty() && arr[stack.peek()] >= arr[i]) {
+//                 stack.pop();
+//             }
+//             if (stack.isEmpty()) {
+//                 res[i] = n;
+//             } else {
+//                 res[i] = stack.peek();
+//             }
+//             stack.push(i);
+//         }
+//         return res; commebt and aproac also ib easy
+Show more
+
+Validated single-pass stack algorithm for rectangle area computation
+Validated single-pass stack algorithm for rectangle area computation
+Here's the clean working code with comments — I removed the leftover commented-out old version since it's not needed anymore.
+
+java
+class Solution {
+    public int largestRectangleArea(int[] heights) {
+        // stack will store indices of bars
+        Stack<Integer> st = new Stack<Integer>();
+        int n = heights.length;
+        int max = Integer.MIN_VALUE;
+
+        // we go one step extra (i == n) to force-empty the stack at the end
+        for (int i = 0; i <= n; i++) {
+
+            // when i == n, pretend there's a bar of height 0
+            // this makes sure every remaining bar in the stack gets processed
+            int elm = (i == n) ? 0 : heights[i];
+
+            // if current bar is smaller than the bar on top of stack,
+            // it means the top bar can't extend further right
+            // so calculate its area now, before removing it
+            while (!st.isEmpty() && heights[st.peek()] > elm) {
+
+                int h = heights[st.pop()]; // height of the bar we are closing
+
+                // after popping, new top of stack is the nearest smaller bar on left
+                // if stack becomes empty, it means bar had no smaller bar on left (wall = -1)
+                int ps = (st.isEmpty()) ? -1 : st.peek();
+
+                // width = distance between left wall and right wall
+                int w = i - ps - 1;
+
+                // area using this bar as the smallest height
+                max = Math.max(max, h * w);
+            }
+
+            // push current index, its turn to be checked later
+            st.push(i);
+        }
+
+        // if array was empty, max stays MIN_VALUE, so return 0 instead
+        return (max == Integer.MIN_VALUE) ? 0 : max;
+    }
+}
+Easy language approach
+This is the same histogram problem as before, but done smarter — in just one pass, instead of finding "next smaller" and "previous smaller" separately.
+
+Main idea: Keep a stack of bars that are still "waiting" — meaning we haven't found their right boundary yet. The stack always keeps bars in increasing height order (small at bottom, bigger going up).
+
+Walk through bars left to right:
+
+If current bar is taller than or equal to the top of stack → just push it. It doesn't break anything yet, so let it wait too.
+If current bar is smaller than the top of stack → that means the bar on top of the stack has finally found its right wall (the current bar stops it from growing further right). So:
+Pop that bar out — we now know its height (h)
+Its right wall = current index i
+Its left wall = whatever is now on top of stack after popping (or -1 if stack becomes empty, meaning no wall on the left)
+Width = distance between these two walls
+Calculate area = height * width, and update the answer if this is bigger
+Keep doing this popping until the top of the stack is no longer bigger than the current bar, then push the current bar.
+Trick at the end: After the last real bar, we add one imaginary bar of height 0. This forces the loop to pop and process every bar still left in the stack, since a 0 is smaller than everything.
+Why is this efficient?
+Every bar is pushed once and popped once — so the whole thing runs in straight-line time (no repeated scanning), unlike checking every pair of bars.
+
+
+
+
