@@ -1,0 +1,65 @@
+You are given an integer array height of length n. There are n vertical lines drawn such that the two endpoints of the ith line are (i, 0) and (i, height[i]).
+
+Find two lines that together with the x-axis form a container, such that the container contains the most water.
+
+Return the maximum amount of water a container can store.
+
+Your code is correct — this is the classic two-pointer approach for Container With Most Water. Let's add comments and walk through the approach.
+javaclass Solution {
+    public int maxArea(int[] height) {
+        int n = height.length;
+
+        // start with two pointers, one at each end of the array
+        int i = 0;
+        int j = n - 1;
+
+        int ans = 0; // stores the best (largest) area found so far
+
+        // keep shrinking the gap between the two pointers until they meet
+        while (i < j) {
+
+            // width = distance between the two lines
+            // height used = shorter of the two lines (water can't rise above the shorter wall)
+            ans = Math.max(ans, (j - i) * Math.min(height[i], height[j]));
+
+            // move the pointer at the SHORTER line inward
+            // because the shorter line is the bottleneck, keeping it won't help
+            if (height[i] <= height[j]) {
+                i++;
+            } else {
+                j--;
+            }
+        }
+
+        return ans; // maximum water area found
+    }
+}
+Easy language approach
+Imagine vertical lines standing at different heights. Picking any two lines, you can trap water between them — the amount of water depends on:
+
+Width = how far apart the two lines are
+Height = the shorter of the two lines (water spills over the shorter wall, so it can't go higher than that)
+
+So area = width × shorter height.
+Brute force way: Check every possible pair of lines — O(n²) time, too slow for large inputs.
+Smarter way (two pointers):
+
+Start with the two lines that are farthest apart — one at the very left (i=0), one at the very right (j=n-1). This gives the maximum possible width right away.
+Calculate the area for this pair, and save it if it's the best so far.
+Now here's the key decision: which pointer should move inward?
+
+Moving a pointer always makes the width smaller (bad).
+So we only want to move a pointer if there's a chance it leads to a taller wall, which might make up for the lost width.
+The shorter of the two current lines is the "bottleneck" — it's the reason the area isn't bigger. Keeping it in place and moving the other pointer would give zero benefit, because the shorter one still limits the height even if the width shrinks.
+So we move the pointer at the shorter line inward, hoping to find a taller one that could increase the height (even though width decreases by 1 each time).
+
+
+Repeat until the two pointers meet.
+
+Why does this never miss the correct answer?
+Because whenever we move the shorter pointer, we're throwing away all pairs that used that particular short line with anything even further inward — but those pairs can't be better anyway (smaller width AND still limited by the same short height, or even shorter). So nothing valuable is skipped.
+Time and space:
+
+Time: O(n) — each pointer moves at most n times total.
+Space: O(1) — just a couple of variables, no extra data structure.
+
