@@ -1,0 +1,77 @@
+Given an integer array nums, return all the triplets [nums[i], nums[j], nums[k]] such that i != j, i != k, and j != k, and nums[i] + nums[j] + nums[k] == 0.
+
+Notice that the solution set must not contain duplicate triplets.
+
+
+Solution {
+    public List<List<Integer>> threeSum(int[] nums) {
+        int n = nums.length;
+
+        // sort the array first - this makes two-pointer technique possible
+        // and also helps in easily skipping duplicate values
+        Arrays.sort(nums);
+
+        // using a Set (not List) so duplicate triplets are automatically removed
+        Set<List<Integer>> result = new HashSet<>();
+
+        // if less than 3 numbers, no triplet is possible
+        if (n < 3 || n == 0) {
+            return new ArrayList<>();
+        }
+
+        // fix one number at a time (nums[i]), then find pairs from the rest
+        // that sum up with it to make 0
+        for (int i = 0; i < n - 2; i++) {
+
+            int left = i + 1;   // pointer right after i
+            int right = n - 1;  // pointer at the end of array
+
+            // classic two-pointer search for pair summing to -nums[i]
+            while (left < right) {
+
+                int sum = nums[left] + nums[right] + nums[i];
+
+                if (sum == 0) {
+                    // found a valid triplet, add it to result (order: left, right, i)
+                    result.add(Arrays.asList(nums[left], nums[right], nums[i]));
+
+                    // move both pointers inward to look for more triplets
+                    left++;
+                    right--;
+                }
+                else if (sum < 0) {
+                    // sum too small, need a bigger number -> move left pointer right
+                    left++;
+                }
+                else {
+                    // sum too big, need a smaller number -> move right pointer left
+                    right--;
+                }
+            }
+        }
+
+        // convert set back to list before returning
+        return new ArrayList<>(result);
+    }
+}
+Easy language approach
+We want all unique triplets (a, b, c) from the array such that a + b + c = 0.
+Step 1: Sort the array first.
+Sorting is the foundation here — it lets us use the two-pointer technique (like in the earlier "container with most water" problem), and it also makes handling duplicates way easier since equal numbers end up next to each other.
+Step 2: Fix one number, then solve "two sum" for the rest.
+This is the key trick: a + b + c = 0 is the same as saying b + c = -a. So:
+
+Pick nums[i] as our fixed number a.
+Now search the rest of the array (from i+1 to end) for a pair that sums to -nums[i]. This is exactly the "two sum" problem, solvable with two pointers on a sorted array.
+
+Step 3: Two-pointer search for the pair.
+
+left starts right after i, right starts at the very end.
+If the 3 numbers sum to 0 → found a triplet! Move both pointers inward to keep searching.
+If sum is too small (< 0) → we need a bigger number, so move left forward (since array is sorted, moving right increases value).
+If sum is too big (> 0) → we need a smaller number, so move right backward.
+
+Step 4: Avoiding duplicate triplets.
+Since different values of i, left, right might land on the same triplet values (like [-1, 0, 1] found multiple times), we store results in a HashSet instead of a List — sets automatically discard exact duplicates.
+A small note on efficiency:
+Using a HashSet<List<Integer>> works correctly, but it does extra work — hashing lists and comparing them is a bit costly. A common optimization is to manually skip duplicate values while moving i, left, and right, so you never generate the same triplet twice in the first place, and can use a plain ArrayList instead. Want me to show you that duplicate-skipping version next? It's a good pattern to know since it's the standard, more efficient way this problem is usually solved.
