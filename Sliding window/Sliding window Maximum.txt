@@ -1,0 +1,70 @@
+You are given an array of integers nums, there is a sliding window of size k which is moving from the very left of the array to the very right. You can only see the k numbers in the window. Each time the sliding window moves right by one position.
+
+Return the max sliding window.
+
+class Solution {
+    public int[] maxSlidingWindow(int[] nums, int k) {
+
+        // Length of the input array
+        int n = nums.length;
+
+        // Result array will have (n - k + 1) windows
+        int[] res = new int[n - k + 1];
+
+        // If array is empty, return empty result
+        if (n == 0) {
+            return res;
+        }
+
+        // Deque stores INDICES (not values)
+        // It will always keep the indices of elements in decreasing order of values
+        Deque<Integer> deque = new ArrayDeque<>();
+
+        int index = 0;
+
+        // ---------------- Build the first window ----------------
+        while (index < k) {
+
+            // Remove all smaller elements from the back
+            // They can never become the maximum because the current element is bigger
+            while (!deque.isEmpty() && nums[deque.peekLast()] <= nums[index]) {
+                deque.pollLast();
+            }
+
+            // Add current index at the back
+            deque.offerLast(index);
+
+            index++;
+        }
+
+        // The front of deque always contains the maximum element's index
+        res[0] = nums[deque.peekFirst()];
+
+        // ---------------- Slide the window ----------------
+        for (int i = 1; i < n - k + 1; i++) {
+
+            // Remove the front index if it is outside the current window
+            if (!deque.isEmpty() && deque.peekFirst() <= (i - 1)) {
+                deque.pollFirst();
+            }
+
+            // Index of the new element entering the window
+            int newIndex = i + k - 1;
+
+            // Remove all smaller elements from the back
+            // They are useless because the new element is larger
+            while (!deque.isEmpty() && nums[deque.peekLast()] <= nums[newIndex]) {
+                deque.pollLast();
+            }
+
+            // Add the new index to the deque
+            deque.offerLast(newIndex);
+
+            // Front of deque is always the maximum of the current window
+            res[i] = nums[deque.peekFirst()];
+        }
+
+        // Return the answer
+        return res;
+    }
+}

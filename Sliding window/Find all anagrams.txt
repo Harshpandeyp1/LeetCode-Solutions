@@ -1,34 +1,57 @@
 Given two strings s and p, return an array of all the start indices of p's anagrams in s. You may return the answer in any order.
 
  
+Approach (Simple Explanation)
+This problem asks us to find all starting positions in string s where an anagram of p occurs.
+Key idea — Sliding Window + Frequency Count:
 
-class Solution {
+An anagram means same characters with same frequency, just different order.
+So instead of comparing characters directly, we compare frequency counts of characters (26 letters, a-z).
+We take a window of size m (length of p) in s, and slide it one step at a time from left to right.
+At each step, we remove the frequency of the character leaving the window and add the frequency of the character entering the window.
+If at any point the frequency array of the window matches the frequency array of p, that starting index is added to the answer.
+
+This avoids re-counting the whole window every time — we just adjust counts in O(1) per step, making the whole algorithm O(n).
+Commented Code
+javaclass Solution {
     public List<Integer> findAnagrams(String s, String p) {
-        int n=s.length();
-        int m=p.length();
-        List<Integer>list=new ArrayList<>();//ans arraylist
-        if(m>n) return list;
-         int Scount[]=new int [26];
-         int Pcount[]=new int[26];
-        for(int i=0;i<m;i++){
-            int si=s.charAt(i)-'a';//couting freq through ascii value  a-a=0 b-a=1 z-a=25 of the first  winfow
-            int pi=p.charAt(i)-'a';
-            Scount[si]++;
-            Pcount[pi]++;
-            
+        int n = s.length(); // length of the main string
+        int m = p.length(); // length of the pattern string
+        List<Integer> list = new ArrayList<>(); // stores starting indices of anagram matches
+
+        // if pattern is longer than string, no anagram is possible
+        if (m > n) return list;
+
+        int Scount[] = new int[26]; // frequency count of current window in s
+        int Pcount[] = new int[26]; // frequency count of pattern p
+
+        // build frequency count for the first window of s (size m) and for p itself
+        for (int i = 0; i < m; i++) {
+            int si = s.charAt(i) - 'a'; // map char to index 0-25 (a=0, b=1, ..., z=25)
+            int pi = p.charAt(i) - 'a';
+            Scount[si]++; // increment frequency in window
+            Pcount[pi]++; // increment frequency in pattern
         }
-        if(Arrays.equals(Scount,Pcount)){//compare freq of the first winddow with the pattern
-            list.add(0);
+
+        // compare frequency arrays of first window and pattern
+        if (Arrays.equals(Scount, Pcount)) {
+            list.add(0); // match found at index 0
         }
-        for(int i=1;i<=n-m;i++){ 
-            int prev=s.charAt(i-1)-'a';//reduce prev elm freq and take one next elm in windpw
-            int next=s.charAt(i+m-1)-'a';//taking the next elm
-            Scount[prev]--;//reducing the frq of prev 
-            Scount[next]++;//inc of next
-            if(Arrays.equals(Scount,Pcount)){//compare and add
-                list.add(i);
+
+        // slide the window across the rest of the string
+        for (int i = 1; i <= n - m; i++) {
+            int prev = s.charAt(i - 1) - 'a';     // character leaving the window (leftmost of previous window)
+            int next = s.charAt(i + m - 1) - 'a'; // character entering the window (rightmost of new window)
+
+            Scount[prev]--; // remove old character's count
+            Scount[next]++; // add new character's count
+
+            // after updating, check if current window matches pattern's frequency
+            if (Arrays.equals(Scount, Pcount)) {
+                list.add(i); // match found at index i
             }
         }
-        return list;
+
+        return list; // return all starting indices of anagrams
     }
 }

@@ -1,26 +1,86 @@
 
 Given a string s, find the length of the longest substring without duplicate characters.
 
+This is the classic "Longest Substring Without Repeating Characters" problem, solved using the variable-size sliding window technique (two pointers: left and right).Key idea:
+Approach (Simple Explanation)
+This is a variable-size sliding window problem where we need to find the smallest substring in s that contains all characters of t (including duplicates).
+Key idea — Expand and Shrink:
 
-class Solution {
-    public int lengthOfLongestSubstring(String s) {
-     int n=s.length();
-     int left=0;
-     int right=0;
-     int ans=0;
-     int freq[]=new int[128];
+Build a frequency map of characters needed from t.
+Expand the window (windowEnd) — for each character we bring into the window, if it's needed (exists in t's map), decrement its required count. When a character's required count hits exactly 0, it means we now have "enough" of that character — so decrement uniquecharcount (number of distinct characters still unsatisfied).
+Once uniquecharcount == 0, it means the current window contains all characters of t — this is a valid window! Now try to shrink it from the left (windowStart) to make it as small as possible:
 
-     for(right=0;right<n;right++){//moving right pointer
-        char ch=s.charAt(right);//if occur inc freq
-        freq[ch]++;
-     
-     while(freq[ch]>1){//if nsy freq is greater then one remove left elm and inc left pointer
-        freq[s.charAt(left)]--;
-        left++;
-     }
-     ans = Math.max(ans, right - left + 1);//max of ans of last indx of substring right-left+1 formula
+Record the length if it's smaller than the best found so far.
+Remove the character at windowStart — if it was needed, increment its count back. If that count goes above 0, it means we no longer have "enough" of that character, so increment uniquecharcount back (window becomes invalid) and stop shrinking.
+
+
+Repeat this expand-shrink cycle until windowEnd reaches the end of s.
+Return the smallest valid window found, or "" if none exists.
+
+Commented Code
+javaclass Solution {
+    // Expand until uniqueCharCount becomes 0 (window has all needed chars)
+    // Then shrink until uniqueCharCount becomes greater than 0 (window becomes invalid again)
+    // Repeat until the end of the string
+    public String minWindow(String s, String t) {
+        HashMap<Character, Integer> freqMap = new HashMap<>();
+        
+        // populate the map with required frequency of each character in t
+        for (int i = 0; i < t.length(); i++) {
+            char ch = t.charAt(i);
+            freqMap.put(ch, freqMap.getOrDefault(ch, 0) + 1); // count occurrences of each char in t
+        }
+
+        int uniquecharcount = freqMap.size(); // number of distinct characters we still need to fully satisfy
+        int startIndx = -1;      // starting index of the best (minimum) window found; -1 means no valid window yet
+        int windowStart = 0;     // left pointer of sliding window
+        int windowEnd = 0;       // right pointer of sliding window
+        int minLen = Integer.MAX_VALUE; // length of smallest valid window found so far
+        int n = s.length();
+
+        while (windowEnd < n) {
+            // ---------- EXPANSION PHASE ----------
+            // move windowEnd forward, bringing new characters into the window,
+            // until all required characters of t are present (uniquecharcount == 0)
+            char ch = s.charAt(windowEnd); // character being added to the window
+
+            if (freqMap.containsKey(ch)) {          // only care about characters that are part of t
+                freqMap.put(ch, freqMap.get(ch) - 1); // reduce "how many more of this char we need"
+                if (freqMap.get(ch) == 0) {          // reached exactly the required count for this char
+                    uniquecharcount--;                // one more distinct character is now fully satisfied
+                }
+            }
+
+            // ---------- SHRINKING PHASE ----------
+            // while the window contains everything needed (uniquecharcount == 0),
+            // try shrinking from the left to find the smallest such window
+            while (uniquecharcount == 0) {
+                int len = windowEnd - windowStart + 1; // current valid window length
+                if (len < minLen) {
+                    minLen = len;             // update smallest length found
+                    startIndx = windowStart;  // remember where this best window starts
+                }
+
+                ch = s.charAt(windowStart); // character about to be removed from the window (left side)
+
+                if (freqMap.containsKey(ch)) {           // only matters if it's a character from t
+                    freqMap.put(ch, freqMap.get(ch) + 1); // we now need one more of this char again
+                    if (freqMap.get(ch) > 0) {            // if we now need MORE than before (went positive)
+                        uniquecharcount++;                 // this character is no longer fully satisfied
+                    }
+                }
+                windowStart++; // shrink window by moving left pointer forward
+            }
+
+            windowEnd++; // continue expanding window
+        }
+
+        // if no valid window was ever found, return empty string
+        if (startIndx == -1) {
+            return "";
+        }
+
+        // extract and return the smallest valid window using recorded start index and length
+        return s.substring(startIndx, startIndx + minLen);
     }
-    return ans;
-    }
-
 }

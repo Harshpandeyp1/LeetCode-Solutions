@@ -1,0 +1,56 @@
+Given a string s and an integer k, return the maximum number of vowel letters in any substring of s with length k.
+
+Vowel letters in English are 'a', 'e', 'i', 'o', and 'u'.
+
+
+This is a classic fixed-size sliding window problem: find the maximum number of vowels in any substring of length k.
+Key idea:
+
+First, count vowels in the first window of size k (index 0 to k-1).
+Then slide the window one character at a time across the rest of the string:
+
+When the window moves right by one step, one character leaves from the left (i-k) and one character enters from the right (i).
+Update the vowel count accordingly: decrement if the leaving character was a vowel, increment if the entering character is a vowel.
+
+
+Keep track of the maximum vowel count seen across all windows.
+
+This avoids recomputing the vowel count from scratch for every window — each step only does O(1) work, so the whole algorithm is O(n).
+Commented Code
+javaclass Solution {
+    public int maxVowels(String s, int k) {
+        
+        int n = s.length();  // length of the string
+        int curr = 0;        // vowel count in the current window
+        int result = 0;      // tracks the maximum vowel count found so far
+
+        // Step 1: build the first window of size k (index 0 to k-1)
+        for (int i = 0; i < k; i++) {
+            if (isVowel(s.charAt(i))) {
+                curr++;  // count vowel if present
+            }
+            result = curr; // update result (final value after loop = vowel count of first window)
+        }
+
+        // Step 2: slide the window across the rest of the string
+        for (int i = k; i < n; i++) {
+            // remove the contribution of the character leaving the window (leftmost of previous window)
+            if (isVowel(s.charAt(i - k))) {
+                curr--;
+            }
+            // add the contribution of the new character entering the window (current index i)
+            if (isVowel(s.charAt(i))) {
+                curr++;
+            }
+            // update result with the max vowel count seen so far
+            result = Math.max(result, curr);
+        }
+
+        return result; // return the maximum vowels found in any window of size k
+    }
+
+    // helper function to check if a character is a vowel
+    public boolean isVowel(char c) {
+        return c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u';
+    }
+}
