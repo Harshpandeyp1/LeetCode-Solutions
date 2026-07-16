@@ -1,0 +1,60 @@
+Given n non-negative integers representing an elevation map where the width of each bar is 1, compute how much water it can trap after raining
+
+
+
+class Solution {
+    public int trap(int[] height) {
+        int n = height.length;
+
+        // two pointers starting from both ends of the array
+        int left = 0;
+        int right = n - 1;
+
+        // leftmax = tallest bar seen so far while moving from the left
+        // rightmax = tallest bar seen so far while moving from the right
+        int leftmax = 0;
+        int rightmax = 0;
+
+        int ans = 0; // total trapped water
+
+        // keep moving pointers inward until they meet
+        while (left <= right) {
+
+            // update the tallest wall seen so far on each side
+            leftmax = Math.max(leftmax, height[left]);
+            rightmax = Math.max(rightmax, height[right]);
+
+            // whichever side has the SMALLER max wall is the side we can safely process,
+            // because that smaller max is the real limiting wall for water on that side
+            if (leftmax < rightmax) {
+                // water on current left bar = height of left wall - height of this bar
+                ans += (leftmax) - height[left];
+                left++; // move left pointer inward
+            } else {
+                // water on current right bar = height of right wall - height of this bar
+                ans += (rightmax) - height[right];
+                right--; // move right pointer inward
+            }
+        }
+
+        return ans; // total water trapped across all bars
+    }
+}
+Easy language approach
+Imagine bars of different heights standing in a row. Rainwater gets trapped between them, but the water level on top of any bar depends on the shorter of the two tallest walls on its left and right side — water can't rise higher than the shorter surrounding wall, or it would just spill over.
+Key idea: For any bar, water trapped on it = min(tallest wall on left, tallest wall on right) - height of this bar (if positive).
+Why two pointers instead of checking every bar's left and right walls separately?
+Checking the tallest wall on both sides for every single bar directly would mean scanning left and right every time — slow (O(n²) or needing extra arrays for O(n) with more space). Instead:
+
+Start two pointers, left at the beginning and right at the end.
+Track leftmax and rightmax — the tallest bar seen so far while walking inward from each side.
+The trick: whichever side currently has the smaller max (leftmax or rightmax) is the side we can safely calculate water for right now — because we already know for certain that side's water is capped by that smaller value, no matter what taller bars might still be hiding further along the other side.
+Add up the trapped water for that bar, then move that pointer one step inward.
+Repeat until both pointers meet.
+
+Why this always gives the correct answer:
+If leftmax < rightmax, it means somewhere on the right, there's already a wall taller than everything we've seen on the left so far. So the left side's water level is guaranteed to be limited by leftmax, regardless of what comes later on the right. This lets us safely process the left bar without knowing the exact tallest wall on the right in advance.
+Time and space:
+
+Time: O(n) — each pointer moves at most n times total.
+Space: O(1) — no extra arrays needed, just a few variables.
