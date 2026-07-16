@@ -1,0 +1,56 @@
+Given an integer array nums sorted in non-decreasing order, remove the duplicates in-place such that each unique element appears only once. The relative order of the elements should be kept the same.
+
+Consider the number of unique elements in nums to be k​​​​​​​​​​​​​​. After removing duplicates, return the number of unique elements k.
+
+The first k elements of nums should contain the unique numbers in sorted order. The remaining elements beyond index k - 1 can be ignored.
+
+
+
+class Solution {
+    public int removeDuplicates(int[] nums) {
+        /*
+         * Approach (in simple words):
+         * -----------------------------
+         * The array is already SORTED, so all duplicate values are
+         * guaranteed to sit right next to each other.
+         *
+         * We use TWO POINTERS to solve this in-place, without any extra
+         * array or Set:
+         *
+         *  - 'i' (slow pointer) → points to the last position where a 
+         *     UNIQUE (confirmed, final) value has been placed.
+         *
+         *  - 'j' (fast pointer) → scans ahead through the array, looking
+         *     for the next value that's DIFFERENT from nums[i].
+         *
+         * Logic:
+         *  - If nums[j] is different from nums[i], we found a new unique
+         *    value. So we move 'i' forward by 1, and copy nums[j] into
+         *    that new position (nums[i] = nums[j]).
+         *  - If nums[j] is the SAME as nums[i], it's a duplicate — do
+         *    nothing, just let 'j' move ahead and skip it.
+         *
+         * By the end, all unique elements are packed at the FRONT of the
+         * array (indices 0 to i), in sorted order. The count of unique
+         * elements is (i + 1).
+         */
+
+        int n = nums.length;
+        int i = 0; // slow pointer: index of last unique element placed so far
+
+        // fast pointer starts from index 1 (since nums[0] is unique by default)
+        for (int j = 1; j < n; j++) {
+            
+            // If current element is different from the last unique one,
+            // it means we found a NEW unique value.
+            if (nums[i] != nums[j]) {
+                i++;               // move to next slot for unique element
+                nums[i] = nums[j]; // place the new unique value there
+            }
+            // else: nums[j] is a duplicate of nums[i], so just skip (do nothing)
+        }
+
+        // i+1 = total count of unique elements (since i is 0-indexed)
+        return i + 1;
+    }
+}
