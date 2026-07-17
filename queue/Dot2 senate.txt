@@ -1,0 +1,132 @@
+In the world of Dota2, there are two parties: the Radiant and the Dire.
+
+The Dota2 senate consists of senators coming from two parties. Now the Senate wants to decide on a change in the Dota2 game. The voting for this change is a round-based procedure. In each round, each senator can exercise one of the two rights:
+
+Ban one senator's right: A senator can make another senator lose all his rights in this and all the following rounds.
+Announce the victory: If this senator found the senators who still have rights to vote are all from the same party, he can announce the victory and decide on the change in the game.
+Given a string senate representing each senator's party belonging. The character 'R' and 'D' represent the Radiant party and the Dire party. Then if there are n senators, the size of the given string will be n.
+
+The round-based procedure starts from the first senator to the last senator in the given order. This procedure will last until the end of voting. All the senators who have lost their rights will be skipped during the procedure.
+
+Suppose every senator is smart enough and will play the best strategy for his own party. Predict which party will finally announce the victory and change the Dota2 game. The output should be "Radiant" or "Dire".
+
+ 
+
+Example 1:
+
+Input: senate = "RD"
+Output: "Radiant"
+Explanation: 
+The first senator comes from Radiant and he can just ban the next senator's right in round 1. 
+And the second senator can't exercise any rights anymore since his right has been banned. 
+And in round 2, the first senator can just announce the victory since he is the only guy in the senate who can vote.
+
+
+
+
+
+
+import java.util.LinkedList;
+import java.util.Queue;
+
+class Solution {
+
+    /*
+     * ============================================================
+     * APPROACH (Dota2 Senate - Predict Party Victory)
+     * ============================================================
+     *
+     * This problem is a simulation problem, and the cleanest way to
+     * simulate a repeating, round-based elimination process is the
+     * "queue of indices" technique.
+     *
+     * Every senator gets one ban per round, and bans are permanent.
+     * A senator who survives a round gets to act again in the next
+     * round. So instead of physically removing characters from a
+     * string, we track each senator only by their ORIGINAL POSITION
+     * (index) in the senate string, and we use two separate queues:
+     *
+     *      r  -> holds indices of all 'R' senators still alive
+     *      d  -> holds indices of all 'D' senators still alive
+     *
+     * Since voting happens strictly in left-to-right index order,
+     * a plain FIFO queue naturally preserves "who goes next."
+     *
+     * THE TRICK - simulating multiple rounds with ONE pair of queues:
+     * Whenever a senator survives a matchup (because their opponent
+     * got banned), we push their index back into their own queue,
+     * but with n added to it (n = length of senate string).
+     *
+     *   - Adding n doesn't change WHO the senator is,
+     *     it just pushes them to the "back of the line" for the
+     *     NEXT round, while keeping their relative voting order
+     *     intact (since everyone who survives gets +n uniformly).
+     *
+     * THE MATCHUP RULE (core logic):
+     * At every step, compare the smallest index at the front of
+     * each queue (r_indx vs d_indx). Whoever has the SMALLER index
+     * acts first (since lower index means it's their turn to vote
+     * earlier), and they get to ban their opponent.
+     *
+     *   - If r_indx < d_indx  -> R acts first -> R bans D
+     *                              -> R survives, requeue r_indx+n
+     *   - If d_indx < r_indx  -> D acts first -> D bans R
+     *                              -> D survives, requeue d_indx+n
+     *
+     * We repeat this until one queue becomes completely empty.
+     * Whichever party still has senators remaining in their queue
+     * is the winning party, since they can keep banning every
+     * opposing senator round after round.
+     *
+     * TIME COMPLEXITY:  O(n)  -> each senator is processed/requeued
+     *                            a bounded number of times overall.
+     * SPACE COMPLEXITY: O(n)  -> for the two queues.
+     * ============================================================
+     */
+
+    public String predictPartyVictory(String senate) {
+        int n = senate.length(); // total number of senators
+
+        // Queues to store the ORIGINAL indices of R and D senators
+        Queue<Integer> r = new LinkedList<>();
+        Queue<Integer> d = new LinkedList<>();
+
+        // Step 1: Populate the queues based on each senator's party
+        for (int i = 0; i < n; i++) {
+            char party = senate.charAt(i);
+            if (party == 'R') {
+                r.offer(i);   // add R senator's index to R queue
+            } else {
+                d.offer(i);   // add D senator's index to D queue
+            }
+        }
+
+        // Step 2: Simulate rounds of voting until one party
+        // has no senators left to vote
+        while (!r.isEmpty() && !d.isEmpty()) {
+
+            // Peek at (and remove) the senator whose turn is next
+            // in each party's queue
+            int r_indx = r.poll(); // front R senator's index
+            int d_indx = d.poll(); // front D senator's index
+
+            // Whoever has the smaller index votes first in this round
+            if (r_indx < d_indx) {
+                // R votes first -> R bans the D senator
+                // D senator (d_indx) is eliminated permanently (not requeued)
+                // R senator survives and moves to the next round
+                r.offer(r_indx + n);
+            } else {
+                // D votes first (d_indx < r_indx) -> D bans the R senator
+                // R senator (r_indx) is eliminated permanently (not requeued)
+                // D senator survives and moves to the next round
+                d.offer(d_indx + n);
+            }
+        }
+
+        // Step 3: Whichever queue is NOT empty has the surviving party.
+        // If R queue still has senators, Radiant (R) wins.
+        // Otherwise, Dire (D) wins.
+        return r.isEmpty() ? "Dire" : "Radiant";
+    }
+}
