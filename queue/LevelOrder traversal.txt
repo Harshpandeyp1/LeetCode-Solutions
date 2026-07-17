@@ -1,0 +1,67 @@
+iven the root of a binary tree, return the level order traversal of its nodes' values. (i.e., from left to right, level by level).
+
+ 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
+class Solution {
+
+    /*
+     * ============================================================
+     * APPROACH (Binary Tree Level Order Traversal - BFS)
+     * ============================================================
+     * We use BFS with a queue to traverse the tree level by level.
+     * At the start of each while-loop iteration, the queue contains
+     * exactly the nodes belonging to the CURRENT level. We record
+     * how many nodes are in the queue (levelSize) BEFORE processing,
+     * so we know exactly how many nodes to pop for this level
+     * (any nodes added during processing belong to the NEXT level).
+     *
+     * For each level, we collect all node values into a small list,
+     * then add that list to our overall result list.
+     *
+     * TIME:  O(n) — every node visited once
+     * SPACE: O(n) — queue + result storage
+     * ============================================================
+     */
+
+    public List<List<Integer>> levelOrder(TreeNode root) {
+        List<List<Integer>> result = new ArrayList<>(); // final answer: list of levels
+
+        // Edge case: empty tree -> return empty result immediately
+        if (root == null) {
+            return result;
+        }
+
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.offer(root); // start BFS with the root node
+
+        // Process the tree level by level until the queue is empty
+        while (!queue.isEmpty()) {
+            int levelSize = queue.size(); // number of nodes in the CURRENT level
+            List<Integer> currentLevel = new ArrayList<>(); // values for this level
+
+            // Process exactly 'levelSize' nodes belonging to this level
+            for (int i = 0; i < levelSize; i++) {
+                TreeNode treenode = queue.poll(); // remove next node in this level
+                currentLevel.add(treenode.val);   // collect its value
+
+                // Enqueue this node's children so they get processed
+                // in the NEXT level's iteration
+                if (treenode.left != null) {
+                    queue.offer(treenode.left);
+                }
+                if (treenode.right != null) {
+                    queue.offer(treenode.right);
+                }
+            }
+
+            // Add this fully-built level to the result
+            result.add(currentLevel);
+        }
+
+        return result; // list of levels, each containing that level's node values
+    }
+}
