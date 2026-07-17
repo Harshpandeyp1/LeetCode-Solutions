@@ -1,0 +1,93 @@
+There are n people in a line queuing to buy tickets, where the 0th person is at the front of the line and the (n - 1)th person is at the back of the line.
+
+You are given a 0-indexed integer array tickets of length n where the number of tickets that the ith person would like to buy is tickets[i].
+
+Each person takes exactly 1 second to buy a ticket. A person can only buy 1 ticket at a time and has to go back to the end of the line (which happens instantaneously) in order to buy more tickets. If a person does not have any tickets left to buy, the person will leave the line.
+
+Return the time taken for the person initially at position k (0-indexed) to finish buying tickets.
+
+
+import java.util.LinkedList;
+import java.util.Queue;
+
+class Solution {
+
+    /*
+     * ============================================================
+     * APPROACH (Time Needed to Buy Tickets)
+     * ============================================================
+     *
+     * We have n people standing in a queue, each wanting to buy
+     * tickets[i] tickets. They buy ONE ticket at a time, then go
+     * to the back of the line (if they still need more tickets).
+     * We need to find how much TIME has passed by the moment the
+     * person at index k has bought ALL their tickets.
+     *
+     * Instead of literally simulating a queue with people going to
+     * the back of the line (which works but can be simplified),
+     * we can use a queue of INDICES to simulate turns minute by
+     * minute:
+     *
+     *   - Each index in the queue represents "this person still
+     *     needs to buy a ticket."
+     *   - We process the front of the queue: that person buys
+     *     ONE ticket (decrement their ticket count), and time
+     *     increases by 1 (res++).
+     *   - If that person still needs more tickets after buying
+     *     one (tickets[curr] > 0), they go to the back of the
+     *     queue again.
+     *   - If that person doesn't need any more tickets, they
+     *     leave the queue permanently.
+     *   - The moment we finish serving the person at index k
+     *     (i.e., their ticket count hits 0), we STOP and return
+     *     the current time (res), since that's exactly when
+     *     person k finished buying tickets.
+     *
+     * This correctly models the round-robin nature of the queue
+     * and naturally accounts for people finishing early and
+     * leaving the line.
+     *
+     * TIME COMPLEXITY:  O(n * max(tickets))  in the worst case,
+     *                   since we simulate ticket-by-ticket.
+     * SPACE COMPLEXITY: O(n) for the queue.
+     * ============================================================
+     */
+
+    public int timeRequiredToBuy(int[] tickets, int k) {
+        int n = tickets.length;
+        int res = 0; // tracks total time (minutes) elapsed
+
+        // Queue holds the ORIGINAL indices of people still waiting
+        // to buy tickets, in their current line order
+        Queue<Integer> queue = new LinkedList<>();
+        for (int i = 0; i < n; i++) {
+            queue.offer(i);
+        }
+
+        while (!queue.isEmpty()) {
+            int curr = queue.poll(); // index of the person at front of line
+
+            // This person buys ONE ticket -> takes 1 unit of time
+            tickets[curr]--;
+            res++;
+
+            // If this is the person we care about (index k) and
+            // they just bought their LAST ticket, we're done —
+            // return the current elapsed time immediately.
+            if (curr == k && tickets[curr] == 0) {
+                return res;
+            }
+
+            // If this person still needs more tickets, send them
+            // to the back of the queue to wait for their next turn
+            if (tickets[curr] > 0) {
+                queue.offer(curr);
+            }
+            // Otherwise, they've bought everything they need,
+            // so they simply don't get re-added to the queue
+            // (they leave the line).
+        }
+
+        return res; // fallback (loop will always return early via k's check)
+    }
+}
