@@ -1,0 +1,54 @@
+You have a RecentCounter class which counts the number of recent requests within a certain time frame.
+
+Implement the RecentCounter class:
+
+RecentCounter() Initializes the counter with zero recent requests.
+int ping(int t) Adds a new request at time t, where t represents some time in milliseconds, and returns the number of requests that has happened in the past 3000 milliseconds (including the new request). Specifically, return the number of requests that have happened in the inclusive range [t - 3000, t].
+It is guaranteed that every call to ping uses a strictly larger value of t than the previous call.
+
+
+Approach
+The problem: given a stream of ping(t) calls (with strictly increasing t), return how many pings happened in the range [t - 3000, t].
+Key idea — Sliding Window using a Queue:
+Since t values arrive in increasing order, we can keep a queue of all ping timestamps that are still "recent" (within the last 3000 ms). Every time a new ping comes in:
+
+Add it to the back of the queue.
+Remove (from the front) any timestamps that have fallen outside the valid window [t-3000, t].
+Whatever remains in the queue is exactly the count of recent pings — return its size.
+
+A Queue is perfect here because timestamps arrive in order (oldest at the front), so we only ever need to trim from the front — no need to search or sort.
+Commented Code
+javaclass RecentCounter {
+    // Stores timestamps of all pings that are (so far) considered "recent".
+    // Since pings arrive in non-decreasing order of t, the queue is always
+    // naturally sorted — oldest timestamp at the front, newest at the back.
+    Queue<Integer> queue;
+
+    public RecentCounter() {
+        queue = new LinkedList<>();
+    }
+
+    public int ping(int t) {
+        // Step 1: record this new ping
+        queue.add(t);
+
+        // Step 2: discard timestamps that are now too old.
+        // A timestamp is "too old" if it's less than (t - 3000),
+        // i.e. it falls outside the window [t-3000, t].
+        // We only need to check/remove from the FRONT because the
+        // queue is ordered oldest -> newest.
+        while (!queue.isEmpty() && t - 3000 > queue.peek()) {
+            queue.poll();
+        }
+
+        // Step 3: whatever's left in the queue are exactly the pings
+        // that occurred within the last 3000 ms (inclusive) — return count.
+        return queue.size();
+    }
+}
+
+/**
+ * Your RecentCounter object will be instantiated and called as such:
+ * RecentCounter obj = new RecentCounter();
+ * int param_1 = obj.ping(t);
+ */
