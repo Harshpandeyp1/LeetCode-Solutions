@@ -1,0 +1,157 @@
+You are given an m x n grid where each cell can have one of three values:
+
+0 representing an empty cell,
+1 representing a fresh orange, or
+2 representing a rotten orange.
+Every minute, any fresh orange that is 4-directionally adjacent to a rotten orange becomes rotten.
+
+Return the minimum number of minutes that must elapse until no cell has a fresh orange. If this is impossible, return -1.
+
+ import java.util.LinkedList;
+import java.util.Queue;
+
+class Solution {
+
+    /*
+     * ============================================================
+     * APPROACH (Rotting Oranges - Multi-source BFS)
+     * ============================================================
+     *
+     * PROBLEM: Given a grid where:
+     *   0 = empty cell
+     *   1 = fresh orange
+     *   2 = rotten orange
+     * Every minute, any fresh orange adjacent (up/down/left/right)
+     * to a rotten orange becomes rotten. We need to find the
+     * minimum number of minutes until no fresh orange remains,
+     * or -1 if that's impossible.
+     *
+     * KEY IDEA: This is a MULTI-SOURCE BFS problem.
+     *   - Every orange that is ALREADY rotten at the start is a
+     *     separate BFS "source" — they all start spreading rot
+     *     to their neighbors AT THE SAME TIME (same minute).
+     *   - We process the grid in BFS "levels" or "layers" —
+     *     each full level we process = 1 minute of real time.
+     *   - All rotten oranges in the current queue rot their fresh
+     *     neighbors simultaneously, and those newly rotten oranges
+     *     become the next BFS level.
+     *
+     * WHY THIS WORKS: BFS naturally expands outward level by
+     * level, which perfectly matches how rot spreads outward
+     * minute by minute from multiple rotten oranges at once.
+     *
+     * We track freshCount (number of fresh oranges remaining) so
+     * that:
+     *   - If it hits 0, all oranges rotted -> return elapsed time.
+     *   - If the BFS queue empties out but freshCount > 0, some
+     *     fresh oranges were unreachable -> return -1.
+     *
+     * TIME COMPLEXITY:  O(n*m) -> every cell is visited at most once.
+     * SPACE COMPLEXITY: O(n*m) -> for the BFS queue in the worst case.
+     * ============================================================
+     */
+
+    public int orangesRotting(int[][] grid) {
+        int n = grid.length;       // number of rows in the grid
+        int m = grid[0].length;    // number of columns in the grid
+        int freshCount = 0;        // counts how many fresh (1) oranges exist
+
+        // Queue will hold the {row, col} coordinates of all currently
+        // rotten oranges, used to perform multi-source BFS
+        Queue<int[]> queue = new LinkedList<>();
+
+        // Step 1: Scan the entire grid once to:
+        //   - count all fresh oranges (freshCount)
+        //   - collect starting positions of all rotten oranges (queue)
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                if (grid[i][j] == 1) {
+                    freshCount++; // found a fresh orange, increment counter
+                } else if (grid[i][j] == 2) {
+                    // found a rotten orange, add its position as a BFS source
+                    queue.offer(new int[]{i, j});
+                }
+            }
+        }
+
+        // Edge case: if there are no fresh oranges at all,
+        // no time is needed since nothing needs to rot
+        if (freshCount == 0) {
+            return 0;
+        }
+
+        int time = 0; // tracks total minutes elapsed
+
+        // Step 2: Perform BFS level by level.
+        // Each iteration of this while-loop processes ONE full minute,
+        // i.e., all oranges that are rotten at the START of this minute
+        // will rot their fresh neighbors simultaneously.
+        while (!queue.isEmpty()) {
+
+            // size = number of rotten oranges present at the start of
+            // this minute (this defines the current BFS "level")
+            int size = queue.size();
+
+            // Process exactly 'size' rotten oranges belonging to
+            // this level/minute (new ones added during this loop
+            // belong to the NEXT level, so we don't process them yet)
+            for (int i = 0; i < size; i++) {
+
+                // Remove the next rotten orange's coordinates from queue
+                int rottenLoc[] = queue.poll();
+                int r = rottenLoc[0]; // row of this rotten orange
+                int c = rottenLoc[1]; // column of this rotten orange
+
+                // Define the 4 possible neighboring cells:
+                // up, right, down, left (in that order)
+                int neighbours[][] = {{r - 1, c}, {r, c + 1}, {r + 1, c}, {r, c - 1}};
+
+                // Check each neighboring cell to see if it can rot
+                for (int[] neighbour : neighbours) {
+                    int nr = neighbour[0]; // neighbor's row
+                    int nc = neighbour[1]; // neighbor's column
+
+                    // Skip this neighbor if it's outside the grid boundaries
+                    if (nr < 0 || nr >= n || nc < 0 || nc >= m) {
+                        continue;
+                    }
+                    // Skip this neighbor if it's NOT a fresh orange
+                    // (i.e., it's either empty (0) or already rotten (2))
+                    else if (grid[nr][nc] != 1) {
+                        continue;
+                    }
+
+                    // At this point, the neighbor IS a fresh orange (1)
+                    // that is adjacent to a rotten orange, so it rots now
+                    grid[nr][nc] = 2;
+
+                    // Add this newly rotten orange to the queue so it
+                    // can spread rot to ITS neighbors in the NEXT minute
+                    queue.offer(new int[]{nr, nc});
+                }
+            }
+
+            // We've finished processing every rotten orange from this
+            // level, meaning exactly 1 full minute has passed
+            time++;
+
+            // Every orange currently sitting in the queue right now
+            // was JUST rotted in this round, so subtract that count
+            // from the number of remaining fresh oranges
+            freshCount -= queue.size();
+
+            // If no fresh oranges remain, we can stop early —
+            // no need to process further empty minutes
+            if (freshCount == 0) {
+                break;
+            }
+        }
+
+        // Step 3: Final result check
+        // If freshCount reached 0, all oranges rotted successfully,
+        // so return the total time taken.
+        // Otherwise, some fresh oranges were unreachable by any
+        // rotten orange, so it's impossible -> return -1
+        return (freshCount == 0) ? time : -1;
+    }
+}
