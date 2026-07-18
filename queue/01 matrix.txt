@@ -1,0 +1,81 @@
+Given an m x n binary matrix mat, return the distance of the nearest 0 for each cell.
+
+The distance between two cells sharing a common edge is 1.
+
+
+
+
+
+class Solution {
+    public int[][] updateMatrix(int[][] mat) {
+        int m = mat.length;      // number of rows
+        int n = mat[0].length;   // number of columns
+
+        // dist[i][j] will store the final answer: distance of cell (i,j) to nearest 0
+        int[][] dist = new int[m][n];
+
+        // Queue for BFS traversal - holds cell coordinates as {row, col}
+        Queue<int[]> queue = new LinkedList<>();
+
+        // -------------------------------------------------------
+        // Step 1: Initialization
+        // Add all '0' cells to the queue as BFS starting points (sources).
+        // Mark all '1' cells as unvisited (-1) since we don't know their
+        // distance yet.
+        // -------------------------------------------------------
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (mat[i][j] == 0) {
+                    // A 0 cell has distance 0 to itself
+                    dist[i][j] = 0;
+                    // Add this cell to the queue so BFS expands outward from it
+                    queue.offer(new int[]{i, j});
+                } else {
+                    // Mark as "not visited yet" - we'll compute this during BFS
+                    dist[i][j] = -1;
+                }
+            }
+        }
+
+        // Directions array for moving to the 4 adjacent cells:
+        // down, up, right, left
+        int[][] directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
+        // -------------------------------------------------------
+        // Step 2: Multi-source BFS
+        // Since the queue starts with ALL 0 cells at once, BFS naturally
+        // expands layer by layer - so the first time we reach a cell,
+        // it's guaranteed to be via the shortest path from some 0.
+        // -------------------------------------------------------
+        while (!queue.isEmpty()) {
+            // Remove the next cell to process from the front of the queue
+            int[] curr = queue.poll();
+            int row = curr[0];
+            int col = curr[1];
+
+            // Check all 4 neighboring cells
+            for (int[] dir : directions) {
+                int newRow = row + dir[0];
+                int newCol = col + dir[1];
+
+                // Only proceed if the neighbor is:
+                // 1) within grid bounds, and
+                // 2) not yet visited (dist == -1 means "unvisited")
+                if (newRow >= 0 && newRow < m && newCol >= 0 && newCol < n 
+                        && dist[newRow][newCol] == -1) {
+                    
+                    // This neighbor's distance = current cell's distance + 1
+                    // (since we're moving exactly one step away)
+                    dist[newRow][newCol] = dist[row][col] + 1;
+
+                    // Add this neighbor to the queue so we can expand
+                    // from it in the next BFS layer
+                    queue.offer(new int[]{newRow, newCol});
+                }
+            }
+        }
+
+        // At this point every cell has its shortest distance to a 0 filled in
+        return dist;
+    }
+}
