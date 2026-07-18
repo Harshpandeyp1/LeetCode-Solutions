@@ -1,0 +1,106 @@
+You have a lock in front of you with 4 circular wheels. Each wheel has 10 slots: '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'. The wheels can rotate freely and wrap around: for example we can turn '9' to be '0', or '0' to be '9'. Each move consists of turning one wheel one slot.
+
+The lock initially starts at '0000', a string representing the state of the 4 wheels.
+
+You are given a list of deadends dead ends, meaning if the lock displays any of these codes, the wheels of the lock will stop turning and you will be unable to open it.
+
+Given a target representing the value of the wheels that will unlock the lock, return the minimum total number of turns required to open the lock, or -1 if it is impossible.
+
+ 
+
+Open the Lock — Approach
+Treat every lock combination like a state/node in a graph.
+The initial state is "0000".
+From every state, we can rotate each of the 4 wheels:
+One step forward: 0 → 1, 9 → 0
+One step backward: 0 → 9, 1 → 0
+Therefore, every combination has at most 8 possible next states.
+Algorithm
+Store all deadends in a HashSet for fast lookup.
+If "0000" is a deadend, return -1.
+Use BFS starting from "0000" because we need the minimum number of turns.
+Use a visited set to avoid processing the same combination again.
+For every current combination:
+Try rotating each of the 4 digits forward.
+Try rotating each of the 4 digits backward.
+Ignore combinations that are deadends or already visited.
+Process BFS level by level:
+Each level represents one additional turn.
+When the current combination becomes equal to target, return the number of steps.
+If the queue becomes empty without reaching the target, return -1.
+Why BFS?
+
+Each wheel rotation costs exactly 1 turn. Therefore, every edge has equal cost, and BFS guarantees the shortest path/minimum number of turns.
+
+Complexity
+Time: O(10⁴) in the worst case, because there are only 10,000 possible lock combinations.
+Space: O(10⁴) for the queue and visited set.
+
+
+
+
+
+
+
+class Solution {
+    public int openLock(String[] deadends, String target) {
+
+        Set<String> dead = new HashSet<>(Arrays.asList(deadends));
+
+        if (dead.contains("0000")) {
+            return -1;
+        }
+
+        Queue<String> q = new LinkedList<>();
+        Set<String> visited = new HashSet<>();
+
+        q.offer("0000");
+        visited.add("0000");
+
+        int steps = 0;
+
+        while (!q.isEmpty()) {
+
+            int size = q.size();
+
+            while (size-- > 0) {
+
+                String curr = q.poll();
+
+                if (curr.equals(target)) {
+                    return steps;
+                }
+
+                char[] arr = curr.toCharArray();
+
+                for (int i = 0; i < 4; i++) {
+
+                    char original = arr[i];
+
+                    // Rotate forward
+                    arr[i] = (original == '9') ? '0' : (char)(original + 1);
+                    String up = new String(arr);
+
+                    if (!dead.contains(up) && visited.add(up)) {
+                        q.offer(up);
+                    }
+
+                    // Rotate backward
+                    arr[i] = (original == '0') ? '9' : (char)(original - 1);
+                    String down = new String(arr);
+
+                    if (!dead.contains(down) && visited.add(down)) {
+                        q.offer(down);
+                    }
+
+                    // Restore original digit
+                    arr[i] = original;
+                }
+            }
+
+            steps++;
+        }
+
+        return -1;
+    }
+}
