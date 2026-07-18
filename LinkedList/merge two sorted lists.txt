@@ -1,0 +1,57 @@
+You are given the heads of two sorted linked lists list1 and list2.
+
+Merge the two lists into one sorted list. The list should be made by splicing together the nodes of the first two lists.
+
+Return the head of the merged linked list.
+
+
+/**
+public ListNode mergeTwoLists(ListNode a, ListNode b) {
+
+    // APPROACH:
+    // Compare the current nodes of both sorted linked lists.
+    // Choose the smaller node and make it the current node of the merged list.
+    // Then recursively merge the remaining nodes.
+
+    // If list 'a' is empty,
+    // return the remaining nodes of list 'b'.
+    if (a == null) {
+        return b;
+    }
+
+    // If list 'b' is empty,
+    // return the remaining nodes of list 'a'.
+    if (b == null) {
+        return a;
+    }
+
+    // If the current node of 'a' is smaller,
+    // then 'a' should come first in the merged list.
+    if (a.val < b.val) {
+
+        // Keep 'a' as the current node.
+        // Recursively merge the remaining part of 'a'
+        // with the complete remaining part of 'b'.
+        //
+        // Example:
+        // a: 1 → 3 → 5
+        // b: 2 → 4 → 6
+        //
+        // 1 is smaller, so:
+        // 1.next = merge(3 → 5, 2 → 4 → 6)
+        a.next = mergeTwoLists(a.next, b);
+
+        // Return 'a' as the current head of the merged list.
+        return a;
+    }
+
+    // Otherwise, 'b' is smaller or equal to 'a'.
+    // So 'b' should come first.
+    //
+    // Recursively merge the remaining part of 'b'
+    // with the remaining part of 'a'.
+    b.next = mergeTwoLists(b.next, a);
+
+    // Return 'b' as the current head of the merged list.
+    return b;
+}
