@@ -1,0 +1,185 @@
+A linked list of length n is given such that each node contains an additional random pointer, which could point to any node in the list, or null.
+
+Construct a deep copy of the list. The deep copy should consist of exactly n brand new nodes, where each new node has its value set to the value of its corresponding original node. Both the next and random pointer of the new nodes should point to new nodes in the copied list such that the pointers in the original list and copied list represent the same list state. None of the pointers in the new list should point to nodes in the original list.
+
+For example, if there are two nodes X and Y in the original list, where X.random --> Y, then for the corresponding two nodes x and y in the copied list, x.random --> y.
+
+Return the head of the copied linked list.
+
+The linked list is represented in the input/output as a list of n nodes. Each node is represented as a pair of [val, random_index] where:
+
+val: an integer representing Node.val
+random_index: the index of the node (range from 0 to n-1) that the random pointer points to, or null if it does not point to any node.
+Your code will only be given the head of the original linked list.
+
+ 
+
+
+```java
+/*
+ * Definition for a Node.
+ *
+ * class Node {
+ *     int val;
+ *     Node next;
+ *     Node random;
+ *
+ *     public Node(int val) {
+ *         this.val = val;
+ *         this.next = null;
+ *         this.random = null;
+ *     }
+ * }
+ */
+
+class Solution {
+
+    public Node copyRandomList(Node head) {
+
+        // If the list is empty, there is nothing to copy
+        if (head == null) {
+            return null;
+        }
+
+
+        /*
+         * APPROACH:
+         *
+         * We solve the problem in 3 steps.
+         *
+         * STEP 1:
+         * Create a copy of every node and insert it
+         * immediately after the original node.
+         *
+         * Original:
+         * A -> B -> C
+         *
+         * After inserting copies:
+         * A -> A' -> B -> B' -> C -> C'
+         *
+         *
+         * STEP 2:
+         * Set the random pointers of copied nodes.
+         *
+         * If:
+         * A.random = C
+         *
+         * Then:
+         * A'.random = C'
+         *
+         * Because C' is immediately after C:
+         * A'.random = A.random.next
+         *
+         *
+         * STEP 3:
+         * Separate the original list and copied list.
+         */
+
+
+        /*
+         * STEP 1:
+         * Create copied nodes and insert them
+         * after their original nodes.
+         */
+
+        Node curr = head;
+
+        while (curr != null) {
+
+            // Create a copy of the current node
+            Node newNode = new Node(curr.val);
+
+            // Copy points to the next original node
+            newNode.next = curr.next;
+
+            // Insert copy after the original node
+            curr.next = newNode;
+
+            // Move to the next original node
+            curr = newNode.next;
+        }
+
+
+        /*
+         * STEP 2:
+         * Set random pointers of copied nodes.
+         *
+         * Structure:
+         *
+         * Original -> Copy -> Next Original
+         *
+         * If:
+         * curr.random = X
+         *
+         * Then:
+         * curr.next.random = X.next
+         *
+         * Because X.next is the copy of X.
+         */
+
+        curr = head;
+
+        while (curr != null) {
+
+            // If the original node has a random pointer
+            if (curr.random != null) {
+
+                // Set the copied node's random pointer
+                curr.next.random = curr.random.next;
+            }
+
+            // Move to the next original node
+            curr = curr.next.next;
+        }
+
+
+        /*
+         * STEP 3:
+         * Separate the original and copied lists.
+         *
+         * Current structure:
+         *
+         * A -> A' -> B -> B' -> C -> C'
+         *
+         * Required:
+         *
+         * Original:
+         * A -> B -> C
+         *
+         * Copy:
+         * A' -> B' -> C'
+         */
+
+        // The first copied node is head.next
+        Node newHead = head.next;
+
+        // Pointer for traversing the copied list
+        Node newCurr = newHead;
+
+        // Start traversing the original list again
+        curr = head;
+
+        while (curr != null) {
+
+            // Restore the original list
+            curr.next = newCurr.next;
+
+            // Move to the next original node
+            curr = curr.next;
+
+            // If another original node exists
+            if (curr != null) {
+
+                // Connect current copy to the next copy
+                newCurr.next = curr.next;
+
+                // Move to the next copied node
+                newCurr = newCurr.next;
+            }
+        }
+
+        // Return the head of the deep copied list
+        return newHead;
+    }
+}
+```
