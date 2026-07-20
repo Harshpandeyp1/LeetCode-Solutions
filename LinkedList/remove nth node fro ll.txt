@@ -1,0 +1,78 @@
+Given the head of a linked list, remove the nth node from the end of the list and return its head.
+
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode() {}
+ *     ListNode(int val) { this.val = val; }
+ *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+ * }
+ */
+class Solution {
+    /**
+     * APPROACH: Two-pointer (fast & slow) technique, single pass.
+     * 
+     * 1. Move 'second' pointer n steps ahead of 'first' pointer (both starting at head).
+     * 2. If 'second' becomes null exactly when n hits 0, it means n == length of list,
+     *    so the node to remove is the head itself — handle this as a special case.
+     * 3. If n is still > 0 after 'second' hits null, n was larger than the list length
+     *    (invalid input) — just return the head unchanged.
+     * 4. Otherwise, move both 'first' and 'second' forward together until 'second'
+     *    reaches the end (null). At this point 'first' sits exactly n nodes behind
+     *    'second', which means 'prev' (the node just before 'first') is right before
+     *    the node to remove.
+     * 5. Skip over the target node by linking prev.next to first.next.
+     *
+     * Time Complexity: O(L) where L is the length of the list (single pass).
+     * Space Complexity: O(1) — no extra data structures used.
+     */
+    public ListNode removeNthFromEnd(ListNode head, int n) {
+
+        // 'second' pointer starts at head; will be advanced n steps ahead of 'first'
+        ListNode second = head;
+
+        // Advance 'second' n steps forward, decrementing n each time,
+        // but stop early if we run off the end of the list (second becomes null)
+        while (n > 0 && second != null) {
+            second = second.next;   // move second one step forward
+            n--;                    // one less step remaining
+        }
+
+        // If second became null, it means we ran out of nodes while advancing
+        if (second == null) {
+
+            // n > 0 here means n was greater than the list's length (invalid n)
+            if (n > 0) {
+                return head; // nothing to remove, return list unchanged
+            }
+
+            // n == 0 here means second became null exactly as n hit 0,
+            // i.e., n equals the list length, so we must remove the head node
+            if (n == 0) {
+                ListNode temp = head;   // temporarily hold the current head
+                head = head.next;       // move head pointer to the second node
+                temp.next = null;       // detach the old head from the list (cleanup)
+                return head;            // return the new head after removal
+            }
+        }
+
+        // Normal case: second is a valid (non-null) node, n steps ahead of first
+        ListNode first = head;   // 'first' pointer starts at head
+        ListNode prev = null;    // 'prev' will trail just behind 'first'
+
+        // Move both pointers forward together until 'second' reaches the end
+        while (second != null) {
+            prev = first;              // prev catches up to where first currently is
+            first = first.next;        // first moves one step forward
+            second = second.next;      // second moves one step forward
+        }
+
+        // At this point, 'first' is the node to be removed, and 'prev' is just before it
+        prev.next = first.next;   // skip over 'first', linking prev directly to first.next
+        first.next = null;        // detach the removed node from the list (cleanup)
+
+        return head;   // return the (possibly unchanged) head of the modified list
+    }
+}
