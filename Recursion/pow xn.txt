@@ -1,0 +1,49 @@
+Implement pow(x, n), which calculates x raised to the power n (i.e., xn).
+
+ 
+
+Example 1:
+
+Input: x = 2.00000, n = 10
+Output: 1024.00000
+
+
+
+Explanation of Your Solution (Fast Power / Binary Exponentiation)
+
+Your solution uses fast exponentiation, which reduces time complexity from O(n) to O(log n).
+
+The core idea:
+
+If n is even: x^n = (x*x)^(n/2) — so we can square x and halve n.
+If n is odd: x^n = x * x^(n-1) — so we take one x out, multiply it into the answer, and now n-1 is even, so we can continue squaring.
+
+This way, instead of multiplying n times, we roughly halve the problem size at each step, giving logarithmic time.
+
+The long nn = n is used because if n = Integer.MIN_VALUE (-2147483648), negating it would overflow a 32-bit int (since int range is -2147483648 to 2147483647). Using long avoids this overflow issue.
+
+3. Commented Code
+java
+class Solution {
+    public double myPow(double x, int n) {
+        double ans = 1.0;                    // This will store the final result, starts at 1 (x^0 = 1)
+        long nn = n;                         // Convert n to long to avoid overflow when negating Integer.MIN_VALUE
+        
+        if (nn < 0) nn = -1 * nn;            // If exponent is negative, work with its positive value for now
+        
+        while (nn > 0) {                     // Keep reducing nn until it becomes 0
+            if (nn % 2 == 1) {               // If nn is odd
+                ans = ans * x;               // Multiply current x into the answer (extract one factor)
+                nn = nn - 1;                  // Reduce nn by 1 to make it even
+            }
+            else {                            // If nn is even
+                x = x * x;                    // Square x (this is the key trick: combines two multiplications into one)
+                nn = nn / 2;                  // Halve nn since squaring x lets us cover twice the exponent per step
+            }
+        }
+        
+        if (n < 0) ans = (double)(1.0) / (double)(ans);  // If original exponent was negative, take reciprocal of the answer
+        
+        return ans;                          // Return the final computed power
+    }
+}
