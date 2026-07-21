@@ -1,0 +1,23 @@
+The Fibonacci numbers, commonly denoted F(n) form a sequence, called the Fibonacci sequence, such that each number is the sum of the two preceding ones, starting from 0 and 1. That is,
+
+F(0) = 0, F(1) = 1
+F(n) = F(n - 1) + F(n - 2), for n > 1.
+Given n, calculate F(n).
+
+
+
+public class FibonacciNth {                                          // Class declaration
+    public static int fibonacciNth(int n) {                          // Method that returns the nth Fibonacci number
+        int a = 0, b = 1;                                            // Initialize first two Fibonacci numbers: a=F(0), b=F(1)
+        for (int i = 0; i < n; i++) {                                 // Loop n times to move forward in the sequence
+            int temp = b;                                            // Store current value of b before it changes
+            b = a + b;                                                // Update b to be the next Fibonacci number (a+b)
+            a = temp;                                                 // Update a to be the old value of b (shift forward)
+        }                                                             // End of loop
+        return a;                                                    // After n shifts, a holds the nth Fibonacci number
+    }                                                                 // End of fibonacciNth method
+    public static void main(String[] args) {                         // Main method - program entry point
+        int n = 10;                                                  // Set n to 10 (we want the 10th Fibonacci number)
+        System.out.println("Fibonacci number at position " + n + ": " + fibonacciNth(n)); // Print the result by calling the method
+    }                                                                 // End of main method
+}                                                                     // End of class
