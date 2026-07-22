@@ -1,0 +1,61 @@
+Given an integer array nums of unique elements, return all possible subsets (the power set).
+
+The solution set must not contain duplicate subsets. Return the solution in any order.
+
+ 
+
+
+class Solution {
+    // This list will store all the subsets (the power set) of the given array
+    List<List<Integer>> res = new ArrayList<>();
+
+    public List<List<Integer>> subsets(int[] nums) {
+        // Start the recursion from index 0 with an empty sublist (current subset being built)
+        findSubsets(nums, 0, new ArrayList<>());
+        // Return the final list containing all subsets
+        return res;
+    }
+
+    /*
+        APPROACH: Recursion using "Include / Exclude" (Pick / Don't Pick) technique
+
+        For every element in the array, we have two choices:
+        1. Include the element in the current subset
+        2. Exclude the element from the current subset
+
+        We explore BOTH choices for every index using recursion (like a binary decision tree).
+        When we reach the end of the array (index == nums.length), 
+        the current 'sublist' represents one complete subset, so we add it to the result.
+
+        Since we make 2 choices at every index, and there are 'n' elements,
+        total subsets generated = 2^n, which matches the size of the power set.
+
+        Time Complexity: O(2^n) - since there are 2^n subsets
+        Space Complexity: O(n) - recursion stack depth (ignoring the output list)
+    */
+    public void findSubsets(int nums[], int index, List<Integer> sublist) {
+
+        // Base case: if we've considered all elements (reached beyond last index)
+        if (index == nums.length) {
+            // Add a COPY of the current sublist to res
+            // (we use 'new ArrayList<>(sublist)' because 'sublist' is mutated 
+            // later during backtracking, so we can't add the same reference directly)
+            res.add(new ArrayList<>(sublist));
+            return; // stop recursion for this path
+        }
+
+        // ---------- CHOICE 1: INCLUDE the current element ----------
+        sublist.add(nums[index]); // add current element to the subset
+
+        // Recurse to the next index with this element included
+        findSubsets(nums, index + 1, sublist);
+
+        // Backtrack: remove the last added element 
+        // so we can explore the other choice (exclude) without carrying this element
+        sublist.remove(sublist.size() - 1);
+
+        // ---------- CHOICE 2: EXCLUDE the current element ----------
+        // Recurse to the next index without adding the current element
+        findSubsets(nums, index + 1, sublist);
+    }
+}
