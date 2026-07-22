@@ -1,0 +1,70 @@
+Given an array nums of distinct integers, return all the possible permutations. You can return the answer in any order.
+
+ 
+
+
+
+
+class Solution {
+    public List<List<Integer>> permute(int[] nums) {
+        // This will store all the final permutations
+        List<List<Integer>> res = new ArrayList<>();
+        
+        // This will store the current permutation being built
+        List<Integer> curr = new ArrayList<>();
+        
+        // Start the recursive process to generate permutations
+        permutations(nums, curr, res);
+        
+        return res;
+    }
+
+    /*
+        APPROACH: Backtracking
+
+        To generate all permutations, at every step we try placing 
+        EVERY unused number at the current position, then recurse further.
+
+        - We pick a number that hasn't been used yet (checked using curr.contains(nums[i]))
+        - Add it to the current permutation (curr)
+        - Recurse to fill the next position
+        - Backtrack (remove the last added number) to try the next possible number 
+          at this position, allowing all combinations to be explored
+
+        When 'curr' reaches the same size as 'nums', it means we've formed 
+        a complete permutation, so we add a copy of it to 'res'.
+
+        Time Complexity: O(n * n!) 
+            - There are n! permutations, and building each one takes O(n) time (due to contains() and copying)
+        Space Complexity: O(n) for recursion stack + O(n) for curr list (ignoring output storage)
+    */
+    public void permutations(int nums[], List<Integer> curr, List<List<Integer>> res) {
+        
+        // Base case: if the current permutation's size equals nums' length,
+        // it means we've placed all numbers, so it's a complete permutation
+        if (curr.size() == nums.length) {
+            // Add a COPY of curr to res 
+            // (important because curr will keep changing due to backtracking)
+            res.add(new ArrayList<>(curr));
+            return; // stop recursion for this path
+        }
+
+        // Try placing every number at the current position
+        for (int i = 0; i < nums.length; i++) {
+
+            // Skip numbers that are already used in the current permutation
+            if (curr.contains(nums[i])) continue;
+
+            // ---------- CHOOSE ----------
+            curr.add(nums[i]); // place nums[i] in the current permutation
+
+            // Recurse to fill the next position
+            permutations(nums, curr, res);
+
+            // ---------- UN-CHOOSE (Backtrack) ----------
+            // Remove the last added number so we can try a different number 
+            // at this position in the next loop iteration
+            curr.remove(curr.size() - 1);
+        }
+    }
+}
