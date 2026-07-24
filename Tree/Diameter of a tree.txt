@@ -1,0 +1,67 @@
+class Solution {
+    // This will store the FINAL ANSWER — the biggest diameter found anywhere in the tree.
+    // It's a class-level variable so its value survives across ALL recursive calls
+    // (a local variable inside a function resets every time, so it can't do this job).
+    int diameter = 0;
+
+    public int diameterOfBinaryTree(TreeNode root) {
+        // We just need to trigger the recursion — the real answer will be sitting
+        // in 'diameter' after height() has visited every node.
+        height(root);
+        return diameter;
+    }
+
+    /*
+        APPROACH (in easy language):
+
+        Diameter = the longest path between any two nodes in the tree.
+        This path might not pass through the root — it could be hiding
+        anywhere deep inside the tree.
+
+        Trick: For ANY node, the longest path THAT PASSES THROUGH IT
+        is simply:
+            (height of its left side) + (height of its right side)
+
+        Think of it like this: imagine standing at a node.
+        The longest "arm" you can stretch to the left is leftHeight,
+        and the longest "arm" to the right is rightHeight.
+        Add both arms together, and that's the longest path passing
+        through YOU.
+
+        So the plan is: visit every single node in the tree, and at
+        each one, check "if the longest path passed through me, how
+        long would it be?" Keep the biggest value seen so far in 'diameter'.
+
+        Meanwhile, the function itself still needs to return HEIGHT
+        (not diameter) to its parent call, because the parent needs
+        height to do its own left+right calculation.
+
+        So this function does TWO jobs quietly:
+        1. Updates the global 'diameter' answer (side job)
+        2. Returns height upward so the recursion above it can use it (main return job)
+
+        Time Complexity: O(n) — we visit every node exactly once
+        Space Complexity: O(h) — recursion stack, where h = height of tree
+    */
+    private int height(TreeNode node) {
+
+        // Base case: an empty tree has height 0
+        if (node == null) {
+            return 0;
+        }
+
+        // First, find out how tall the left side is
+        int leftHeight = height(node.left);
+
+        // Then, find out how tall the right side is
+        int rightHeight = height(node.right);
+
+        // At THIS node, the longest path passing through it = leftHeight + rightHeight
+        // Compare it with the best diameter found so far, and keep the bigger one
+        diameter = Math.max(diameter, leftHeight + rightHeight);
+
+        // Return this node's height to whoever called us (its parent),
+        // so the parent can do the same leftHeight+rightHeight trick for itself
+        return 1 + Math.max(leftHeight, rightHeight);
+    }
+}
