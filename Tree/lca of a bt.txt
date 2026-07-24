@@ -1,0 +1,81 @@
+Given a binary tree, find the lowest common ancestor (LCA) of two given nodes in the tree.
+
+According to the definition of LCA on Wikipedia: “The lowest common ancestor is defined between two nodes p and q as the lowest node in T that has both p and q as descendants (where we allow a node to be a descendant of itself).”
+
+
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+
+class Solution {
+
+    // Approach:
+    // We recursively search for p and q in the left and right subtrees.
+    //
+    // There are three important cases:
+    //
+    // 1. If root is null:
+    //    The current subtree does not contain p or q.
+    //
+    // 2. If root is p or q:
+    //    We found one of the target nodes, so return it.
+    //
+    // 3. After searching both subtrees:
+    //    - If both left and right return a node,
+    //      then p and q exist on different sides of root.
+    //      Therefore, root is their Lowest Common Ancestor.
+    //
+    //    - If only one side returns a node,
+    //      return that node because both targets are located
+    //      in that subtree.
+    //
+    // Time Complexity: O(N)
+    // We may visit every node once.
+    //
+    // Space Complexity: O(H)
+    // H is the height of the tree because of the recursion stack.
+
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+
+        // Base Case:
+        // If the current node is null, there is nothing to search.
+        //
+        // If the current node is p or q, we found one target node.
+        if(root == null || root == p || root == q) {
+            return root;
+        }
+
+        // Recursively search for p and q in the left subtree.
+        TreeNode leftchild = lowestCommonAncestor(root.left, p, q);
+
+        // Recursively search for p and q in the right subtree.
+        TreeNode rightchild = lowestCommonAncestor(root.right, p, q);
+
+        // If the left subtree did not find p or q,
+        // return whatever was found in the right subtree.
+        if(leftchild == null) {
+            return rightchild;
+        }
+
+        // If the right subtree did not find p or q,
+        // return whatever was found in the left subtree.
+        else if(rightchild == null) {
+            return leftchild;
+        }
+
+        // If both left and right return a node,
+        // one target exists in the left subtree
+        // and the other target exists in the right subtree.
+        //
+        // Therefore, the current root is their Lowest Common Ancestor.
+        else {
+            return root;
+        }
+    }
+}
