@@ -1,0 +1,30 @@
+class Solution {
+
+    public TreeNode searchBST(TreeNode root, int val) {
+
+        // If the tree is empty,
+        // the value does not exist
+        if (root == null) {
+            return null;
+        }
+
+        // If the current node contains the target value,
+        // return this node
+        //
+        // Returning the node automatically returns
+        // the entire subtree rooted at this node
+        if (root.val == val) {
+            return root;
+        }
+
+        // If target value is smaller than current value,
+        // search in the left subtree
+        if (val < root.val) {
+            return searchBST(root.left, val);
+        }
+
+        // Otherwise, target value is greater than current value,
+        // so search in the right subtree
+        return searchBST(root.right, val);
+    }
+}
