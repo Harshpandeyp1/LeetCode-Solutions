@@ -1,0 +1,69 @@
+class Solution {
+
+```
+public boolean isValidBST(TreeNode root) {
+
+    // Initially, the root can have any value
+    // between negative infinity and positive infinity
+    return validate(
+            root,
+            Long.MIN_VALUE,
+            Long.MAX_VALUE
+    );
+}
+
+
+public boolean validate(
+        TreeNode root,
+        long min,
+        long max
+) {
+
+    // An empty tree is a valid BST
+    if (root == null) {
+        return true;
+    }
+
+
+    // The current node must be strictly
+    // greater than min
+    // and strictly smaller than max
+    //
+    // If it violates either boundary,
+    // the tree is not a valid BST
+    if (root.val <= min || root.val >= max) {
+        return false;
+    }
+
+
+    // Every value in the left subtree
+    // must be smaller than root.val
+    //
+    // The lower boundary remains the same
+    // but the upper boundary becomes root.val
+    boolean leftValid = validate(
+            root.left,
+            min,
+            root.val
+    );
+
+
+    // Every value in the right subtree
+    // must be greater than root.val
+    //
+    // The lower boundary becomes root.val
+    // but the upper boundary remains the same
+    boolean rightValid = validate(
+            root.right,
+            root.val,
+            max
+    );
+
+
+    // The entire tree is valid only if
+    // both left and right subtrees are valid
+    return leftValid && rightValid;
+}
+```
+
+}
