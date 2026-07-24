@@ -1,0 +1,51 @@
+class Solution {
+
+```
+public TreeNode insertIntoBST(TreeNode root, int val) {
+
+    // If we reach a null position,
+    // this is the correct place to insert the new value
+    if (root == null) {
+
+        // Create and return a new node
+        return new TreeNode(val);
+    }
+
+
+    // If the value to insert is smaller
+    // than the current node's value,
+    // it must go into the left subtree
+    if (val < root.val) {
+
+        // Recursively insert the value
+        // into the left subtree
+        //
+        // We assign the returned node to root.left
+        // so the new node becomes connected to the tree
+        root.left = insertIntoBST(root.left, val);
+    }
+
+
+    // If the value to insert is greater
+    // than the current node's value,
+    // it must go into the right subtree
+    else if (val > root.val) {
+
+        // Recursively insert the value
+        // into the right subtree
+        //
+        // We assign the returned node to root.right
+        // so the new node becomes connected to the tree
+        root.right = insertIntoBST(root.right, val);
+    }
+
+
+    // Return the current root
+    //
+    // This keeps the original tree connected
+    // while returning back from recursion
+    return root;
+}
+```
+
+}
