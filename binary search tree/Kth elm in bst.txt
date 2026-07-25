@@ -1,0 +1,60 @@
+class Solution {
+
+    // Keeps track of how many nodes we have visited
+    // during inorder traversal.
+    int count = 0;
+
+    public int kthSmallest(TreeNode root, int k) {
+
+        // Base case:
+        // If there is no node, the answer has not been found
+        // in this subtree.
+        if (root == null) {
+            return -1;
+        }
+
+        /*
+         * In a BST:
+         * Left subtree contains smaller values.
+         *
+         * So, first search the left subtree.
+         */
+        int left = kthSmallest(root.left, k);
+
+        /*
+         * If left != -1, it means the kth smallest element
+         * has already been found in the left subtree.
+         *
+         * Return it immediately without doing further traversal.
+         */
+        if (left != -1) {
+            return left;
+        }
+
+        /*
+         * Now we are visiting the current node.
+         *
+         * Inorder traversal of a BST gives values in sorted order:
+         *
+         * Left -> Root -> Right
+         *
+         * Therefore, increment count whenever we visit a node.
+         */
+        count++;
+
+        /*
+         * If count becomes k, the current node is the
+         * kth smallest element.
+         */
+        if (count == k) {
+            return root.val;
+        }
+
+        /*
+         * If the answer was not found in the left subtree
+         * and the current node is not the answer,
+         * search the right subtree.
+         */
+        return kthSmallest(root.right, k);
+    }
+}
