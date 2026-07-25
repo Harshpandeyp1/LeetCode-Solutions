@@ -1,0 +1,125 @@
+class Solution {
+
+```
+public TreeNode deleteNode(TreeNode root, int key) {
+
+    // If the tree is empty,
+    // the key does not exist
+    if (root == null) {
+        return root;
+    }
+
+
+    // If the key is smaller than the current node,
+    // search for it in the left subtree
+    if (key < root.val) {
+
+        // Delete the key from the left subtree
+        //
+        // Assign the returned subtree back to root.left
+        root.left = deleteNode(root.left, key);
+    }
+
+
+    // If the key is greater than the current node,
+    // search for it in the right subtree
+    else if (key > root.val) {
+
+        // Delete the key from the right subtree
+        //
+        // Assign the returned subtree back to root.right
+        root.right = deleteNode(root.right, key);
+    }
+
+
+    // Otherwise, we found the node to delete
+    else {
+
+
+        // CASE 1:
+        // The node has no children
+        //
+        // Simply remove the node
+        if (root.left == null && root.right == null) {
+            return null;
+        }
+
+
+        // CASE 2:
+        // The node has only a right child
+        //
+        // Replace the current node
+        // with its right child
+        if (root.left == null) {
+            return root.right;
+        }
+
+
+        // CASE 3:
+        // The node has only a left child
+        //
+        // Replace the current node
+        // with its left child
+        if (root.right == null) {
+            return root.left;
+        }
+
+
+        // CASE 4:
+        // The node has two children
+        //
+        // We need to find a replacement node
+
+
+        // Find the in-order predecessor
+        //
+        // It is the largest value
+        // in the left subtree
+        TreeNode predecessor = findPred(root.left);
+
+
+        // Copy the predecessor's value
+        // into the current node
+        root.val = predecessor.val;
+
+
+        // Delete the original predecessor node
+        // from the left subtree
+        //
+        // The predecessor is guaranteed to have
+        // no right child, so deletion becomes easier
+        root.left = deleteNode(
+                root.left,
+                predecessor.val
+        );
+    }
+
+
+    // Return the root of the modified BST
+    return root;
+}
+
+
+// This method finds the in-order predecessor
+// of a node
+//
+// The predecessor is the largest value
+// in the given subtree
+public TreeNode findPred(TreeNode node) {
+
+    // Keep moving right
+    // because right values are larger
+    while (node.right != null) {
+
+        // Move to the next larger node
+        node = node.right;
+    }
+
+
+    // The rightmost node is
+    // the largest value in the subtree
+    return node;
+}
+```
+
+}
