@@ -1,0 +1,43 @@
+You are given the root of a binary search tree (BST), where the values of exactly two nodes of the tree were swapped by mistake. Recover the tree without changing its structure.
+
+
+
+class Solution {
+    // These are instance variables (fields), shared across recursive calls
+    private TreeNode first, second, prev;
+    // first  -> stores the FIRST node that is out of order (too big, appears early)
+    // second -> stores the SECOND node that is out of order (too small, appears later)
+    // prev   -> keeps track of the previously visited node in in-order sequence
+
+    public void recoverTree(TreeNode root) {
+        first = second = prev = null;   // reset all trackers before starting traversal
+        inorder(root);                  // do in-order traversal, which will set first & second
+        int temp = first.val;           // save first's value temporarily
+        first.val = second.val;         // copy second's value into first
+        second.val = temp;              // put the saved value into second
+        // net effect: first.val and second.val are swapped
+    }
+
+    private void inorder(TreeNode node) {
+        if (node == null) return;       // base case: nothing to do for an empty subtree
+
+        inorder(node.left);             // Step 1: recursively visit the ENTIRE left subtree first
+                                         // (this ensures smaller values are processed before node)
+
+        if (prev != null && prev.val > node.val) {
+            // Step 2: compare current node with the previously visited node
+            // If prev.val > node.val, the in-order sequence has DECREASED — a violation!
+
+            if (first == null) {
+                first = prev;           // first time we see a violation: mark 'prev' as the first bad node
+            }
+            second = node;              // ALWAYS update second to the current node on every violation
+                                         // (handles both adjacent and non-adjacent swap cases)
+        }
+
+        prev = node;                    // Step 3: mark current node as "previous" for the next comparison
+
+        inorder(node.right);            // Step 4: recursively visit the ENTIRE right subtree last
+                                         // (this processes larger values after node)
+    }
+}
