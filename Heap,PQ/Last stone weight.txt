@@ -1,0 +1,57 @@
+You are given an array of integers stones where stones[i] is the weight of the ith stone.
+
+We are playing a game with the stones. On each turn, we choose the heaviest two stones and smash them together. Suppose the heaviest two stones have weights x and y with x <= y. The result of this smash is:
+
+If x == y, both stones are destroyed, and
+If x != y, the stone of weight x is destroyed, and the stone of weight y has new weight y - x.
+At the end of the game, there is at most one stone left.
+
+Return the weight of the last remaining stone. If there are no stones left, return 0.
+
+
+Optimal Approach (Max-Heap / PriorityQueue)
+
+Idea: Put all stones into a max-heap. Each turn:
+
+Pop the largest (y) and second largest (x) — O(log n) each.
+If they're unequal, push the new stone y - x back into the heap.
+Repeat until the heap has 0 or 1 elements.
+
+Since we never need a fully-sorted array — just repeated access to the top 2 — a heap avoids redundant sorting work.
+
+java
+import java.util.PriorityQueue;
+import java.util.Collections;
+
+class Solution {
+    public int lastStoneWeight(int[] stones) {
+        // Java's PriorityQueue is a MIN-heap by default,
+        // so we reverse the order to make it a MAX-heap.
+        PriorityQueue<Integer> maxHeap = new PriorityQueue<>(Collections.reverseOrder());
+        
+        // Step 1: Load all stones into the heap -> O(n log n)
+        for (int stone : stones) {
+            maxHeap.offer(stone);
+        }
+        
+        // Step 2: Keep smashing while at least 2 stones remain
+        while (maxHeap.size() > 1) {
+            int y = maxHeap.poll(); // remove & get largest stone
+            int x = maxHeap.poll(); // remove & get 2nd largest stone
+            
+            // If they're not equal, the leftover weight goes back into play
+            if (y != x) {
+                maxHeap.offer(y - x); // insert new stone as a NEW heap entry
+            }
+            // If y == x, both are destroyed -> nothing to add back
+        }
+        
+        // Step 3: At this point heap has either 0 or 1 stone left
+        return maxHeap.isEmpty() ? 0 : maxHeap.poll();
+    }
+}
+
+Complexity:
+
+Time: O(n log n) — each poll/offer is O(log n), done O(n) times total.
+Space: O(n) — heap storage.
