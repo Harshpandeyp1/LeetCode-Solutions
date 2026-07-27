@@ -1,0 +1,72 @@
+The median is the middle value in an ordered integer list. If the size of the list is even, there is no middle value, and the median is the mean of the two middle values.
+
+For example, for arr = [2,3,4], the median is 3.
+For example, for arr = [2,3], the median is (2 + 3) / 2 = 2.5.
+Implement the MedianFinder class:
+
+MedianFinder() initializes the MedianFinder object.
+void addNum(int num) adds the integer num from the data stream to the data structure.
+double findMedian() returns the median of all elements so far. Answers within 10-5 of the actual answer will be accepted.
+ 
+
+
+Median Finder — Full Explanation + Bug Fixes
+The Approach (In Plain Words)
+
+Imagine splitting all the numbers you've seen so far into two halves:
+
+Left half (smaller numbers) → stored in a max-heap (so the largest of the small numbers is on top — this is the number closest to the middle from the left side).
+Right half (bigger numbers) → stored in a min-heap (so the smallest of the big numbers is on top — closest to the middle from the right side).
+
+If we always keep these two halves balanced in size (equal, or max-heap has one extra), then:
+
+If both heaps are equal size → median = average of the two "middle" tops.
+If max-heap has one extra → median = the top of max-heap alone (it holds the true middle element).
+
+This is like keeping a line of people split into two groups — shorter half on the left, taller half on the right — and the median is always right where the two groups meet.
+
+class MedianFinder {
+    PriorityQueue<Integer> minheap; // bigger half, smallest on top
+    PriorityQueue<Integer> maxheap; // smaller half, largest on top
+    
+    public MedianFinder() {
+        minheap = new PriorityQueue<>();
+        maxheap = new PriorityQueue<>((a, b) -> b - a);
+    }
+    
+    public void addNum(int num) {
+        // Step 1: always add new number to maxheap first
+        maxheap.offer(num);
+        
+        // Step 2: fix ordering if a number ended up in the wrong heap
+        if (!maxheap.isEmpty() && !minheap.isEmpty() && maxheap.peek() > minheap.peek()) {
+            int val = maxheap.poll();
+            minheap.offer(val);
+        }
+        
+        // Step 3: rebalance if maxheap has too many extra elements
+        if (maxheap.size() > minheap.size() + 1) {
+            int val = maxheap.poll();
+            minheap.offer(val);
+        }
+        
+        // Step 4: rebalance if minheap has too many extra elements
+        if (minheap.size() > maxheap.size() + 1) {
+            int val = minheap.poll();
+            maxheap.offer(val);
+        }
+    }
+    
+    public double findMedian() {
+        // If maxheap has one extra element, its top IS the median
+        if (maxheap.size() > minheap.size()) {
+            return maxheap.peek(); // FIX: return the VALUE, not size
+        }
+        // If minheap has one extra element, its top IS the median
+        if (minheap.size() > maxheap.size()) {
+            return minheap.peek(); // FIX: return the VALUE, not size
+        }
+        // If equal size, median is the average of both tops
+        return (minheap.peek() + maxheap.peek()) / 2.0;
+    }
+}
