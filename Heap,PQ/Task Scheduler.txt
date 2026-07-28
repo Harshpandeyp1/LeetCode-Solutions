@@ -1,0 +1,110 @@
+You are given an array of CPU tasks, each labeled with a letter from A to Z, and a number n. Each CPU interval can be idle or allow the completion of one task. Tasks can be completed in any order, but there's a constraint: there has to be a gap of at least n intervals between two tasks with the same label.
+
+Return the minimum number of CPU intervals required to complete all tasks.
+
+ 
+
+
+
+/*
+ * APPROACH: Task Scheduler (LeetCode 621) - Greedy + Max Heap + Cooldown Queue
+ * ------------------------------------------------------------------------
+ * 1. Count the frequency of each task type.
+ * 2. Put all tasks into a MAX HEAP (priority queue) sorted by frequency,
+ *    so the task with the HIGHEST remaining frequency is always processed first.
+ *    (Greedy idea: schedule the most frequent task as early as possible,
+ *    so it has more time to "cool down" before it's needed again.)
+ * 3. Simulate time tick by tick:
+ *      - At each tick, pick the task with highest frequency from the heap (if any) and run it.
+ *      - Decrease its frequency by 1.
+ *      - If it still has occurrences left, it must wait "n" cooldown units
+ *        before it can be scheduled again -> push it into a COOLDOWN QUEUE
+ *        with its "ready again" time = current time + n.
+ *      - After running (or even if no task ran, i.e., idle slot), check the
+ *        front of the cooldown queue: if a task's cooldown has expired
+ *        (its executiontime == current time), move it back into the heap
+ *        so it's eligible to run again.
+ * 4. Keep looping until both the heap and the cooldown queue are empty.
+ *    The final "time" value is the total number of CPU intervals needed
+ *    (including idle slots when no task was ready to run).
+ */
+
+// Helper class representing a task type with its remaining frequency
+// and the time at which it becomes eligible to run again after cooldown.
+class Task implements Comparable<Task> {
+    int frequency;       // how many times this task still needs to run
+    int executiontime;   // the time at which this task exits cooldown and becomes ready again
+
+    // Constructor: initialize frequency and executiontime (initially 0, meaning "ready now")
+    Task(int f, int t) {
+        frequency = f;
+        executiontime = t;
+    }
+
+    // Comparator logic: PriorityQueue uses this to order tasks.
+    // We want a MAX HEAP based on frequency, so we return (that.frequency - this.frequency).
+    // This means: task with LARGER frequency comes FIRST (higher priority).
+    public int compareTo(Task that) {
+        return that.frequency - this.frequency;
+    }
+}
+
+class Solution {
+    public int leastInterval(char[] tasks, int n) {
+
+        // Step 1: Count frequency of each task character using a HashMap
+        // key = task character, value = number of times it occurs
+        HashMap<Character, Integer> map = new HashMap<>();
+        for (Character task : tasks) {
+            // increment count for this character, default to 0 if not present
+            map.put(task, map.getOrDefault(task, 0) + 1);
+        }
+
+        // Step 2: Build a max-heap (PriorityQueue) of Task objects based on frequency
+        // The task with the highest frequency will always be at the top (poll() first)
+        PriorityQueue<Task> pq = new PriorityQueue<>();
+        for (Character ch : map.keySet()) {
+            int freq = map.get(ch);
+            // executiontime starts at 0 since these tasks are all ready to run immediately
+            pq.offer(new Task(freq, 0));
+        }
+
+        // Step 3: A queue to hold tasks that are currently in "cooldown"
+        // (i.e., they ran recently and must wait "n" intervals before running again)
+        Queue<Task> queue = new LinkedList<>();
+
+        int time = 0; // tracks total number of CPU intervals used so far
+
+        // Step 4: Simulate CPU cycles until there are no tasks left to run
+        // (neither in the heap ready to run, nor in cooldown queue waiting)
+        while (!queue.isEmpty() || !pq.isEmpty()) {
+            time++; // move to the next time unit/tick
+
+            // If there's a task ready to run (heap is not empty), run the highest-frequency one
+            if (!pq.isEmpty()) {
+                Task task = pq.poll();       // pick task with highest remaining frequency
+                task.frequency--;            // "execute" it once, reduce its remaining count
+
+                // If this task still needs to run more times in the future,
+                // put it into cooldown queue with its next eligible time = time + n
+                if (task.frequency > 0) {
+                    task.executiontime = time + n;
+                    queue.offer(task);
+                }
+                // If frequency becomes 0, the task is fully done and is discarded (not re-added anywhere)
+            }
+            // NOTE: if pq is empty at this tick, it means CPU is idle this cycle (no task available),
+            // but time still increments - this correctly models idle/wasted CPU cycles.
+
+            // Step 5: After processing this tick, check if the task at front of cooldown queue
+            // has finished waiting (its executiontime equals current time).
+            // If so, move it back into the heap so it becomes eligible to run again.
+            if (!queue.isEmpty() && queue.peek().executiontime == time) {
+                pq.offer(queue.poll());
+            }
+        }
+
+        // Step 6: Return total time taken to finish all tasks (including idle slots)
+        return time;
+    }
+}
