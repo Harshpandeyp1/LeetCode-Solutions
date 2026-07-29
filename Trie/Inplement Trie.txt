@@ -1,0 +1,92 @@
+A trie (pronounced as "try") or prefix tree is a tree data structure used to efficiently store and retrieve keys in a dataset of strings. There are various applications of this data structure, such as autocomplete and spellchecker.
+
+Implement the Trie class:
+
+Trie() Initializes the trie object.
+void insert(String word) Inserts the string word into the trie.
+boolean search(String word) Returns true if the string word is in the trie (i.e., was inserted before), and false otherwise.
+boolean startsWith(String prefix) Returns true if there is a previously inserted string word that has the prefix prefix, and false otherwise.
+
+
+
+class Trie {
+    private TrieNode root;
+
+    // Each node represents one letter position in the tree.
+    // It has 26 "slots" for possible next letters (a-z),
+    // and a flag to say "a complete word ends here".
+    private class TrieNode {
+        private TrieNode[] children = null;
+        private boolean isWord; // true = some inserted word stops exactly at this node
+
+        public TrieNode() {
+            children = new TrieNode[26]; // one slot per letter of the alphabet
+        }
+    }
+
+    // Constructor: create an empty root node.
+    // The root itself doesn't represent any letter — it's just the starting point.
+    public Trie() {
+        root = new TrieNode();
+    }
+
+    // APPROACH for insert:
+    // Walk from the root, one character at a time.
+    // If the path for a letter doesn't exist yet, create it.
+    // If it already exists (shared prefix with another word), just move into it.
+    // After the last letter, mark that node as "end of word".
+    public void insert(String word) {
+        TrieNode it = root;
+        for (char c : word.toCharArray()) {
+            int indexInTrieNode = c - 'a'; // convert letter to array index (a=0, b=1, ...)
+            if (it.children[indexInTrieNode] == null) {
+                it.children[indexInTrieNode] = new TrieNode(); // no path yet, so build one
+            }
+            it = it.children[indexInTrieNode]; // step into that child
+        }
+        it.isWord = true; // we've placed all letters, so flag the final node
+    }
+
+    // APPROACH for search:
+    // Walk the path letter by letter, just like insert.
+    // If any letter's path is missing, the word was never inserted -> false.
+    // If we reach the end of the string, the word only "counts" if
+    // the final node is flagged isWord (not just a prefix of some other word).
+    public boolean search(String word) {
+        TrieNode it = root;
+        for (char c : word.toCharArray()) {
+            int indexInTrieNode = c - 'a';
+
+            if (it.children[indexInTrieNode] == null) {
+                return false; // path breaks -> word doesn't exist
+            } else {
+                it = it.children[indexInTrieNode]; // keep walking
+            }
+        }
+        return it.isWord; // path exists, but only a real word if flagged
+    }
+
+    // APPROACH for startsWith:
+    // Same walk as search, BUT we don't care about the isWord flag.
+    // We only care whether the path for this prefix exists at all.
+    public boolean startsWith(String prefix) {
+        TrieNode it = root;
+        for (char c : prefix.toCharArray()) {
+            int indexInTrieNode = c - 'a';
+            if (it.children[indexInTrieNode] == null) {
+                return false; // path breaks -> no word has this prefix
+            } else {
+                it = it.children[indexInTrieNode];
+            }
+        }
+        return true; // made it through the whole prefix -> it exists
+    }
+}
+
+/**
+ * Your Trie object will be instantiated and called as such:
+ * Trie obj = new Trie();
+ * obj.insert(word);
+ * boolean param_2 = obj.search(word);
+ * boolean param_3 = obj.startsWith(prefix);
+ */
