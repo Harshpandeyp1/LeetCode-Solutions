@@ -1,0 +1,125 @@
+/**
+ * QUESTION (LeetCode 211 - Design Add and Search Words Data Structure):
+ * Design a data structure that supports adding new words and finding if a string
+ * matches any previously added word.
+ *
+ * Implement the WordDictionary class:
+ * - WordDictionary() Initializes the object.
+ * - void addWord(word) Adds word to the data structure, it can be matched later.
+ * - boolean search(word) Returns true if there is any string in the data structure
+ *   that matches word. word may contain dots '.' where each dot can match any
+ *   one letter (a wildcard for exactly one character).
+ *
+ * APPROACH:
+ * Use a Trie (prefix tree), same base structure as a normal Trie, but the search
+ * function needs to be recursive instead of a simple loop, because a '.' can
+ * branch into 26 possible paths at once instead of just one.
+ * - addWord: identical to a normal trie insert -> walk/create letter by letter,
+ *   mark the final node as end-of-word (isLast).
+ * - search: walk letter by letter like a normal trie BUT whenever we hit a '.',
+ *   we don't know which child to follow, so we try ALL 26 children and succeed
+ *   if ANY of them leads to a match. This is why recursion (find) is needed
+ *   instead of a plain while-loop.
+ */
+class WordDictionary {
+
+    // Standard trie node: 26 possible next letters + a flag marking
+    // "a complete word ends here".
+    class TrieNode{
+        TrieNode children[];
+        boolean isLast;
+        TrieNode(){
+            children=new TrieNode[26];
+        }
+    }
+
+    TrieNode root;
+
+    public WordDictionary() {
+        root=new TrieNode(); // root doesn't represent a letter, just the starting point
+    }
+    
+    // APPROACH: exactly like inserting into a normal trie.
+    // Walk the word letter by letter, creating nodes when a path doesn't exist yet,
+    // then flag the last node as a complete word.
+    public void addWord(String word) {
+        TrieNode node=root;
+        for(char c:word.toCharArray()){
+            TrieNode curr=node.children[c-'a'];
+            if(curr==null){
+                node.children[c-'a']=new TrieNode(); // create missing path
+                curr=node.children[c-'a'];
+            }
+            node=curr; // move into the child
+        }
+        node.isLast=true; // mark end of word
+    }
+    
+    // Kick off the recursive search starting at index 0 and the root node.
+    public boolean search(String word) {
+        return find(0,word,root);
+    }
+
+    // APPROACH for find (recursive):
+    // indx = which character of "word" we're currently trying to match.
+    // node = which trie node we're currently standing on.
+    //
+    // Two cases at every step:
+    //   1) We're at the LAST character of the word -> this is the base case.
+    //      Check if a valid path exists ending in isLast=true.
+    //   2) We're NOT at the last character -> this is the recursive case.
+    //      Move one level deeper into the trie and call find() again.
+    //
+    // Inside both cases, we handle '.' differently from a normal letter:
+    //   - normal letter -> only ONE possible child to check/follow
+    //   - '.' -> UNKNOWN child, so loop over all 26 possible children;
+    //            succeed as soon as any ONE of them works
+    private boolean find(int indx,String word,TrieNode node){
+
+        // ---- BASE CASE: last character of the word ----
+        if(indx==word.length()-1){
+
+            // '.' at the last position -> check if ANY child is a valid word-ending
+            if(word.charAt(indx)=='.'){
+                for(int i=0;i<26;i++){
+                    if(node.children[i]!=null && node.children[i].isLast){
+                        return true; // found at least one match, done
+                    }
+                }
+                return false; // checked all 26, none worked -> IMPORTANT: outside the loop
+            }
+
+            // normal letter at the last position -> check that ONE specific child
+            if(node.children[word.charAt(indx)-'a']!=null && node.children[word.charAt(indx)-'a'].isLast){
+                return true;
+            }
+            return false;
+        }
+
+        // ---- RECURSIVE CASE: not the last character yet ----
+
+        // '.' in the middle -> try every possible child, recurse deeper on each,
+        // succeed if ANY branch eventually leads to a full match
+        if(word.charAt(indx)=='.'){
+            for(int i=0;i<26;i++){
+                if(node.children[i]!=null && find(indx+1,word,node.children[i])){
+                    return true; // one branch worked, no need to check the rest
+                }
+            }
+            return false; // none of the 26 branches worked -> outside the loop
+        }
+
+        // normal letter in the middle -> only one path to follow, go deeper if it exists
+        if(node.children[word.charAt(indx)-'a']!=null){
+            return find(indx+1,word,node.children[word.charAt(indx)-'a']);
+        }
+        return false; // path doesn't exist -> no match possible
+    }
+}
+
+/**
+ * Your WordDictionary object will be instantiated and called as such:
+ * WordDictionary obj = new WordDictionary();
+ * obj.addWord(word);
+ * boolean param_2 = obj.search(word);
+ */
