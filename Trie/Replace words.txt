@@ -1,0 +1,113 @@
+/**
+ * QUESTION (LeetCode 648 - Replace Words):
+ * In English, we have a concept called "root" which can be followed by other
+ * words to form another longer word - let's call this word "successor".
+ * Given a dictionary of roots and a sentence, replace all successors in the
+ * sentence with the ROOT forming it. If a successor can be replaced by more
+ * than one root, replace it with the root that has the shortest length.
+ *
+ * Example: dictionary = ["cat","bat","rat"], sentence = "the cattle was rattled by the battery"
+ * Output: "the cat was rat by the bat"
+ *
+ * APPROACH:
+ * Build a Trie out of all the dictionary roots.
+ * For each word in the sentence, walk down the trie letter by letter.
+ * The MOMENT we hit a node marked isword=true, that's the shortest matching
+ * root -> stop immediately and return it (this naturally gives the shortest
+ * root, since we check as we go, not after building the full word).
+ * If no root matches by the time the word ends (or the path breaks), keep
+ * the original word as-is.
+ */
+class Node {
+    Node child[];
+    boolean isword;
+    Node() {
+        child = new Node[26];
+        isword = false;
+    }
+}
+
+class Trie {
+    Node root;
+    Trie() {
+        root = new Node();
+    }
+
+    // APPROACH: standard trie insert.
+    // Walk the word letter by letter, creating nodes as needed,
+    // and mark the final node as end-of-word.
+    public void add(String word) {
+        Node temp = root;
+        for (char ch : word.toCharArray()) {
+            int indx = ch - 'a';
+            if (temp.child[indx] == null) {
+                temp.child[indx] = new Node();
+            }
+            temp = temp.child[indx];
+        }
+        temp.isword = true;
+    }
+
+    // FIX 1: this method was floating OUTSIDE the Trie class in your original
+    // code (it appeared after Trie's closing brace) - that's a syntax error.
+    // It belongs inside Trie, since it needs access to `root`.
+    //
+    // APPROACH: walk the word letter by letter. As soon as we land on a node
+    // that is flagged isword=true, that prefix IS a complete root in the
+    // dictionary -> return it immediately (shortest possible root, since we
+    // check at every step rather than waiting until the end).
+    // If the path breaks before finding any root, return "" (no match).
+    public String prefix(String word) {
+        Node temp = root;
+        for (int i = 0; i < word.length(); i++) {
+            char ch = word.charAt(i);
+            int indx = ch - 'a';
+            if (temp.child[indx] == null) {
+                return ""; // no root in the dictionary matches this word at all
+            }
+            temp = temp.child[indx];
+            if (temp.isword) {
+                return word.substring(0, i + 1); // shortest matching root found
+            }
+        }
+        return ""; // walked the whole word, never hit a root -> no match
+    }
+}
+
+class Solution {
+    public String replaceWords(List<String> dictionary, String sentence) {
+        StringBuilder res = new StringBuilder();
+        Trie trie = new Trie();
+
+        // insert every root word into the trie
+        for (String word : dictionary) {
+            trie.add(word);
+        }
+
+        String words[] = sentence.split(" ");
+        for (String word : words) {
+            String pfx = trie.prefix(word);
+
+            // FIX 2: String comparison must use .equals(), not ==.
+            // == compares object references, not string content -> this would
+            // often give the wrong answer even when the logic looks right.
+            if (pfx.equals("")) {
+                res.append(word); // no root found, keep original word
+            } else {
+                res.append(pfx); // replace with the shortest matching root
+            }
+
+            // FIX 3: you never added a space BETWEEN words - only one space
+            // was appended once at the very end. This would glue every word
+            // in the sentence together with no separators.
+            res.append(" ");
+        }
+
+        // FIX 4: your original code had `return res.toString().trim();` sitting
+        // OUTSIDE the method body (after the method's closing brace), which is
+        // a syntax error. It must be the last line INSIDE replaceWords, before
+        // its closing brace. trim() removes the one extra trailing space we
+        // added after the last word.
+        return res.toString().trim();
+    }
+}
