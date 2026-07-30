@@ -1,0 +1,173 @@
+import java.util.*;
+
+/*
+ * ============================================================
+ * QUESTION (LeetCode 1268 - Search Suggestions System)
+ * ============================================================
+ * We are given a list of "products" and a string "searchWord".
+ *
+ * Imagine a user typing "searchWord" one letter at a time into
+ * a search bar. After EACH letter they type, we must suggest
+ * up to 3 products from our list that:
+ *    1) start with whatever has been typed so far (the prefix)
+ *    2) are sorted alphabetically
+ *
+ * Example:
+ * products = ["mobile","mouse","moneypot","monitor","mousepad"]
+ * searchWord = "mouse"
+ *
+ * Output:
+ * [
+ *   ["mobile","moneypot","monitor"],  -> after typing "m"
+ *   ["mobile","moneypot","monitor"],  -> after typing "mo"
+ *   ["mouse","mousepad"],             -> after typing "mou"
+ *   ["mouse","mousepad"],             -> after typing "mous"
+ *   ["mouse","mousepad"]              -> after typing "mouse"
+ * ]
+ *
+ * ============================================================
+ * APPROACH (Trie)
+ * ============================================================
+ * Since we need "all products starting with a given prefix",
+ * and this needs to be checked repeatedly for growing prefixes,
+ * a Trie (prefix tree) is a very natural fit.
+ *
+ * STEP 1: Sort all products alphabetically FIRST.
+ *         Why? Because when we insert words into the trie in
+ *         sorted order, the first 3 words that arrive at any
+ *         given trie node will AUTOMATICALLY be the 3
+ *         lexicographically smallest ones passing through it.
+ *
+ * STEP 2: Insert every product into the trie letter by letter.
+ *         At EVERY node along the path, store the word in that
+ *         node's "suggestions" list -- but only keep the FIRST
+ *         3 words that ever reach that node (ignore the rest).
+ *
+ * STEP 3: To answer the query, walk through searchWord letter
+ *         by letter, moving down the trie as we go.
+ *         - If at any point the next letter doesn't exist in
+ *           the trie, that means NO product can match this
+ *           prefix anymore (or any longer prefix after it) ->
+ *           add an empty list for this and all remaining letters.
+ *         - Otherwise, just read off the pre-stored suggestions
+ *           list at that node -- no extra searching needed!
+ * ============================================================
+ */
+
+class Solution {
+
+    // A single node in our trie
+    class TrieNode {
+        TrieNode[] children = new TrieNode[26];   // 26 slots, one for each letter a-z
+
+        // stores AT MOST 3 words that pass through this node
+        // (these are the words we will suggest if the user's
+        // typed prefix ends exactly here)
+        List<String> suggestions = new ArrayList<>();
+    }
+
+    private TrieNode root = new TrieNode(); // empty root node, represents "no letters typed yet"
+
+    /*
+     * Inserts one word into the trie, letter by letter.
+     * Also updates the "suggestions" list at every node it passes through.
+     */
+    private void insert(String word) {
+        TrieNode node = root; // start walking from the root
+
+        for (char c : word.toCharArray()) {
+            int idx = c - 'a'; // convert letter to index (0-25)
+
+            // if this letter path doesn't exist yet, create a new node
+            if (node.children[idx] == null) {
+                node.children[idx] = new TrieNode();
+            }
+
+            node = node.children[idx]; // move down into that child node
+
+            // only add this word if the node doesn't already have 3 suggestions
+            // (since products are inserted in sorted order, whichever 3 arrive
+            // FIRST are already guaranteed to be the smallest 3 alphabetically)
+            if (node.suggestions.size() < 3) {
+                node.suggestions.add(word);
+            }
+        }
+    }
+
+    public List<List<String>> suggestedProducts(String[] products, String searchWord) {
+
+        // STEP 1: sort products alphabetically
+        // this ensures correct 3 suggestions get "locked in" at each trie node
+        Arrays.sort(products);
+
+        // STEP 2: insert every product into the trie
+        for (String product : products) {
+            insert(product);
+        }
+
+        List<List<String>> result = new ArrayList<>(); // final answer, one list per letter typed
+
+        TrieNode node = root;     // pointer that walks down the trie as we read searchWord
+        boolean broken = false;   // becomes true once we hit a dead end (no more matches possible)
+
+        // STEP 3: walk through searchWord one character at a time
+        for (char c : searchWord.toCharArray()) {
+            int idx = c - 'a';
+
+            // if we've already hit a dead end before, OR this letter doesn't
+            // exist in the trie at this point, no product can match anymore
+            if (broken || node.children[idx] == null) {
+                broken = true;                     // mark permanently broken
+                result.add(new ArrayList<>());      // no suggestions possible -> empty list
+            } else {
+                node = node.children[idx];          // move down the trie by one letter
+                result.add(node.suggestions);       // just grab the pre-stored top-3 list!
+            }
+        }
+
+        return result;
+    }
+}
+
+/*
+ * ============================================================
+ * DRY RUN EXAMPLE
+ * ============================================================
+ * products (before sort) = ["mobile","mouse","moneypot","monitor","mousepad"]
+ * after Arrays.sort()    = ["mobile","moneypot","monitor","mouse","mousepad"]
+ *
+ * Inserting in this exact order means at the node for prefix "m",
+ * the first 3 words to arrive are "mobile", "moneypot", "monitor"
+ * -> these get LOCKED IN as the suggestions for "m" (and "mo").
+ *
+ * Later, "mouse" and "mousepad" arrive too late to make it into
+ * the "m"/"mo" node's list (it's already full with 3), but they
+ * DO get properly added to the deeper nodes for "mou", "mous", "mouse"
+ * since those nodes are fresh and not yet full.
+ *
+ * searchWord = "mouse"
+ * i=0 'm' -> node exists -> suggestions = ["mobile","moneypot","monitor"]
+ * i=1 'o' -> node exists -> suggestions = ["mobile","moneypot","monitor"]
+ * i=2 'u' -> node exists -> suggestions = ["mouse","mousepad"]
+ * i=3 's' -> node exists -> suggestions = ["mouse","mousepad"]
+ * i=4 'e' -> node exists -> suggestions = ["mouse","mousepad"]
+ *
+ * Final Output:
+ * [
+ *   ["mobile","moneypot","monitor"],
+ *   ["mobile","moneypot","monitor"],
+ *   ["mouse","mousepad"],
+ *   ["mouse","mousepad"],
+ *   ["mouse","mousepad"]
+ * ]
+ * ============================================================
+ * COMPLEXITY
+ * ============================================================
+ * Let N = number of products, L = average length of a product name,
+ * S = length of searchWord.
+ *
+ * Building trie : O(N log N) for sort + O(N * L) for insertion
+ * Answering query: O(S) -- just walking down the trie, no searching needed!
+ * Space          : O(N * L) for trie nodes (each storing up to 3 string refs)
+ * ============================================================
+ */
