@@ -1,0 +1,93 @@
+/*
+ * ============================================================
+ * QUESTION (LeetCode 200 - Number of Islands)
+ * ============================================================
+ * Given a 2D grid of '1's (land) and '0's (water), count how
+ * many islands there are. An island is formed by connecting
+ * adjacent lands (horizontally or vertically only, NOT
+ * diagonally). Assume all edges of the grid are surrounded by
+ * water.
+ *
+ * Example:
+ * grid = [
+ *   ["1","1","0","0","0"],
+ *   ["1","1","0","0","0"],
+ *   ["0","0","1","0","0"],
+ *   ["0","0","0","1","1"]
+ * ]
+ * Output: 3
+ * (top-left block of 1's = 1 island, middle single 1 = 1 island,
+ *  bottom-right block of 1's = 1 island)
+ *
+ * ============================================================
+ * APPROACH (DFS + marking visited cells)
+ * ============================================================
+ * 1. Scan every cell in the grid.
+ * 2. Whenever we find an unvisited '1' (land we haven't counted
+ *    yet), that means we've discovered a BRAND NEW island.
+ *    - Increment our island count by 1.
+ *    - Run a DFS from that cell to "sink" the ENTIRE island --
+ *      i.e., visit every land cell connected to it (up, down,
+ *      left, right) and mark all of them as visited.
+ * 3. Marking visited cells is crucial: without it, we'd count
+ *    the same island multiple times (once for every '1' cell
+ *    inside it) instead of just once.
+ * 4. We mark visited cells by changing '1' -> '2' directly in
+ *    the grid. This avoids needing a separate boolean[][]
+ *    visited array, saving extra space.
+ * ============================================================
+ */
+
+class Solution {
+    int n = 0; // number of rows in the grid
+    int m = 0; // number of columns in the grid
+
+    public int numIslands(char[][] grid) {
+        n = grid.length;
+        m = grid[0].length;
+
+        int count = 0; // total number of islands found so far
+
+        // scan every single cell in the grid
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+
+                // found an unvisited piece of land -> it's the start of a NEW island
+                if (grid[i][j] == '1') {
+                    dfs(grid, i, j); // sink this entire island (mark all its cells as visited)
+                    count++;         // we've now counted one full island
+                }
+                // if grid[i][j] is '0' (water) or '2' (already-visited land),
+                // we simply skip it and move to the next cell
+            }
+        }
+
+        return count;
+    }
+
+    /*
+     * Recursively visits every land cell connected to (i, j),
+     * marking each one as '2' so it's never counted again.
+     */
+    public void dfs(char[][] grid, int i, int j) {
+
+        // stop if we've gone outside the grid boundaries
+        if (i < 0 || i >= n || j < 0 || j >= m) {
+            return;
+        }
+
+        // stop if this cell is water ('0') or already visited ('2')
+        if (grid[i][j] == '0' || grid[i][j] == '2') {
+            return;
+        }
+
+        // mark current cell as visited, so we don't process it again
+        grid[i][j] = '2';
+
+        // explore all 4 neighboring directions (up, right, down, left)
+        dfs(grid, i - 1, j); // up
+        dfs(grid, i, j + 1); // right
+        dfs(grid, i + 1, j); // down
+        dfs(grid, i, j - 1); // left
+    }
+}
