@@ -1,0 +1,144 @@
+/*
+ * ============================================================
+ * QUESTION (LeetCode 720 - Longest Word in Dictionary)
+ * ============================================================
+ * We are given an array of words.
+ * We need to find the LONGEST word in the array such that
+ * every prefix of that word (built one letter at a time)
+ * is ALSO present in the array.
+ *
+ * Example:
+ * words = ["w","wo","wor","worl","world"]
+ * "world" is valid because:
+ *   "w" exists ✔
+ *   "wo" exists ✔
+ *   "wor" exists ✔
+ *   "worl" exists ✔
+ *   "world" exists ✔
+ * So "world" can be built one character at a time -> answer = "world"
+ *
+ * If there is a tie (two words of same max length are valid),
+ * return the one that comes first alphabetically.
+ * If no such word exists, return "".
+ *
+ * ============================================================
+ * APPROACH (Trie + DFS)
+ * ============================================================
+ * 1. Insert every word into a Trie (prefix tree).
+ *    - Each node represents one character.
+ *    - Mark node.isword = true at the END of every inserted word.
+ *
+ * 2. Do a DFS starting from the root.
+ *    - Only move into a child node if that child is a COMPLETE
+ *      word (child.isword == true).
+ *    - This single check automatically ensures every prefix
+ *      along the path is a valid word -- exactly what the
+ *      question asks for.
+ *
+ * 3. While doing DFS, keep track of the longest path found.
+ *    - Since we visit children in order 'a' to 'z', the first
+ *      longest word we find is automatically the smallest
+ *      alphabetically (so ties are handled for free).
+ * ============================================================
+ */
+
+class Solution {
+
+    // A single node of the Trie
+    class TrieNode {
+        TrieNode[] child = new TrieNode[26]; // 26 slots, one per letter a-z
+        boolean isword = false;              // true if a word ENDS at this node
+    }
+
+    private TrieNode root = new TrieNode(); // root of the trie (empty node, no letter)
+
+    /*
+     * Inserts a single word into the trie letter by letter.
+     * Creates new nodes only when needed.
+     */
+    private void insert(String word) {
+        TrieNode node = root; // start walking from the root
+
+        for (char c : word.toCharArray()) {
+            int idx = c - 'a'; // convert character to index (0-25)
+
+            // if this letter path doesn't exist yet, create it
+            if (node.child[idx] == null) {
+                node.child[idx] = new TrieNode();
+            }
+
+            // move down to that child node
+            node = node.child[idx];
+        }
+
+        // after placing all letters, mark the LAST node as a valid word end
+        node.isword = true;
+    }
+
+    /*
+     * Main function:
+     * Step 1 - insert all words into the trie
+     * Step 2 - DFS to find the longest buildable word
+     */
+    public String longestWord(String[] words) {
+
+        // build the trie with all given words
+        for (String word : words) {
+            insert(word);
+        }
+
+        // res[0] stores our answer so far (using array so DFS can modify it)
+        String[] res = {""}; // start with empty string (length 0)
+
+        // start DFS from root with an empty path
+        dfs(root, new StringBuilder(), res);
+
+        return res[0]; // final answer
+    }
+
+    /*
+     * DFS function:
+     * Explores the trie, but ONLY moves into a child
+     * if that child itself is marked as a complete word.
+     * This enforces the "every prefix must exist" rule.
+     */
+    private void dfs(TrieNode node, StringBuilder path, String[] res) {
+
+        // try all 26 letters in order (a -> z)
+        // this order ensures alphabetical tie-breaking happens naturally
+        for (int i = 0; i < 26; i++) {
+
+            TrieNode child = node.child[i];
+
+            // only go deeper if:
+            // 1) this letter path exists (child != null)
+            // 2) this path itself forms a valid word (child.isword == true)
+            if (child != null && child.isword) {
+
+                path.append((char) ('a' + i)); // add this letter to our current path
+
+                // if this path is longer than our best answer so far, update answer
+                if (path.length() > res[0].length()) {
+                    res[0] = path.toString();
+                }
+
+                // recursively explore further down this path
+                dfs(child, path, res);
+
+                // BACKTRACK: remove the last letter before trying the next branch
+                // (since 'path' is shared/reused across all recursive calls)
+                path.deleteCharAt(path.length() - 1);
+            }
+        }
+    }
+}
+
+/*
+ * ============================================================
+ * COMPLEXITY
+ * ============================================================
+ * Time  : O(N * L)  -> N = number of words, L = average word length
+ *         (insertion is O(L) per word, DFS visits each node once)
+ * Space : O(N * L)  -> trie storage in the worst case (no shared prefixes)
+ * ============================================================
+ */
