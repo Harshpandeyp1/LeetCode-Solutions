@@ -1,0 +1,134 @@
+/*
+ * ============================================================
+ * PROBLEM: Pacific Atlantic Water Flow (LeetCode 417)
+ * ============================================================
+ * You are given an m x n integer matrix `heights` representing
+ * the height of each cell in a continent. The Pacific ocean
+ * touches the LEFT and TOP edges of the matrix, and the
+ * Atlantic ocean touches the RIGHT and BOTTOM edges.
+ *
+ * Water can flow from a cell to a neighboring cell (up, down,
+ * left, right) only if the neighboring cell's height is LESS
+ * THAN OR EQUAL TO the current cell's height (water flows
+ * downhill or on flat ground).
+ *
+ * Return a list of grid coordinates [r, c] where water can flow
+ * from that cell to BOTH the Pacific and Atlantic oceans.
+ *
+ * Example:
+ * Input: heights = [
+ *   [1,2,2,3,5],
+ *   [3,2,3,4,4],
+ *   [2,4,5,3,1],
+ *   [6,7,1,4,5],
+ *   [5,1,1,2,4]
+ * ]
+ * Output: [[0,4],[1,3],[1,4],[2,2],[3,0],[3,1],[4,0]]
+ *
+ * ============================================================
+ * APPROACH: Reverse DFS from Ocean Borders
+ * ============================================================
+ * Instead of checking, for every single cell, whether water can
+ * reach BOTH oceans (which would mean running DFS from every
+ * cell — expensive), we flip the problem:
+ *
+ * 1. Think backwards: start DFS FROM the ocean borders and walk
+ *    "uphill" (to cells with height >= current), since that is
+ *    the reverse of water flowing downhill INTO the ocean.
+ *
+ * 2. Run DFS from every cell along the TOP row and LEFT column
+ *    (Pacific border) marking all reachable cells in a
+ *    `pacific[][]` boolean grid.
+ *
+ * 3. Run DFS from every cell along the BOTTOM row and RIGHT
+ *    column (Atlantic border) marking all reachable cells in an
+ *    `atlantic[][]` boolean grid.
+ *
+ * 4. A cell can flow to both oceans if and only if it was
+ *    marked reachable in BOTH the pacific and atlantic grids.
+ *
+ * 5. Collect all such [i, j] coordinates and return them.
+ *
+ * Time Complexity:  O(R * C)  -> each cell visited a constant
+ *                                number of times across both DFS runs
+ * Space Complexity: O(R * C)  -> pacific/atlantic grids + recursion stack
+ * ============================================================
+ */
+
+class Solution {
+
+    // 4 possible movement directions: down, up, right, left
+    int dir[][] = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
+
+    public List<List<Integer>> pacificAtlantic(int[][] heights) {
+
+        List<List<Integer>> res = new ArrayList<>();
+
+        // Edge case: empty grid has no valid cells.
+        if (heights == null || heights.length == 0 || heights[0].length == 0) return res;
+
+        int row = heights.length, col = heights[0].length;
+
+        // pacific[i][j] = true if water from (i,j) can reach the Pacific
+        boolean[][] pacific = new boolean[row][col];
+
+        // atlantic[i][j] = true if water from (i,j) can reach the Atlantic
+        boolean[][] atlantic = new boolean[row][col];
+
+        // Step 1: DFS from every cell in the TOP row (Pacific) and
+        // BOTTOM row (Atlantic).
+        for (int i = 0; i < col; i++) {
+            dfs(heights, 0, i, Integer.MIN_VALUE, pacific);       // top row -> Pacific
+            dfs(heights, row - 1, i, Integer.MIN_VALUE, atlantic); // bottom row -> Atlantic
+        }
+
+        // Step 2: DFS from every cell in the LEFT column (Pacific) and
+        // RIGHT column (Atlantic).
+        for (int i = 0; i < row; i++) {
+            dfs(heights, i, 0, Integer.MIN_VALUE, pacific);       // left column -> Pacific
+            dfs(heights, i, col - 1, Integer.MIN_VALUE, atlantic); // right column -> Atlantic
+        }
+
+        // Step 3: A cell qualifies only if it's reachable from BOTH oceans.
+        for (int i = 0; i < row; i++) {
+            for (int j = 0; j < col; j++) {
+                if (pacific[i][j] && atlantic[i][j]) {
+                    res.add(Arrays.asList(i, j));
+                }
+            }
+        }
+
+        return res;
+    }
+
+    /**
+     * DFS helper: marks all cells reachable from (i, j) by moving to
+     * neighbors with height >= current cell's height (simulating
+     * water flowing "uphill" back from the ocean border).
+     *
+     * @param matrix the height grid
+     * @param i      current row
+     * @param j      current column
+     * @param prev   height of the previous cell we came from
+     * @param ocean  the visited-tracking grid (pacific or atlantic)
+     */
+    public void dfs(int[][] matrix, int i, int j, int prev, boolean[][] ocean) {
+
+        // Out of bounds -> stop.
+        if (i < 0 || i >= ocean.length || j < 0 || j >= ocean[0].length) return;
+
+        // Stop if:
+        // - current cell is lower than where we came from (water
+        //   couldn't have flowed this way), OR
+        // - we've already visited this cell for this ocean.
+        if (matrix[i][j] < prev || ocean[i][j]) return;
+
+        // Mark this cell as able to reach the ocean we're tracking.
+        ocean[i][j] = true;
+
+        // Explore all 4 neighboring directions.
+        for (int[] d : dir) {
+            dfs(matrix, i + d[0], j + d[1], matrix[i][j], ocean);
+        }
+    }
+}
