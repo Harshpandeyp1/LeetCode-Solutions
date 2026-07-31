@@ -1,0 +1,114 @@
+/*
+ * ============================================================
+ * PROBLEM: Course Schedule (LeetCode 207)
+ * ============================================================
+ * There are `numCourses` courses labeled 0 to numCourses - 1.
+ * You are given an array `prerequisites` where
+ * prerequisites[i] = [a, b] means you must take course b
+ * BEFORE course a.
+ *
+ * Return true if it's possible to finish all courses,
+ * i.e., there is no cycle in the course dependency graph.
+ * Otherwise, return false.
+ *
+ * Example:
+ * Input: numCourses = 2, prerequisites = [[1,0]]
+ * Output: true
+ * Explanation: Take course 0 first, then course 1. No cycle.
+ *
+ * Input: numCourses = 2, prerequisites = [[1,0],[0,1]]
+ * Output: false
+ * Explanation: Course 1 needs course 0, and course 0 needs
+ *              course 1 -> circular dependency -> impossible.
+ *
+ * ============================================================
+ * APPROACH: BFS - Kahn's Algorithm (Topological Sort)
+ * ============================================================
+ * 1. Model this as a directed graph:
+ *      - Each course is a node.
+ *      - An edge b -> a means "b must be completed before a"
+ *        (from prerequisites[i] = [a, b]).
+ *
+ * 2. Build:
+ *      - An adjacency list `graph` where graph[b] contains all
+ *        courses `a` that depend on b.
+ *      - An `indegree[]` array where indegree[a] = number of
+ *        prerequisites course `a` still needs.
+ *
+ * 3. Seed a queue with every course whose indegree is 0
+ *    (no prerequisites needed — can be taken immediately).
+ *
+ * 4. Run BFS (this is the "topological sort" part):
+ *      - Poll a course `curr` from the queue, count it as taken.
+ *      - For every course `next` that depends on `curr`:
+ *          - Decrease its indegree by 1 (one prerequisite done).
+ *          - If its indegree becomes 0, all its prerequisites
+ *            are satisfied, so enqueue it.
+ *
+ * 5. If we manage to process (count) all `numCourses`, there's
+ *    no cycle -> return true.
+ *    If count < numCourses, some courses were never reachable
+ *    (stuck in a cycle) -> return false.
+ *
+ * Time Complexity:  O(V + E)  -> V = numCourses, E = prerequisites.length
+ * Space Complexity: O(V + E)  -> adjacency list + indegree array + queue
+ * ============================================================
+ */
+
+class Solution {
+    public boolean canFinish(int numCourses, int[][] prerequisites) {
+
+        // graph[b] = list of courses that depend on course b
+        List<List<Integer>> graph = new ArrayList<>();
+
+        // indegree[a] = number of prerequisites course a still needs
+        int[] indegree = new int[numCourses];
+
+        // Step 1: Initialize an empty adjacency list for each course.
+        for (int i = 0; i < numCourses; i++) {
+            graph.add(new ArrayList<>());
+        }
+
+        // Step 2: Build the graph and indegree array from prerequisites.
+        // prerequisites[i] = [a, b] means: b -> a (take b before a)
+        for (int[] pre : prerequisites) {
+            int a = pre[0]; // course that has a prerequisite
+            int b = pre[1]; // the prerequisite course
+
+            graph.get(b).add(a); // edge: b -> a
+            indegree[a]++;       // a now depends on one more course
+        }
+
+        // Step 3: Seed the queue with all courses that have
+        // no prerequisites (indegree == 0) — these can be
+        // taken right away.
+        Queue<Integer> queue = new LinkedList<>();
+        for (int i = 0; i < numCourses; i++) {
+            if (indegree[i] == 0) {
+                queue.offer(i);
+            }
+        }
+
+        // Step 4: Process courses in BFS/topological order.
+        int count = 0; // tracks how many courses we successfully "take"
+
+        while (!queue.isEmpty()) {
+            int curr = queue.poll();
+            count++; // this course has been successfully scheduled
+
+            // "Unlock" courses that depended on curr.
+            for (int next : graph.get(curr)) {
+                indegree[next]--;
+
+                // If next has no remaining prerequisites,
+                // it's ready to be taken.
+                if (indegree[next] == 0) {
+                    queue.offer(next);
+                }
+            }
+        }
+
+        // Step 5: If we scheduled every course, there was no cycle.
+        return count == numCourses;
+    }
+}
