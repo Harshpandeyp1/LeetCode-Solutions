@@ -1,0 +1,133 @@
+/*
+ * ============================================================
+ * PROBLEM: Clone Graph (LeetCode 133)
+ * ============================================================
+ * Given a reference to a node in a connected undirected graph,
+ * return a deep copy (clone) of the graph.
+ *
+ * Each node in the graph contains a value (int) and a list of
+ * its neighbors (List<Node>).
+ *
+ * class Node {
+ *     public int val;
+ *     public List<Node> neighbors;
+ * }
+ *
+ * The graph is represented via adjacency list. Every node has a
+ * unique value, and the graph is connected (reachable from the
+ * given starting node).
+ *
+ * Example:
+ * Input: adjList = [[2,4],[1,3],[2,4],[1,3]]
+ * Output: [[2,4],[1,3],[2,4],[1,3]]
+ * Explanation: Node 1's neighbors are 2 and 4.
+ *              Node 2's neighbors are 1 and 3.
+ *              Node 3's neighbors are 2 and 4.
+ *              Node 4's neighbors are 1 and 3.
+ *
+ * ============================================================
+ * APPROACH: BFS (Breadth-First Search) Traversal
+ * ============================================================
+ * 1. Edge case: if the input node is null, there's nothing to
+ *    clone, so return null immediately.
+ *
+ * 2. Use a HashMap<Node, Node> to map every ORIGINAL node to its
+ *    CLONED counterpart. This serves two purposes:
+ *      a) Avoids creating duplicate clones for the same node.
+ *      b) Lets us detect if a node has already been visited.
+ *
+ * 3. Use a Queue to perform BFS level by level:
+ *      - Start by cloning the given node (with an empty neighbor
+ *        list for now) and add it to the map + queue.
+ *      - While the queue is not empty:
+ *          - Pop a node `h` (the original node).
+ *          - For each neighbor of `h` in the original graph:
+ *              - If that neighbor hasn't been cloned yet,
+ *                clone it (empty neighbor list) and enqueue it
+ *                so its own neighbors get processed later.
+ *              - Link the CLONE of `h` to the CLONE of neighbor
+ *                by adding it to the clone's neighbor list.
+ *
+ * 4. Since every node is added to the map/queue exactly once
+ *    (guarded by containsKey check), each node and edge is
+ *    processed only once.
+ *
+ * 5. Return the clone corresponding to the original starting
+ *    node — map.get(node).
+ *
+ * Time Complexity:  O(V + E)  -> visit every vertex and every edge once
+ * Space Complexity: O(V)      -> HashMap + Queue store up to V nodes
+ * ============================================================
+ */
+
+/*
+// Definition for a Node.
+class Node {
+    public int val;
+    public List<Node> neighbors;
+    public Node() {
+        val = 0;
+        neighbors = new ArrayList<Node>();
+    }
+    public Node(int _val) {
+        val = _val;
+        neighbors = new ArrayList<Node>();
+    }
+    public Node(int _val, ArrayList<Node> _neighbors) {
+        val = _val;
+        neighbors = _neighbors;
+    }
+}
+*/
+
+class Solution {
+    public Node cloneGraph(Node node) {
+
+        // Base case: an empty graph has nothing to clone.
+        if (node == null) return null;
+
+        // map: links each ORIGINAL node -> its CLONED node.
+        // Also doubles as our "visited" tracker.
+        Map<Node, Node> map = new HashMap<>();
+
+        // queue: drives the BFS traversal (holds ORIGINAL nodes
+        // whose neighbors still need to be processed).
+        Queue<Node> queue = new ArrayDeque<>();
+
+        // Step 1: Clone the starting node first (neighbors list
+        // empty for now — we'll fill it in as we go), then
+        // enqueue the ORIGINAL start node to begin BFS.
+        queue.add(node);
+        map.put(node, new Node(node.val, new ArrayList<>()));
+
+        // Step 2: Standard BFS loop.
+        while (!queue.isEmpty()) {
+
+            // h = current ORIGINAL node being processed.
+            Node h = queue.poll();
+
+            // Look at every neighbor of the current original node.
+            for (Node neighbor : h.neighbors) {
+
+                // If we haven't cloned this neighbor yet:
+                if (!map.containsKey(neighbor)) {
+                    // Create its clone (empty neighbor list for now)
+                    map.put(neighbor, new Node(neighbor.val, new ArrayList<>()));
+
+                    // Enqueue the ORIGINAL neighbor so its own
+                    // neighbors get processed in a future iteration.
+                    queue.add(neighbor);
+                }
+
+                // Connect the CLONE of h to the CLONE of neighbor.
+                // (This is how we rebuild the graph structure on
+                // the cloned side, edge by edge.)
+                map.get(h).neighbors.add(map.get(neighbor));
+            }
+        }
+
+        // Step 3: Return the clone that corresponds to the
+        // original input node.
+        return map.get(node);
+    }
+}
