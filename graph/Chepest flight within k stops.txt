@@ -1,0 +1,62 @@
+import java.util.*;   // needed for Arrays.fill(), Arrays.copyOf()
+
+/*
+    QUESTION: Cheapest Flights Within K Stops
+
+    There are n cities connected by some flights. Each flight has a
+    source, destination, and price. You are given src, dst, and k
+    (the maximum number of STOPS allowed, i.e. k+1 edges allowed).
+    Find the cheapest price to go from src to dst using at most k
+    stops. If no such route exists, return -1.
+
+    APPROACH: Bellman-Ford (limited to k+1 rounds)
+
+    Idea:
+    - price[i] = cheapest cost found so far to reach city i.
+    - Normally Bellman-Ford relaxes edges (V-1) times to guarantee
+      shortest path with unlimited stops. Here we only relax it
+      (k+1) times, because we are ONLY allowed k stops (k+1 edges).
+    - In each round, we use a COPY of the price array (called temp)
+      so that we only use distances found in the PREVIOUS round.
+      This prevents using more than 1 edge per round (which would
+      break the "at most k stops" rule).
+
+    Time Complexity: O(k * E)   where E = number of flights
+    Space Complexity: O(n)
+*/
+
+class Solution {
+    public int findCheapestPrice(int n, int[][] flights, int src, int dst, int k) {
+
+        int[] price = new int[n];              // price[i] = cheapest cost to reach city i
+        Arrays.fill(price, Integer.MAX_VALUE);  // start with "infinity" (unreachable) for all
+        price[src] = 0;                         // cost to reach the source itself is 0
+
+        // run only (k+1) rounds, since k stops means k+1 edges allowed
+        for (int i = 0; i < k + 1; i++) {
+
+            // copy current prices into temp, so this round only builds
+            // on LAST round's results (limits us to 1 extra edge per round)
+            int[] temp = Arrays.copyOf(price, n);
+
+            // go through every flight (edge) in this round
+            for (int[] flight : flights) {
+
+                int u = flight[0];   // source city of this flight
+                int v = flight[1];   // destination city of this flight
+                int w = flight[2];   // price of this flight
+
+                // only relax if u is reachable AND going through u is cheaper
+                // fixed: was "price[u]+2" (typo), should be "price[u]+w" (the actual flight price)
+                if (price[u] != Integer.MAX_VALUE && price[u] + w < temp[v]) {
+                    temp[v] = price[u] + w;   // update cheapest cost to reach v
+                }
+            }
+
+            price = temp;   // move to next round using this round's updated prices
+        }
+
+        // if dst is still "infinity", it was never reached -> return -1
+        return (price[dst] == Integer.MAX_VALUE) ? -1 : price[dst];
+    }
+}
