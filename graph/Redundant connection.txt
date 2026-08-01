@@ -1,0 +1,97 @@
+/*
+    APPROACH: Disjoint Set / Union-Find
+
+    Problem: We are given a graph that was originally a tree (n nodes,
+    n-1 edges) but one extra edge was added, making it have a cycle.
+    We need to find that one extra "redundant" edge.
+
+    Idea:
+    - Process edges one by one.
+    - Use Union-Find (DSU) to union the two nodes of each edge.
+    - If two nodes are ALREADY in the same group (same root parent)
+      before we union them, adding this edge creates a cycle.
+      That means this edge is the redundant one -> return it.
+
+    Time Complexity: O(N * α(N))  (α = inverse Ackermann, practically constant)
+    Space Complexity: O(N)
+*/
+
+class Solution {
+
+    int totalNodes;   // stores how many nodes/edges we have
+
+    public int[] findRedundantConnection(int[][] edges) {
+
+        totalNodes = edges.length;      // for this problem, nodes count = edges count
+        int[] res = new int[2];         // will hold the redundant edge {u, v}
+
+        DisjointSet dsu = new DisjointSet(totalNodes);   // create DSU with totalNodes nodes
+
+        // fixed: renamed loop variable from "edges" to "edge"
+        // (using "edges" here was shadowing the outer array and causing
+        // "edge[0]" below to be undefined)
+        for (int[] edge : edges) {
+
+            // try to union the two nodes of this edge (convert to 0-indexed)
+            if (!dsu.unionBySize(edge[0] - 1, edge[1] - 1)) {
+                // if union returns false, both nodes were already connected
+                // so this edge is the one causing the cycle
+                res = edge;
+            }
+        }
+
+        return res;   // return the last edge that caused a cycle
+    }
+
+    // Inner class implementing Union-Find (Disjoint Set Union)
+    class DisjointSet {
+
+        int parent[];   // parent[i] = parent of node i
+        int size[];     // size[i] = size of the group rooted at i
+
+        // constructor: initially every node is its own parent (own group)
+        DisjointSet(int nodes) {
+            this.parent = new int[nodes];
+            this.size = new int[nodes];
+            for (int i = 0; i < nodes; i++) {
+                this.parent[i] = i;   // every node starts as its own root
+                this.size[i] = 1;     // every group starts with size 1
+            }
+        }
+
+        // finds the root parent of a node (with path compression)
+        public int findRootParent(int node) {
+            if (node == parent[node]) {
+                return node;   // node is its own parent -> it's the root
+            }
+            // path compression: point node directly to its root
+            parent[node] = findRootParent(parent[node]);
+            return parent[node];
+        }
+
+        // unions two nodes' groups by size; returns false if already unioned
+        public boolean unionBySize(int node1, int node2) {
+
+            // 1. find the root parent of both nodes
+            int rootParent1 = findRootParent(node1);
+            int rootParent2 = findRootParent(node2);
+
+            // if both already have the same root, they are already connected
+            // -> this edge would create a cycle
+            if (rootParent1 == rootParent2) {
+                return false;
+            }
+
+            // 2. union the smaller group into the bigger group
+            if (size[rootParent1] < size[rootParent2]) {
+                parent[rootParent1] = rootParent2;     // attach smaller under bigger
+                size[rootParent2] += size[rootParent1]; // update bigger group's size
+            } else {
+                parent[rootParent2] = rootParent1;
+                size[rootParent1] += size[rootParent2];
+            }
+
+            return true;   // union successful, no cycle from this edge
+        }
+    }
+}
