@@ -1,0 +1,110 @@
+import java.util.*;   // bring in ArrayList, PriorityQueue, Arrays, etc.
+
+/*
+    APPROACH: Dijkstra's Algorithm (Single Source Shortest Path)
+
+    Problem: There are n nodes labelled 1 to n. Signal starts at node k.
+    We need to find the time it takes for the signal to reach ALL nodes.
+    If some node is unreachable, return -1. Otherwise return the max
+    of all shortest distances (because the "network delay" is decided
+    by whichever node takes the longest to receive the signal).
+
+    Steps:
+    1. Build an adjacency list from the given edges (times[]).
+    2. Run Dijkstra from source node k.
+       - Use a min-heap (priority queue) that always gives us the node
+         with the smallest known distance so far.
+       - Relax edges: if going through u gives a shorter path to v,
+         update it and push it into the queue.
+    3. After Dijkstra finishes, `time[]` holds the shortest distance
+       from k to every other node.
+    4. The answer is the maximum value in `time[]`.
+       - If any node still has distance = Integer.MAX_VALUE, it means
+         that node was never reached -> return -1.
+
+    Time Complexity: O(E log V)  (typical Dijkstra with a heap)
+    Space Complexity: O(V + E)
+*/
+
+class Solution {
+
+    // This function finds shortest distance from "src" to every other node
+    public int[] dijkstra(int src, int n, ArrayList<ArrayList<int[]>> adj) {
+
+        // create a min-heap (priority queue) that will always give us
+        // the pair {node, distance} having the SMALLEST distance first
+        PriorityQueue<int[]> pq = new PriorityQueue<>(
+            (p1, p2) -> p1[1] - p2[1]   // compare by distance (index 1)
+        );
+
+        // time[i] will store the shortest distance from src to node i
+        int[] time = new int[n];              // create array of size n
+        Arrays.fill(time, Integer.MAX_VALUE); // fill all with "infinity" (unknown distance)
+        time[src] = 0;                        // distance to source itself is 0
+
+        // push the source node into the queue with distance 0
+        pq.offer(new int[]{src, 0});
+
+        // keep processing until the queue is empty
+        while (!pq.isEmpty()) {
+
+            int[] pair = pq.poll();   // take out the node with smallest distance
+            int u = pair[0];          // current node
+            int d = pair[1];          // distance recorded when we pushed it
+
+            // if this distance is old/outdated (we already found something shorter), skip it
+            if (d > time[u]) continue;
+
+            // check all neighbors of current node u
+            for (int[] neighbor : adj.get(u)) {
+
+                int v = neighbor[0];   // neighbor node
+                int w = neighbor[1];   // weight/time of edge u -> v
+
+                // if going through u gives a shorter path to v, update it
+                if (time[u] + w < time[v]) {
+                    time[v] = time[u] + w;       // update shortest distance to v
+                    pq.offer(new int[]{v, time[v]}); // push updated node into queue
+                }
+            }
+        }
+
+        // after the loop ends, time[] has the final shortest distances
+        return time;
+    }
+
+    // main function required by the problem
+    public int networkDelayTime(int[][] times, int n, int k) {
+
+        // create an empty adjacency list, one list for each node
+        ArrayList<ArrayList<int[]>> adj = new ArrayList<>();
+
+        // initialize each node's neighbor list as empty
+        for (int i = 0; i < n; i++) {
+            adj.add(new ArrayList<>());
+        }
+
+        // go through each edge given in "times" and build the graph
+        for (int[] t : times) {
+            int u = t[0] - 1;   // source node of edge (convert 1-indexed to 0-indexed)
+            int v = t[1] - 1;   // destination node of edge (convert to 0-indexed)
+            int w = t[2];       // weight/time taken for this edge
+
+            adj.get(u).add(new int[]{v, w});  // add edge u -> v with weight w
+        }
+
+        // run dijkstra starting from node (k-1) since our graph is 0-indexed
+        int[] minTime = dijkstra(k - 1, n, adj);
+
+        // res will store the maximum time among all shortest distances
+        int res = Integer.MIN_VALUE;
+
+        // go through every node's shortest distance
+        for (int t : minTime) {
+            res = Math.max(res, t);   // keep track of the largest distance seen
+        }
+
+        // if res is still "infinity" (MAX_VALUE), some node was never reached
+        return (res == Integer.MAX_VALUE) ? -1 : res;
+    }
+}
