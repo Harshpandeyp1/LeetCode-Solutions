@@ -1,0 +1,54 @@
+/**
+ * QUESTION: Jump Game
+ * -------------------
+ * You are given an integer array nums. You start at index 0.
+ * Each element nums[i] represents the maximum jump length from that
+ * position. Determine whether you can reach the last index.
+ *
+ * APPROACH: Greedy (Backward Traversal)
+ * --------------------------------------
+ * Instead of trying to jump forward from index 0 (which can branch
+ * into many possibilities), we work backward from the last index.
+ *
+ * We maintain "finalPos" = the leftmost index from which the last
+ * index is currently known to be reachable (initially it's the
+ * last index itself, since it trivially "reaches" itself).
+ *
+ * We scan from right to left. For each index idx, we check if we
+ * can jump from idx all the way to finalPos (i.e. idx + nums[idx]
+ * >= finalPos). If we can, then idx itself becomes reachable to
+ * the end, so we update finalPos = idx (this is now the new
+ * leftmost "good" index).
+ *
+ * At the end, if finalPos has been pulled all the way down to 0,
+ * it means index 0 can reach the last index — so return true.
+ * Otherwise, return false.
+ *
+ * Why this works: it's equivalent to checking forward reachability,
+ * but greedily tracking the minimum index that can still reach the
+ * goal avoids recomputation and runs in O(n) time, O(1) space.
+ */
+class Solution {
+    public boolean canJump(int[] nums) {
+        // finalPos = leftmost index known to reach the last index.
+        // Start with the last index itself.
+        int finalPos = nums.length - 1;
+
+        // Traverse from second-last index down to the start
+        for (int idx = nums.length - 2; idx >= 0; idx--) {
+
+            // If from idx we can jump far enough to reach (or pass)
+            // the current finalPos, then idx can also reach the end.
+            if (idx + nums[idx] >= finalPos) {
+                // Update finalPos to this new, smaller reachable index
+                finalPos = idx;
+            }
+            // else: idx cannot reach finalPos, so it stays "unreachable"
+            // and we move on (finalPos remains unchanged)
+        }
+
+        // If finalPos got reduced all the way to 0,
+        // it means index 0 can reach the last index.
+        return finalPos == 0;
+    }
+}
