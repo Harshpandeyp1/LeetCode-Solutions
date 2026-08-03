@@ -1,0 +1,62 @@
+/**
+ * QUESTION: Jump Game II
+ * ----------------------
+ * You are given an integer array nums (0-indexed). You start at index 0.
+ * nums[i] represents the maximum jump length from index i.
+ * Return the MINIMUM number of jumps needed to reach the last index.
+ * (It's guaranteed you can always reach the last index.)
+ *
+ * APPROACH: Greedy (BFS-style Level Jumping)
+ * -------------------------------------------
+ * Think of this like a BFS where each "level" is one jump.
+ * - "coverage" = the farthest index reachable using the jumps taken so far
+ *                (i.e., farthest index reachable from the CURRENT level).
+ * - "lastjumpindx" = the last index reachable using the current number
+ *                    of jumps (the boundary of the current level).
+ *
+ * As we scan left to right, we keep expanding "coverage" — the farthest
+ * we could reach if we jumped from any index within the current level.
+ *
+ * When i reaches "lastjumpindx" (the edge of the current level), it means
+ * we've explored every index reachable with the current jump count.
+ * So we must take ONE more jump to move into the next level, and the
+ * new level's boundary becomes "coverage" (the farthest we found).
+ *
+ * If at any point coverage already reaches/exceeds the destination,
+ * we can stop early — no need to keep scanning.
+ *
+ * Why greedy works: at each level, we always pick the reach that
+ * maximizes how far we can go next, which guarantees the minimum
+ * number of jumps (classic greedy/BFS-level argument).
+ */
+class Solution {
+    public int jump(int[] nums) {
+        int totaljump = 0;
+        int destination = nums.length - 1;
+        int coverage = 0;       // farthest index reachable so far
+        int lastjumpindx = 0;   // boundary of the current "jump level"
+
+        // Edge case: already at the last index, no jumps needed
+        if (nums.length == 1) return 0;
+
+        for (int i = 0; i < nums.length; i++) {
+            // Update the farthest index reachable from any index
+            // visited so far within the current level
+            coverage = Math.max(coverage, i + nums[i]);  // fixed: Math.max (lowercase)
+
+            // If we've reached the edge of the current jump level,
+            // we must take another jump to move forward
+            if (i == lastjumpindx) {
+                lastjumpindx = coverage;   // extend boundary to new level
+                totaljump++;               // count this jump
+
+                // Early exit: if new boundary already covers the
+                // destination, no need to scan further
+                if (coverage >= destination) {
+                    return totaljump;
+                }
+            }
+        }
+        return totaljump;
+    }
+}
