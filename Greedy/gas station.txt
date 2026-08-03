@@ -1,0 +1,59 @@
+/**
+ * QUESTION: Gas Station
+ * ----------------------
+ * There are n gas stations along a circular route. gas[i] is the amount
+ * of fuel available at station i. cost[i] is the fuel needed to travel
+ * from station i to station i+1. You start with an empty tank at some
+ * station and want to travel around the circuit once in one direction.
+ * Return the starting gas station's index if it's possible to complete
+ * the circuit, otherwise return -1. (The answer is guaranteed unique
+ * if one exists.)
+ *
+ * APPROACH: Greedy (Single Pass)
+ * --------------------------------
+ * Key insight 1 (Feasibility check):
+ *   If totalgas < totalcost overall, it's impossible to complete the
+ *   circuit no matter where you start — return -1 immediately.
+ *
+ * Key insight 2 (Finding the start index):
+ *   Track "currgas" = running fuel balance (gas[i]-cost[i]) as we go
+ *   from a candidate start index forward.
+ *   If currgas ever drops below 0, it means the current "startindx"
+ *   CANNOT be the answer, and — crucially — NONE of the indices between
+ *   the old startindx and i can be the answer either (because if you
+ *   couldn't make it from startindx to i+1, starting from any point
+ *   in between would run out even sooner or the same). So we reset
+ *   startindx to i+1 and reset currgas to 0, and keep scanning.
+ *
+ * Since we already verified totalgas >= totalcost, whatever startindx
+ * we end up with after one full pass is guaranteed to be a valid
+ * answer (this is the greedy proof for this classic problem).
+ */
+class Solution {
+    public int canCompleteCircuit(int[] gas, int[] cost) {
+        int totalgas = 0;
+        int totalcost = 0;
+        int currgas = 0;     // running tank balance from current startindx
+        int startindx = 0;   // candidate starting station
+
+        // Single pass: accumulate totals AND find candidate start together
+        for (int i = 0; i < gas.length; i++) {
+            totalgas += gas[i];
+            totalcost += cost[i];
+
+            currgas += gas[i] - cost[i];
+
+            // If tank goes negative, this start point (and everything
+            // before i+1) fails — try starting fresh from the next station
+            if (currgas < 0) {
+                startindx = i + 1;
+                currgas = 0;
+            }
+        }
+
+        // After the loop, check overall feasibility
+        if (totalgas < totalcost) return -1;
+
+        return startindx;
+    }
+}
