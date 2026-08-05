@@ -1,0 +1,51 @@
+/**
+ * QUESTION: Partition Labels
+ * -----------------------------
+ * You are given a string s. Partition it into as many parts as possible
+ * so that each letter appears in at most one part. Return a list of
+ * integers representing the size of each partition.
+ *
+ * APPROACH: Greedy (Expand Window Using Last Occurrence)
+ * ----------------------------------------------------------
+ * For each character, we need to know the LAST index at which it
+ * appears in the string — that tells us how far a partition containing
+ * that character must extend.
+ *
+ * Starting a new partition at "startIndx", we set "endIndx" = the last
+ * occurrence of s.charAt(startIndx). Then we scan every character
+ * WITHIN the current window [startIndx, endIndx]. If any of those
+ * characters has a last occurrence FURTHER than our current endIndx,
+ * we must extend endIndx to include it too (since that character can't
+ * be split across two partitions).
+ *
+ * We keep expanding endIndx until we scan through to it with no further
+ * extensions needed — at that point, the partition is "closed" (no
+ * character inside it appears again later in the string).
+ *
+ * We record its size (endIndx-startIndx+1), then jump i to endIndx+1
+ * to start the next partition.
+ */
+
+class Solution {
+    public List<Integer> partitionLabels(String s) {
+        List<Integer> partition = new ArrayList<>(); // list to store the size of each partition
+
+        for (int i = 0; i < s.length(); i++) { // iterate through the string, i marks start of a new partition
+            int startIndx = i; // remember where this partition starts
+            int endIndx = s.lastIndexOf(s.charAt(startIndx)); // find the last occurrence of the starting character
+
+            for (int j = startIndx + 1; j <= endIndx; j++) { // scan every character within the current window
+                int lastIndexOfNextChar = s.lastIndexOf(s.charAt(j)); // find last occurrence of this character too
+
+                if (lastIndexOfNextChar > endIndx) { // if that character appears further ahead than our current boundary
+                    endIndx = lastIndexOfNextChar; // extend the window to include it
+                }
+            }
+
+            partition.add(endIndx - startIndx + 1); // partition size = end - start + 1, add to result list
+            i = endIndx; // jump i to endIndx (loop's i++ will move it to endIndx+1 next iteration)
+        }
+
+        return partition; // return all partition sizes
+    }
+}
