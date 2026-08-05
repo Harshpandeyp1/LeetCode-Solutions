@@ -1,0 +1,79 @@
+/*
+Question:
+846. Hand of Straights
+
+You are given an integer array 'hand' where each element represents a card
+and an integer 'groupSize'.
+
+Return true if it is possible to rearrange the cards into groups such that:
+1. Each group contains exactly groupSize cards.
+2. Every group consists of consecutive integers.
+
+Approach:
+1. If the total number of cards is not divisible by groupSize,
+   it is impossible to form valid groups.
+2. Sort the array so that we always process the smallest available card first.
+3. Store the frequency of every card using a HashMap.
+4. Traverse the sorted array.
+5. If a card is already used, skip it.
+6. Otherwise, try to form a consecutive group of size groupSize.
+7. If any required card is missing, return false.
+8. Decrease the frequency of every used card and remove it when its count becomes zero.
+9. If all cards are successfully grouped, return true.
+
+Time Complexity: O(N log N)
+Space Complexity: O(N)
+*/
+
+class Solution {
+    public boolean isNStraightHand(int[] hand, int groupSize) {
+
+        // If cards cannot be divided equally into groups
+        if (hand.length % groupSize != 0) {
+            return false;
+        }
+
+        // Sort the cards so we always start from the smallest available card
+        Arrays.sort(hand);
+
+        // HashMap to store the frequency of each card
+        HashMap<Integer, Integer> map = new HashMap<>();
+
+        // Count the occurrences of every card
+        for (int i = 0; i < hand.length; i++) {
+            map.put(hand[i], map.getOrDefault(hand[i], 0) + 1);
+        }
+
+        // Traverse every card in sorted order
+        for (int carde : hand) {
+
+            // Skip if this card has already been used completely
+            if (!map.containsKey(carde)) {
+                continue;
+            }
+
+            // Try to form one consecutive group starting from carde
+            for (int i = 0; i < groupSize; i++) {
+
+                // Current card required in the group
+                int card = carde + i;
+
+                // If the required card is not available, grouping is impossible
+                if (!map.containsKey(card)) {
+                    return false;
+                }
+
+                // Use one occurrence of the current card
+                map.put(card, map.get(card) - 1);
+
+                // Remove the card from the map if all copies are used
+                if (map.get(card) == 0) {
+                    map.remove(card);
+                }
+            }
+        }
+
+        // All groups were formed successfully
+        return true;
+    }
+}
