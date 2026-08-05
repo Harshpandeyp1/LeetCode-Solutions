@@ -1,0 +1,63 @@
+/*
+Question:
+Given an array of intervals where intervals[i] = [starti, endi],
+merge all overlapping intervals and return an array of the non-overlapping intervals.
+
+Example:
+Input: intervals = [[1,3],[2,6],[8,10],[15,18]]
+Output: [[1,6],[8,10],[15,18]]
+
+Approach:
+1. If there is only one interval, return it.
+2. Sort all intervals based on their starting time.
+3. Create a list to store the merged intervals.
+4. Take the first interval as the current interval (newInterval).
+5. Traverse through all intervals:
+   - If the current interval overlaps with newInterval,
+     merge them by updating the ending point.
+   - Otherwise, add the current interval as a new interval.
+6. Convert the list into a 2D array and return it.
+
+Time Complexity: O(n log n)
+- Sorting takes O(n log n)
+- Traversing intervals takes O(n)
+
+Space Complexity: O(n)
+- Extra space used for storing merged intervals.
+*/
+
+class Solution {
+    public int[][] merge(int[][] intervals) {
+
+        // If there is only one interval, no merging is required.
+        if (intervals.length <= 1)
+            return intervals;
+
+        // Step 1: Sort intervals based on their start time.
+        Arrays.sort(intervals, Comparator.comparingInt(i -> i[0]));
+
+        // List to store merged intervals.
+        List<int[]> res = new ArrayList<>();
+
+        // Initialize with the first interval.
+        int[] newInterval = intervals[0];
+        res.add(newInterval);
+
+        // Step 2: Traverse through all intervals.
+        for (int[] interval : intervals) {
+
+            // If intervals overlap, merge them.
+            if (interval[0] <= newInterval[1]) {
+                newInterval[1] = Math.max(newInterval[1], interval[1]);
+            }
+            // If they do not overlap, start a new interval.
+            else {
+                newInterval = interval;
+                res.add(newInterval);
+            }
+        }
+
+        // Convert the list into a 2D array and return.
+        return res.toArray(new int[res.size()][]);
+    }
+}
