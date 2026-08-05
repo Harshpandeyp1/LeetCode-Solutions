@@ -1,0 +1,48 @@
+/**
+ * QUESTION: Non-overlapping Intervals
+ * -------------------------------------
+ * Given an array of intervals (each [start, end]), find the minimum
+ * number of intervals you need to remove so that the rest of the
+ * intervals are non-overlapping.
+ *
+ * APPROACH: Greedy (Sort by End Time)
+ * --------------------------------------
+ * Classic "activity selection" greedy strategy:
+ * Sort intervals by their END time. Then greedily keep an interval
+ * if its start is >= the end of the last kept interval (no overlap).
+ * Keeping the interval that finishes EARLIEST at each step leaves the
+ * maximum possible room for future intervals — this maximizes the
+ * count of intervals we can KEEP without overlap.
+ *
+ * "count" = number of intervals we can keep (non-overlapping).
+ * "prev"  = index of the last interval we decided to KEEP.
+ *
+ * We start comparing from i=1 (not i=0), since intervals[0] is
+ * always kept by default (that's why count starts at 1).
+ *
+ * Finally, the answer (intervals to REMOVE) = total intervals - count.
+ */
+class Solution {
+    public int eraseOverlapIntervals(int[][] intervals) {
+        if (intervals.length == 0) return 0;
+
+        // Sort by end time — greedy choice: prefer intervals that end earliest
+        Arrays.sort(intervals, Comparator.comparingInt(a -> a[1])); // fixed lambda syntax
+
+        int count = 1;   // first interval is always kept
+        int prev = 0;    // index of last kept interval
+
+        // Start from i=1 since intervals[0] is the initial "kept" interval
+        for (int i = 1; i < intervals.length; i++) {  // fixed: start at 1, not 0
+            // If current interval starts on/after the last kept interval ends,
+            // there's no overlap — keep it
+            if (intervals[i][0] >= intervals[prev][1]) {
+                prev = i;
+                count++;
+            }
+            // else: overlaps with the last kept interval — skip it (implicitly removed)
+        }
+
+        return intervals.length - count;  // fixed: intervals.length, not interval.length
+    }
+}
