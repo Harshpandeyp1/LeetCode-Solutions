@@ -1,0 +1,64 @@
+/**
+ * LeetCode 213 - House Robber II
+ *
+ * Question:
+ * Same as House Robber I, but now the houses are arranged in a CIRCLE
+ * (the first house and the last house are adjacent to each other).
+ * You still cannot rob two adjacent houses. Find the maximum money
+ * you can rob without alerting the police.
+ *
+ * Example:
+ * nums = [2,3,2]   -> 3  (can't rob both house 0 and house 2, they're adjacent in circle)
+ * nums = [1,2,3,1] -> 4  (rob house 1 and house 3)
+ *
+ * Approach: Break circle into two linear subproblems
+ * -------------------------------------------------------
+ * Since it's circular, house 0 and house (n-1) can't both be robbed.
+ * So the answer is one of these two cases (take the better one):
+ *
+ *   Case 1: Skip the LAST house  -> consider houses [0 .. n-2]
+ *   Case 2: Skip the FIRST house -> consider houses [1 .. n-1]
+ *
+ * Each case becomes a plain LINEAR House Robber I problem, solved by
+ * robhelper() using the standard dp[i] = max(dp[i-1], dp[i-2] + nums[i]).
+ *
+ * Final answer = max(result of case 1, result of case 2)
+ *
+ * Time Complexity:  O(n)  -> two linear passes over arrays of size n-1
+ * Space Complexity: O(n)  -> two extra arrays of size n-1, plus dp array inside robhelper
+ */
+class Solution {
+    public int rob(int[] nums) {
+        // Edge case: only 1 house -> no adjacency conflict, just take it
+        if (nums.length < 2) return nums[0];
+
+        // skiplast  = houses [0 .. n-2]  (exclude the last house)
+        // skipfirst = houses [1 .. n-1]  (exclude the first house)
+        int[] skiplast = new int[nums.length - 1];
+        int[] skipfirst = new int[nums.length - 1];
+
+        for (int i = 0; i < nums.length - 1; i++) {
+            skiplast[i] = nums[i];
+            skipfirst[i] = nums[i + 1];
+        }
+
+        // Solve each as a standard linear House Robber problem
+        int lootskiplast = robhelper(skiplast);
+        int lootskipfirst = robhelper(skipfirst);
+
+        // Best of the two cases is the answer
+        return Math.max(lootskiplast, lootskipfirst);
+    }
+
+    // Standard House Robber I logic (linear street, no circular constraint)
+    public int robhelper(int[] nums) {
+        int[] dp = new int[nums.length];
+        dp[0] = nums[0];
+        dp[1] = Math.max(nums[0], nums[1]);
+
+        for (int i = 2; i < nums.length; i++) {
+            dp[i] = Math.max(dp[i - 2] + nums[i], dp[i - 1]);
+        }
+        return dp[nums.length - 1];
+    }
+}
