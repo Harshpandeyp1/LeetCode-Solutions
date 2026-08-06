@@ -1,0 +1,65 @@
+/**
+ * LeetCode 322 - Coin Change
+ *
+ * Question:
+ * You are given an integer array `coins` representing coin denominations,
+ * and an integer `amount` representing a target amount of money.
+ * Return the FEWEST number of coins needed to make up that amount.
+ * If the amount cannot be made up by any combination of coins, return -1.
+ * (You have an infinite supply of each coin denomination.)
+ *
+ * Example:
+ * coins = [1,2,5], amount = 11 -> 3 (5+5+1)
+ * coins = [2], amount = 3      -> -1 (impossible)
+ *
+ * Approach: Dynamic Programming (Bottom-Up / Tabulation)
+ * -------------------------------------------------------
+ * mincoins[i] = minimum number of coins needed to make amount `i`.
+ *
+ * For every amount i from 1 to `amount`, try every coin denomination:
+ *   - If `coin` can be used (coin <= i) AND amount (i - coin) is reachable,
+ *     then one option is: 1 coin (this `coin`) + mincoins[i - coin]
+ *   - Take the minimum over all coin choices.
+ *
+ * Recurrence:
+ *   mincoins[i] = min( mincoins[i], 1 + mincoins[i - coin] )   for each valid coin
+ *
+ * Base case:
+ *   mincoins[0] = 0  -> 0 coins needed to make amount 0
+ *
+ * Sentinel value:
+ *   We use Integer.MAX_VALUE to represent "this amount is NOT reachable yet".
+ *   IMPORTANT: initialize with MAX_VALUE (not MIN_VALUE) so Math.min()
+ *   comparisons behave correctly — otherwise mincoins[i] would incorrectly
+ *   get stuck at MIN_VALUE and the whole DP breaks.
+ *
+ * Time Complexity:  O(amount * coins.length)
+ * Space Complexity: O(amount)
+ */
+class Solution {
+    public int coinChange(int[] coins, int amount) {
+        // Edge case: amount 0 (or negative) needs 0 coins
+        if (amount < 1) return 0;
+
+        int[] mincoins = new int[amount + 1];
+        mincoins[0] = 0; // base case: 0 coins needed to make amount 0
+
+        for (int i = 1; i <= amount; i++) {
+            // Assume amount i is unreachable until proven otherwise
+            mincoins[i] = Integer.MAX_VALUE;
+
+            for (int coin : coins) {
+                // Only consider this coin if it fits, and the remaining
+                // amount (i - coin) is actually reachable (not MAX_VALUE)
+                if (coin <= i && mincoins[i - coin] != Integer.MAX_VALUE) {
+                    mincoins[i] = Math.min(mincoins[i], 1 + mincoins[i - coin]);
+                }
+            }
+        }
+
+        // If amount is still unreachable, no combination of coins works
+        if (mincoins[amount] == Integer.MAX_VALUE) return -1;
+
+        return mincoins[amount];
+    }
+}
