@@ -1,0 +1,98 @@
+class Solution {
+    public int lengthOfLIS(int[] nums) {
+
+        // QUESTION:
+        // Given an integer array nums, find the length of the
+        // longest strictly increasing subsequence.
+        //
+        // Example:
+        // nums = [10, 9, 2, 5, 3, 7, 101, 18]
+        //
+        // One LIS is: [2, 3, 7, 101]
+        // Answer = 4
+
+
+        // Edge case:
+        // If array is empty, there is no subsequence.
+        if (nums.length == 0) return 0;
+
+
+        // dp[i] means:
+        // "Length of the longest increasing subsequence
+        // ending exactly at index i."
+        //
+        // Initially every element can form a subsequence
+        // by itself, so every dp[i] starts with 1.
+        //
+        // Example:
+        // nums = [10, 9, 2, 5, 3, 7, 101, 18]
+        //
+        // Initially:
+        // dp = [1, 1, 1, 1, 1, 1, 1, 1]
+
+        int[] dp = new int[nums.length];
+        Arrays.fill(dp, 1);
+
+
+        // Stores the maximum value found in dp[].
+        //
+        // Why?
+        // The LIS can end at ANY index, so the final answer
+        // is the maximum value in dp[].
+        int maxLen = 1;
+
+
+        // i = current element
+        //
+        // For every element nums[i], we try to find a previous
+        // element that can be placed before it.
+        for (int i = 0; i < nums.length; i++) {
+
+
+            // j = previous elements
+            //
+            // We only check elements before i because a
+            // subsequence must maintain the original order.
+            for (int j = 0; j < i; j++) {
+
+
+                // If nums[j] < nums[i], then nums[i] can be
+                // added after nums[j].
+                //
+                // Example:
+                // nums[j] = 5
+                // nums[i] = 7
+                //
+                // 5 < 7  --> YES
+                //
+                // So if there was a subsequence ending at 5,
+                // we can extend it by adding 7.
+                if (nums[j] < nums[i]) {
+
+
+                    // dp[j] = longest increasing subsequence
+                    //        ending at nums[j]
+                    //
+                    // dp[j] + 1 = extend that subsequence
+                    //             by adding nums[i]
+                    //
+                    // Math.max() is used because nums[i] may be
+                    // connected to multiple previous elements.
+                    //
+                    // We want the BEST / LONGEST one.
+
+                    dp[i] = Math.max(dp[i], dp[j] + 1);
+                }
+            }
+
+
+            // LIS can end at any index.
+            // Therefore keep track of the largest dp[i].
+            maxLen = Math.max(maxLen, dp[i]);
+        }
+
+
+        // Return the length of the longest increasing subsequence.
+        return maxLen;
+    }
+}
