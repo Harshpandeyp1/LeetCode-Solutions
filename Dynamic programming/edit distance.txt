@@ -1,0 +1,83 @@
+/**
+ * LeetCode 72. Edit Distance
+ * -----------------------------------------------------------------
+ * QUESTION:
+ * Given two strings word1 and word2, return the minimum number of
+ * operations required to convert word1 to word2.
+ *
+ * You have the following three operations permitted on a word:
+ *   1. Insert a character
+ *   2. Delete a character
+ *   3. Replace a character
+ *
+ * Example:
+ *   word1 = "horse", word2 = "ros"
+ *   Output: 3
+ *   Explanation: horse -> rorse (replace 'h' with 'r')
+ *                rorse -> rose  (remove 'r')
+ *                rose  -> ros   (remove 'e')
+ * -----------------------------------------------------------------
+ * APPROACH: Dynamic Programming (Bottom-Up, 2D table)
+ *
+ * Let dp[i][j] = minimum edit distance between:
+ *                word1[0..i-1] (first i chars of word1)
+ *                word2[0..j-1] (first j chars of word2)
+ *
+ * Base cases:
+ *   dp[i][0] = i   -> convert word1[0..i-1] to empty string => i deletions
+ *   dp[0][j] = j   -> convert empty string to word2[0..j-1] => j insertions
+ *
+ * Transition:
+ *   If word1.charAt(i-1) == word2.charAt(j-1):
+ *       Characters match, no operation needed for this pair.
+ *       dp[i][j] = dp[i-1][j-1]
+ *
+ *   Else, take the minimum of the 3 possible operations, plus 1:
+ *       - Replace : dp[i-1][j-1]  (fix last char of word1 to match, move diagonally)
+ *       - Delete  : dp[i-1][j]    (delete last char of word1, move up)
+ *       - Insert  : dp[i][j-1]    (insert matching char into word1, move left)
+ *       dp[i][j] = 1 + min(replace, delete, insert)
+ *
+ * Answer: dp[m][n]
+ *
+ * Time Complexity:  O(m * n)
+ * Space Complexity: O(m * n)
+ * -----------------------------------------------------------------
+ */
+class Solution {
+    public int minDistance(String word1, String word2) {
+        final int m = word1.length();
+        final int n = word2.length();
+
+        // dp[i][j] = edit distance between word1[0..i-1] and word2[0..j-1]
+        int[][] dp = new int[m + 1][n + 1];
+
+        // Base case: converting word1 prefix of length i to empty string
+        // requires i deletions
+        for (int i = 1; i <= m; ++i) dp[i][0] = i;
+
+        // Base case: converting empty string to word2 prefix of length j
+        // requires j insertions
+        for (int j = 1; j <= n; ++j) dp[0][j] = j;
+
+        for (int i = 1; i <= m; ++i) {
+            for (int j = 1; j <= n; ++j) {
+
+                if (word1.charAt(i - 1) == word2.charAt(j - 1)) {
+                    // Characters match -> no extra operation needed,
+                    // inherit answer from the diagonal (both pointers move back)
+                    dp[i][j] = dp[i - 1][j - 1];
+                } else {
+                    // Characters differ -> consider all 3 operations
+                    int replace = dp[i - 1][j - 1]; // substitute word1[i-1] with word2[j-1]
+                    int delete  = dp[i - 1][j];      // delete word1[i-1]
+                    int insert  = dp[i][j - 1];       // insert word2[j-1] into word1
+
+                    dp[i][j] = 1 + Math.min(replace, Math.min(delete, insert));
+                }
+            }
+        }
+
+        return dp[m][n];
+    }
+}
