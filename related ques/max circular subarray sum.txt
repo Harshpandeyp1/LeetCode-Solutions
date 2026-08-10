@@ -1,0 +1,50 @@
+class Solution {
+    /*
+        APPROACH: Maximum Sum Circular Subarray
+        -----------------------------------------
+        A circular subarray's maximum sum falls into one of two cases:
+
+        CASE 1: The max subarray does NOT wrap around.
+                -> This is just the standard Kadane's algorithm (maxsum).
+
+        CASE 2: The max subarray DOES wrap around (uses a suffix + prefix).
+                -> Instead of building this wrap-around subarray directly,
+                   think of it as: total sum of array - (one excluded middle chunk).
+                -> To maximize what we KEEP, we must MINIMIZE what we EXCLUDE.
+                -> So we find the minimum subarray sum (using Kadane's algorithm,
+                   but minimizing instead of maximizing) and subtract it from
+                   the total sum.
+
+        FINAL ANSWER = max(maxsum, totalsum - minsum)
+
+        EDGE CASE: If all numbers are negative, minsum will equal totalsum
+                   (the whole array becomes the "excluded" minimum subarray),
+                   which would wrongly give 0 for case 2. Since a subarray
+                   can't be empty, in this situation we simply return maxsum.
+    */
+    public int maxSubarraySumCircular(int[] nums) {
+        int maxsum = nums[0], currmax = 0; // tracks best normal (non-wrapping) subarray sum
+        int minsum = nums[0], currmin = 0; // tracks worst (minimum) subarray sum - the "excluded" chunk
+        int totalsum = 0;                  // sum of all elements in the array
+
+        for (int num : nums) {
+            // standard Kadane's algorithm for maximum subarray sum
+            currmax = Math.max(num, currmax + num);
+            maxsum = Math.max(currmax, maxsum);
+
+            // Kadane's algorithm variant for minimum subarray sum
+            currmin = Math.min(num, currmin + num);
+            minsum = Math.min(currmin, minsum);
+
+            totalsum += num;
+        }
+
+        // edge case: all elements negative -> wrap-around case is invalid
+        if (maxsum < 0) {
+            return maxsum;
+        }
+
+        // compare normal case vs wrap-around case (total - excluded min chunk)
+        return Math.max(maxsum, totalsum - minsum);
+    }
+}
