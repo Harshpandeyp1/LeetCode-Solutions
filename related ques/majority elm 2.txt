@@ -1,0 +1,49 @@
+/*
+ * Problem: Majority Element II — LeetCode 229
+ * ---------------------------------------------------
+ * Given an integer array nums of size n, return all elements 
+ * that appear more than floor(n / 3) times. Return in any order.
+ *
+ * Note: Unlike Majority Element I (more than n/2), this problem 
+ * can have AT MOST 2 valid answers (never more, due to pigeonhole 
+ * principle — you can't have 3+ elements each appearing more 
+ * than n/3 times, since that would exceed n total elements).
+ *
+ * Example:
+ * Input: nums = [1,1,1,3,3,2,2,2]
+ * Output: [1,2]
+ *
+ *
+ * Approach: HashMap Frequency Count
+ * ---------------------------------------------------
+ * 1. Count the frequency of every VALUE in nums using a HashMap.
+ * 2. After counting is complete, iterate through the map and 
+ *    collect every value whose count is strictly greater than n/3.
+ * 3. Return the collected list.
+ *
+ * Time Complexity: O(n)
+ * Space Complexity: O(n)
+ */
+
+class Solution {
+    public List<Integer> majorityElement(int[] nums) {
+        int n = nums.length / 3; // threshold (need count > n)
+        
+        HashMap<Integer, Integer> map = new HashMap<>();
+        List<Integer> result = new ArrayList<>();
+        
+        // Step 1: Count frequency of each value
+        for (int num : nums) {
+            map.put(num, map.getOrDefault(num, 0) + 1);
+        }
+        
+        // Step 2: Collect all values whose count exceeds n/3
+        for (int key : map.keySet()) {
+            if (map.get(key) > n) {
+                result.add(key);
+            }
+        }
+        
+        return result;
+    }
+}
