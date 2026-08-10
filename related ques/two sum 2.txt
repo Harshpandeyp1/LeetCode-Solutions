@@ -1,0 +1,62 @@
+/*
+ * Problem: Two Sum (1-Indexed) — LeetCode 167 style
+ * ---------------------------------------------------
+ * Given a 1-indexed array of integers `numbers` that is sorted in 
+ * non-decreasing order, find two numbers such that they add up to 
+ * a specific `target` number.
+ *
+ * Return the indices of the two numbers (1-based), index1 and index2, 
+ * added by one as an integer array [index1, index2] of length 2.
+ *
+ * Note: You may assume that each input would have exactly one solution 
+ * and you may not use the same element twice.
+ *
+ * Example:
+ * Input: numbers = [2,7,11,15], target = 9
+ * Output: [1,2]
+ * Explanation: numbers[1] + numbers[2] = 2 + 7 = 9, so we return [1, 2].
+ *
+ *
+ * Approach: HashMap (One-Pass) with 1-based indexing
+ * ---------------------------------------------------
+ * 1. Convert the given 0-based array into a 1-based array by shifting 
+ *    all elements one position to the right (index 0 left as dummy/unused).
+ * 2. Traverse the 1-based array from index 1 to end.
+ * 3. For each element, calculate the complement: sum = target - current value.
+ * 4. Check if this complement already exists in the HashMap:
+ *    - If yes, we found our pair -> return their indices.
+ *    - If no, store the current value along with its index in the map, 
+ *      so future elements can check against it.
+ * 5. Since each value maps to its index, lookups are O(1), making the 
+ *    overall approach O(n) time and O(n) space.
+ */
+
+class Solution {
+    public int[] twoSum(int[] numbers, int target) {
+        
+        // Map to store: value -> its 1-based index
+        HashMap<Integer, Integer> map = new HashMap<>();
+        
+        // Step 1: Convert 0-based array to 1-based array
+        int[] onebased = new int[numbers.length + 1]; // index 0 unused
+        for (int i = 0; i < numbers.length; i++) {
+            onebased[i + 1] = numbers[i];
+        }
+        
+        // Step 2: Traverse 1-based array to find the pair
+        for (int i = 1; i < onebased.length; i++) {
+            int sum = target - onebased[i]; // complement needed
+            
+            if (map.containsKey(sum)) {
+                // Found the pair -> return their 1-based indices
+                return new int[]{map.get(sum), i};
+            } else {
+                // Store current value with its index for future lookup
+                map.put(onebased[i], i);
+            }
+        }
+        
+        // No solution found (shouldn't happen as per problem constraints)
+        return new int[]{};
+    }
+}
