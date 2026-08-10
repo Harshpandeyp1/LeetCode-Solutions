@@ -1,0 +1,63 @@
+/*
+ * Problem: Contains Duplicate II — LeetCode 219
+ * ---------------------------------------------------
+ * Given an integer array `nums` and an integer `k`, return true if 
+ * there are two distinct indices `i` and `j` in the array such that:
+ *    1. nums[i] == nums[j]
+ *    2. Math.abs(i - j) <= k
+ * Otherwise, return false.
+ *
+ * In simple words: check if any duplicate value exists in the array 
+ * such that its two occurrences are within `k` positions of each other.
+ *
+ * Example 1:
+ * Input: nums = [1,2,3,1], k = 3
+ * Output: true
+ * Explanation: nums[0] = 1 and nums[3] = 1, |0-3| = 3 <= k(3).
+ *
+ * Example 2:
+ * Input: nums = [1,2,3,1,2,3], k = 2
+ * Output: false
+ * Explanation: Duplicates exist (1,2,3) but all are more than 2 
+ * indices apart.
+ *
+ *
+ * Approach: HashMap (Single Pass)
+ * ---------------------------------------------------
+ * 1. Traverse the array once, keeping a HashMap of 
+ *    value -> most recent index at which it was seen.
+ * 2. For each element nums[i]:
+ *    - If it already exists in the map, check whether the gap 
+ *      between the current index and the stored index is <= k.
+ *      - If yes, we found a valid nearby duplicate -> return true.
+ *    - Update the map with the current index for this value 
+ *      (so future occurrences check against the closest previous one).
+ * 3. If we finish the loop without finding such a pair, return false.
+ *
+ * This avoids the O(n^2) brute-force of comparing every pair, 
+ * bringing it down to O(n) time using O(n) extra space.
+ */
+
+class Solution {
+    public boolean containsNearbyDuplicate(int[] nums, int k) {
+        int n = nums.length;
+        
+        // Map to store: value -> most recent index it was seen at
+        HashMap<Integer, Integer> map = new HashMap<>();
+        
+        for (int i = 0; i < n; i++) {
+            
+            // Check if nums[i] was seen before AND the index gap is within k
+            // (ternary here is redundant since the condition is already boolean,
+            //  but kept as-is per requirement)
+            if (map.containsKey(nums[i]) && (i - map.get(nums[i]) <= k) ? true : false) {
+                return true; // valid nearby duplicate found
+            }
+            
+            // Store/update the most recent index for this value
+            map.put(nums[i], i);
+        }
+        
+        return false; // no nearby duplicate found
+    }
+}
