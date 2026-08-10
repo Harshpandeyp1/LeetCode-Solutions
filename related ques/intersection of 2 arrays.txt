@@ -1,0 +1,56 @@
+/*
+ * Problem: Intersection of Two Arrays — LeetCode 349
+ * ---------------------------------------------------
+ * Given two integer arrays nums1 and nums2, return an array of 
+ * their intersection. Each element in the result must be unique, 
+ * and the result can be returned in any order.
+ *
+ * Example:
+ * Input: nums1 = [1,2,2,1], nums2 = [2,2]
+ * Output: [2]
+ *
+ *
+ * Approach: HashSet
+ * ---------------------------------------------------
+ * 1. Add all elements of nums1 into a HashSet (removes duplicates, 
+ *    allows O(1) lookup).
+ * 2. Iterate through nums2, and for each element, check if it 
+ *    exists in the set built from nums1.
+ *    - If yes, add it to a second HashSet `ans` (this also 
+ *      ensures no duplicate values in the final result).
+ * 3. Convert the `ans` set into a result array and return it.
+ *
+ * Time Complexity: O(n + m)
+ * Space Complexity: O(n + m)
+ */
+
+class Solution {
+    public int[] intersection(int[] nums1, int[] nums2) {
+        int n = nums1.length;
+        int m = nums2.length;
+        
+        HashSet<Integer> set = new HashSet<>(); // stores unique elements of nums1
+        HashSet<Integer> ans = new HashSet<>(); // stores common elements (unique)
+        
+        // Step 1: Add all elements of nums1 into set
+        for (int i = 0; i < n; i++) {
+            set.add(nums1[i]);
+        }
+        
+        // Step 2: Check elements of nums2 against set built from nums1
+        for (int i = 0; i < m; i++) {
+            if (set.contains(nums2[i])) {   // FIXED: nums2[i] not nums1[i]
+                ans.add(nums2[i]);           // FIXED: nums2[i] not nums1[i]
+            }
+        }
+        
+        // Step 3: Convert ans set into result array
+        int[] res = new int[ans.size()];     // FIXED: correct size, no "-1"
+        int i = 0;
+        for (int num : ans) {
+            res[i++] = num;                  // FIXED: num, not ans
+        }
+        
+        return res;
+    }
+}
