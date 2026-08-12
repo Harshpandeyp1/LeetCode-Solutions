@@ -1,0 +1,85 @@
+import java.util.Arrays;
+
+/*
+ * QUESTION: 3Sum Closest
+ * ------------------------
+ * Given an integer array nums of length n and an integer target,
+ * find three integers in nums such that the sum is closest to target.
+ * Return the sum of the three integers.
+ * You may assume that each input would have exactly one solution.
+ *
+ * Example:
+ * Input: nums = [-1, 2, 1, -4], target = 1
+ * Output: 2
+ * Explanation: The sum that is closest to the target is 2. (-1 + 2 + 1 = 2)
+ */
+
+/*
+ * APPROACH: Sort + Two Pointers
+ * -------------------------------
+ * 1. Sort the array first. Sorting allows us to use two pointers
+ *    to efficiently search for pairs, moving in a predictable direction.
+ *
+ * 2. Fix one number at index i (outer loop). This reduces the problem
+ *    from "find 3 numbers" to "find 2 numbers" for the rest of the array.
+ *
+ * 3. Use two pointers (left = i+1, right = n-1) to scan for the best
+ *    pair to combine with nums[i]:
+ *      - Calculate sum = nums[i] + nums[left] + nums[right]
+ *      - If this sum is closer to target than our best sum so far,
+ *        update closestSum.
+ *      - If sum == target, we found the exact match — return immediately,
+ *        since nothing can be closer than an exact match.
+ *      - If sum < target, we need a bigger sum → move left pointer
+ *        forward (left++) to get a larger number.
+ *      - If sum > target, we need a smaller sum → move right pointer
+ *        backward (right--) to get a smaller number.
+ *
+ * 4. Repeat for every i, keeping track of the overall closest sum.
+ *
+ * TIME COMPLEXITY: O(n^2)  -> outer loop O(n) * inner two-pointer scan O(n)
+ * SPACE COMPLEXITY: O(1) extra (ignoring sort's internal space)
+ */
+
+class Solution {
+    public int threeSumClosest(int[] nums, int target) {
+        // Step 1: Sort the array so we can use two pointers reliably
+        Arrays.sort(nums);
+        int n = nums.length;
+
+        // Step 2: Initialize closestSum with the first possible triplet
+        // (any valid starting guess works; we'll improve it as we go)
+        int closestSum = nums[0] + nums[1] + nums[2];
+
+        // Step 3: Fix one number at index i, and two-pointer search the rest
+        for (int i = 0; i < n - 2; i++) {
+            int left = i + 1;   // pointer just after i
+            int right = n - 1;  // pointer at the end of array
+
+            while (left < right) {
+                // current triplet sum
+                int sum = nums[left] + nums[right] + nums[i];
+
+                // update closestSum if this sum is nearer to target
+                // (using absolute difference, since "closest" ignores direction)
+                if (Math.abs(sum - target) < Math.abs(closestSum - target)) {
+                    closestSum = sum;
+                }
+
+                if (sum == target) {
+                    // exact match found — can't get any closer than this
+                    return sum;
+                } else if (sum < target) {
+                    // sum too small, need a bigger number -> move left forward
+                    left++;
+                } else {
+                    // sum too big, need a smaller number -> move right backward
+                    right--;
+                }
+            }
+        }
+
+        // Step 4: Return the closest sum found across all triplets
+        return closestSum;
+    }
+}
