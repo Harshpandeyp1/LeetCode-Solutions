@@ -1,0 +1,140 @@
+/*
+ * QUESTION: Substring with Concatenation of All Words
+ * -----------------------------------------------------
+ * You're given a string `s` and an array of words `words`,
+ * where every word has the SAME length.
+ *
+ * Find all starting indices in `s` where a substring is exactly
+ * a concatenation of ALL the words in `words`, each used exactly
+ * once, in ANY order.
+ *
+ * Example:
+ * s = "barfoothefoobarman"
+ * words = ["foo","bar"]
+ * Output: [0, 9]
+ * (because s[0:6] = "barfoo" and s[9:15] = "foobar" are both
+ *  valid concatenations of "foo" and "bar")
+ *
+ *
+ * APPROACH: Sliding Window + Frequency Map
+ * -----------------------------------------------------
+ * 1. Since all words are the same length, chop `s` into fixed-size
+ *    chunks of size `wordLen` and check each chunk against a word list.
+ *
+ * 2. A match could start at ANY character offset (0, 1, 2, ... wordLen-1),
+ *    not just multiples of wordLen. So we repeat the whole process once
+ *    per starting offset.
+ *
+ * 3. For each offset, slide a window forward one word-chunk at a time:
+ *      - If the chunk is a valid word and we don't have too many of it,
+ *        add it to our window.
+ *      - If we now have TOO MANY of that word, shrink the window from
+ *        the left until the count is back in range.
+ *      - If the chunk is NOT a valid word at all, the whole window is
+ *        broken — wipe it and restart right after this bad chunk.
+ *      - If the window now contains exactly all the words we need,
+ *        record it as a match, then shrink by one word to keep sliding.
+ */
+
+class Solution {
+    public List<Integer> findSubstring(String s, String[] words) {
+        
+        // This will store all valid starting indices we find
+        List<Integer> result = new ArrayList<>();
+        
+        // Length of one word (all words are guaranteed same length)
+        int wordLen = words[0].length();
+        
+        // How many words total we need to use
+        int numWords = words.length;
+        
+        // Total length of a valid match = wordLen * numWords
+        int totalLen = wordLen * numWords;
+        
+        // Length of the string we are searching in
+        int sLen = s.length();
+        
+        // If s is shorter than a full match, it's impossible — quit early
+        if (sLen < totalLen) {
+            return result;
+        }
+        
+        // Build a frequency map: how many times each word appears in words[]
+        // e.g. words = ["foo","bar","foo"] -> {foo: 2, bar: 1}
+        Map<String, Integer> wordCount = new HashMap<>();
+        for (String w : words) {
+            wordCount.put(w, wordCount.getOrDefault(w, 0) + 1);
+        }
+        
+        // Try every possible starting offset (0 to wordLen - 1)
+        // because matches don't always start at multiples of wordLen
+        for (int offset = 0; offset < wordLen; offset++) {
+            
+            // left = starting index of our current window
+            int left = offset;
+            
+            // count = how many words are currently inside our window
+            int count = 0;
+            
+            // currCount = tracks how many of each word is in our window right now
+            Map<String, Integer> currCount = new HashMap<>();
+            
+            // Slide forward one whole word-length at a time
+            for (int start = offset; start + wordLen <= sLen; start += wordLen) {
+                
+                // Grab the next chunk of the string to check
+                String word = s.substring(start, start + wordLen);
+                
+                // CASE 1: this chunk IS one of our target words
+                if (wordCount.containsKey(word)) {
+                    
+                    // Add this word into our window's tally
+                    currCount.put(word, currCount.getOrDefault(word, 0) + 1);
+                    count++; // one more word is now in the window
+                    
+                    // CASE 1a: we now have MORE of this word than allowed
+                    // e.g. window has two "foo" but words[] only allows one
+                    while (currCount.get(word) > wordCount.get(word)) {
+                        
+                        // Look at the word sitting at the left edge of window
+                        String leftWord = s.substring(left, left + wordLen);
+                        
+                        // Remove it from our tally
+                        currCount.put(leftWord, currCount.get(leftWord) - 1);
+                        
+                        // Shrink window: move left edge forward
+                        left += wordLen;
+                        
+                        // One less word in the window now
+                        count--;
+                    }
+                    
+                    // CASE 1b: window now has exactly all the words we need
+                    if (count == numWords) {
+                        
+                        // This is a valid match! Save its starting index
+                        result.add(left);
+                        
+                        // Shrink by ONE word from the left so we can
+                        // keep sliding and look for the next match too
+                        String leftWord = s.substring(left, left + wordLen);
+                        currCount.put(leftWord, currCount.get(leftWord) - 1);
+                        left += wordLen;
+                        count--;
+                    }
+                    
+                } else {
+                    // CASE 2: this chunk is NOT a valid word at all
+                    // It poisons the whole window — no match can include it
+                    
+                    currCount.clear();      // forget everything we tracked
+                    count = 0;               // reset word counter
+                    left = start + wordLen;  // restart window right after this bad word
+                }
+            }
+        }
+        
+        // Return all starting indices where a valid match was found
+        return result;
+    }
+}
