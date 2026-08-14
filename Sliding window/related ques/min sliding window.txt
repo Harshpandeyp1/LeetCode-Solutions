@@ -1,0 +1,119 @@
+// ============================================================
+// APPROACH: Sliding Window (Two Pointers) - Minimum Window Substring
+// ------------------------------------------------------------
+// Idea: 
+// 1. Count the frequency of every character needed from t.
+// 2. Use two pointers (windowStart, windowEnd) to define a window in s.
+// 3. EXPAND the window by moving windowEnd forward, and every time we 
+//    collect a character we need in the exact required amount, 
+//    decrease "uniquecharcount" (this tracks how many distinct 
+//    characters are still NOT fully satisfied).
+// 4. Once uniquecharcount becomes 0, it means the current window 
+//    contains ALL characters of t (with correct frequency) -> window is valid.
+// 5. SHRINK the window from the left as much as possible while it 
+//    stays valid, recording the smallest valid window length seen so far.
+// 6. The moment shrinking removes a required character below its 
+//    needed count, uniquecharcount goes back above 0, so we stop 
+//    shrinking and resume expanding.
+// 7. Repeat until windowEnd reaches the end of s.
+// 8. Return the smallest valid window found, or "" if none exists.
+//
+// Time Complexity: O(n + m) -> each pointer moves forward at most n times
+// Space Complexity: O(m) -> for the frequency map of t
+// ============================================================
+
+class Solution {
+    // Expand until uniqueCharCount becomes 0.
+    // Then shrink until uniqueCharCount becomes greater than 0.
+    // Repeat until the end of the string.
+    public String minWindow(String s, String t) {
+        
+        HashMap<Character,Integer> freqMap = new HashMap<>(); 
+        // freqMap will store: for each character in t, how many of it we still need
+
+        // ---- STEP 1: populate the map with characters of t ----
+        for(int i = 0; i < t.length(); i++){
+            char ch = t.charAt(i); // current character of t
+            freqMap.put(ch, freqMap.getOrDefault(ch, 0) + 1); 
+            // find the frequency of each character in t
+            // e.g. if t = "AAB", freqMap becomes {A:2, B:1}
+        }
+
+        int uniquecharcount = freqMap.size(); 
+        // how many DISTINCT characters we still need to fully satisfy
+        // (this decreases only when a character's required count is exactly met)
+
+        int startIndx = -1;     // where the best (minimum) window starts; -1 means no answer found yet
+        int windowStart = 0;    // left pointer of the window
+        int windowEnd = 0;      // right pointer of the window
+        int minLen = Integer.MAX_VALUE; // length of smallest valid window found so far, starts as "infinity"
+        int n = s.length();     // length of string s
+
+        // ---- STEP 2: slide the window across s ----
+        while(windowEnd < n){
+
+            // ---- EXPANSION PHASE ----
+            // Move windowEnd forward, trying to collect characters needed from t.
+            // Jaise milega vaise unique count decrement hoga (as we find needed chars, count goes down),
+            // jab tak unique count decrement hoke 0 nahi ban jata tab tak expand karte rahenge
+            // (we keep expanding until uniquecharcount becomes 0, meaning window is valid)
+
+            char ch = s.charAt(windowEnd); // the new character entering the window from the right
+
+            if(freqMap.containsKey(ch)){ // do we actually need this character (is it part of t)?
+                freqMap.put(ch, freqMap.get(ch) - 1); 
+                // mark it as used: reduce how many more of this character we still need
+                // if we now have MORE than enough, this value goes negative (that's fine, it just means "extra")
+
+                if(freqMap.get(ch) == 0){ 
+                    // if count hits exactly 0, it means we now have exactly the required amount of this character
+                    uniquecharcount--; // one more distinct requirement satisfied
+                }
+            }
+        
+            // ---- SHRINKING PHASE ----
+            // This runs only when window is fully valid (contains everything t needs)
+            while(uniquecharcount == 0){ 
+
+                // find current window length
+                int len = windowEnd - windowStart + 1; 
+                // length nikal ke min se compare karo, agar chota mila to min ko update karo
+                // (calculate length, compare with current minimum, update if smaller)
+
+                if(len < minLen){
+                    minLen = len;             // update smallest length found
+                    startIndx = windowStart;  // best answer starts from here
+                }
+
+                ch = s.charAt(windowStart); 
+                // the character about to be removed as we shrink from the left
+
+                // shrink karo, or check karo ki ye character t mein tha ya nahi
+                // agar tha, to uska freq wapas badhao, aur agar 0 se jyada ho gaya 
+                // to matlab ab ye character phir se missing hai, so unique count badhao
+                if(freqMap.containsKey(ch)){ // was this character part of t?
+                    freqMap.put(ch, freqMap.get(ch) + 1); 
+                    // add 1 back because now we need one more of this character again (we're removing it from window)
+
+                    if(freqMap.get(ch) > 0){ 
+                        // if this pushed the count above 0, it means we no longer have enough of this character
+                        uniquecharcount++; // one element is now missing again, window becomes invalid
+                    }
+                }
+
+                windowStart++; // move left pointer forward to shrink the window
+            }
+
+            windowEnd++; // move right pointer forward to continue expanding (outer loop)
+        }
+        
+        // ---- STEP 3: return the result ----
+        if(startIndx == -1){
+            return ""; // no valid window was ever found
+        }
+
+        return s.substring(startIndx, startIndx + minLen); 
+        // min length ka start aur end use karke final answer substring nikal lo
+        // (extract the final answer using the saved start index and min length)
+    }
+}
