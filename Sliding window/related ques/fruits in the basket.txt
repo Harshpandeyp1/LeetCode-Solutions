@@ -1,0 +1,78 @@
+/*
+ * QUESTION:
+ * Fruit Into Baskets
+ * You are visiting a farm with a single row of fruit trees, represented 
+ * by array `fruits`, where fruits[i] is the type of fruit tree i produces.
+ * You have exactly 2 baskets, and each basket can hold only ONE type of 
+ * fruit (unlimited quantity of that type).
+ * Starting from any tree, you must pick exactly one fruit from every tree 
+ * while moving right, until you reach a tree whose fruit type doesn't fit 
+ * in either basket (i.e., a 3rd distinct type appears).
+ * Return the maximum number of fruits you can collect.
+ *
+ * APPROACH:
+ * - This is really "find the longest subarray with at most 2 distinct 
+ *   values" — a VARIABLE-size sliding window problem (Flavor 2).
+ * - Use two pointers, left and right, to represent the current window.
+ * - Track freq = a HashMap of fruit type -> count of that type inside 
+ *   the current window. We use a HashMap (not an array) because fruit 
+ *   type values could be any integer, not guaranteed to be a small range.
+ * - A window is "valid" as long as freq.size() <= 2 (at most 2 distinct 
+ *   fruit types, i.e., fits in our 2 baskets).
+ * - Expand by moving right forward, including each new fruit's type.
+ * - If freq.size() exceeds 2 (a 3rd type appeared), the window is invalid.
+ *   Shrink from the left, decreasing the count of the leftmost fruit's 
+ *   type, and removing that type entirely from the map once its count 
+ *   hits 0. Repeat (while loop) until freq.size() is back to <= 2, since 
+ *   more than one shrink might be needed to fully remove a type.
+ * - Once valid, update maxwindow with the current window size.
+ */
+
+class Solution {
+    public int totalFruit(int[] fruits) {
+
+        int n = fruits.length; // total number of trees
+
+        // freq maps: fruit type -> how many of that type are in the current window
+        Map<Integer, Integer> freq = new HashMap<>();
+
+        int left = 0; // left pointer of the sliding window
+
+        int maxwindow = 0; // tracks the largest valid window (most fruits collected) so far
+
+        // move right pointer across the trees, expanding the window
+        for (int right = 0; right < n; right++) {
+
+            // include fruits[right] into the window: increment its count 
+            // in the map (getOrDefault handles the case where it's not 
+            // yet present, defaulting to 0 before adding 1)
+            freq.put(fruits[right], freq.getOrDefault(fruits[right], 0) + 1);
+
+            // while the window contains more than 2 distinct fruit types, 
+            // it's invalid — we don't have enough baskets for this many types
+            while (freq.size() > 2) {
+
+                // shrink from the LEFT: decrease the count of the fruit 
+                // type at the left pointer
+                freq.put(fruits[left], freq.get(fruits[left]) - 1);
+
+                // if that fruit type's count has dropped to 0, it means 
+                // this type has completely left the window — remove it 
+                // from the map entirely so freq.size() correctly reflects 
+                // only the types still present
+                if (freq.get(fruits[left]) == 0) {
+                    freq.remove(fruits[left]);
+                }
+
+                left++; // move left pointer forward to shrink the window
+            }
+
+            // window [left, right] is now guaranteed valid (at most 2 
+            // distinct fruit types), so update the best window size seen so far
+            maxwindow = Math.max(maxwindow, right - left + 1);
+        }
+
+        // return the maximum number of fruits collectible (largest valid window)
+        return maxwindow;
+    }
+}
