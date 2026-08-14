@@ -1,0 +1,62 @@
+/*
+ * QUESTION:
+ * Max Consecutive Ones III
+ * You are given a binary array `nums` and an integer `k`. You are allowed 
+ * to flip at most `k` zeros in the array to ones.
+ * Return the maximum number of consecutive ones (1s) you can get after 
+ * performing at most k flips.
+ *
+ * APPROACH:
+ * - This is a VARIABLE-size sliding window problem (Flavor 2) — we don't 
+ *   know the window size upfront, it depends on a condition staying valid.
+ * - Use two pointers, left and right, to represent the current window.
+ * - Expand the window by moving right forward, including each element.
+ * - Track zeroCount = number of zeros currently inside the window.
+ * - A window is "valid" as long as zeroCount <= k, because that means we 
+ *   can flip all the zeros inside it to ones using at most k flips.
+ * - If zeroCount exceeds k (window becomes invalid), shrink the window 
+ *   from the left until zeroCount is back to <= k.
+ * - At every step, once the window is valid, update maxWindow with the 
+ *   current window size (right - left + 1).
+ * - Return maxWindow at the end — the largest valid window found.
+ */
+
+class Solution {
+    public int longestOnes(int[] nums, int k) {
+
+        int n = nums.length; // total length of the array
+
+        int zeroCount = 0;   // count of zeros currently inside the window
+        int maxWindow = 0;   // tracks the largest valid window length found so far
+        int left = 0;         // left pointer of the sliding window
+
+        // move right pointer across the array, expanding the window
+        for (int right = 0; right < n; right++) {
+
+            // include nums[right] into the window:
+            // if it's a zero, increase our zero counter
+            if (nums[right] == 0) {
+                zeroCount++;
+            }
+
+            // check if window is now invalid: too many zeros to flip 
+            // within the allowed budget k
+            if (zeroCount > k) {
+                // shrink window from the left: 
+                // if the element leaving the window (nums[left]) is a zero, 
+                // decrease zeroCount since we're removing it from the window
+                if (nums[left] == 0) {
+                    zeroCount--;
+                }
+                left++; // move left pointer forward to shrink the window
+            }
+
+            // at this point window [left, right] is guaranteed valid 
+            // (zeroCount <= k), so update the best window length seen so far
+            maxWindow = Math.max(maxWindow, right - left + 1);
+        }
+
+        // return the length of the longest valid window found
+        return maxWindow;
+    }
+}
