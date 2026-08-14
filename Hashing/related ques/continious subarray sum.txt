@@ -1,0 +1,90 @@
+// ============================================================
+// QUESTION: Continuous Subarray Sum (LeetCode 523)
+// ------------------------------------------------------------
+// Given an integer array nums and an integer k, return true if 
+// nums has a "good subarray" or false otherwise.
+//
+// A good subarray is a subarray where:
+//   - its length is at least two, and
+//   - the sum of its elements is a multiple of k
+//     (0 is always considered a multiple of k)
+//
+// A subarray must be CONTIGUOUS (not just any subsequence).
+// ============================================================
+
+// ============================================================
+// APPROACH: Prefix Sum + HashMap (remainder trick)
+// ------------------------------------------------------------
+// 1. Build prefix sums as we scan the array: sum = nums[0]+...+nums[i]
+// 2. Key insight: if prefixSum[j] and prefixSum[i] (i < j) leave the 
+//    SAME REMAINDER when divided by k, then:
+//        (prefixSum[j] - prefixSum[i]) % k == 0
+//    And prefixSum[j] - prefixSum[i] is exactly the sum of the 
+//    subarray between index i+1 and j -> so that subarray is a 
+//    multiple of k.
+// 3. So instead of storing raw prefix sums in the map, we store 
+//    REMAINDERS (sum % k) as keys, and the EARLIEST index where 
+//    that remainder occurred as the value.
+// 4. We store only the FIRST occurrence of each remainder, because 
+//    the earliest index gives the maximum possible subarray length 
+//    later (and we specifically need length >= 2).
+// 5. map.put(0, -1) handles the case where a good subarray starts 
+//    right from index 0 (pretend remainder 0 occurred "before" the 
+//    array begins).
+// 6. Special case: if k == 0, we can't do sum % k (division by zero),
+//    so we just use the raw sum as the key in that case (since a 
+//    multiple of 0 must literally be 0).
+//
+// Time Complexity: O(n)  -> single pass through nums
+// Space Complexity: O(min(n, k)) -> map can hold at most k distinct 
+//                                    remainders (or n prefix sums)
+// ============================================================
+
+class Solution {
+    public boolean checkSubarraySum(int[] nums, int k) {
+        
+        int n = nums.length;
+
+        // map: remainder -> first index where this remainder occurred
+        HashMap<Integer, Integer> map = new HashMap<>();
+        map.put(0, -1); // remainder 0 occurs "before" the array starts (index -1)
+
+        int sum = 0; // running prefix sum
+
+        for (int i = 0; i < n; i++) {
+
+            sum += nums[i]; // add current element to running prefix sum
+
+            // compute remainder of sum with k
+            // special-case k == 0 to avoid division by zero
+            int rem = (k == 0) ? sum : sum % k;
+
+            // Java's % can return a negative result if sum is negative
+            // e.g. -7 % 3 = -1 in Java (not 2 like in math)
+            // so we shift it back into the valid [0, k) range
+            if (rem < 0) {
+                rem += k;
+            }
+
+            if (map.containsKey(rem)) {
+                // this remainder was seen before at map.get(rem)
+                // the subarray between that index and current index i
+                // has a sum that is a multiple of k
+                int len = i - map.get(rem); // length = current index - stored index
+
+                if (len >= 2) {
+                    return true; // found a valid "good subarray"
+                }
+                // if len < 2, we do NOT overwrite the map entry —
+                // keep the earliest index, since it gives the best 
+                // chance of hitting length >= 2 with some future index
+            } else {
+                // first time seeing this remainder, store its index
+                map.put(rem, i);
+            }
+        }
+
+        // no good subarray found after checking the whole array
+        return false;
+    }
+}
