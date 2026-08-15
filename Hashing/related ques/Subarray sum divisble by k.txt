@@ -1,0 +1,52 @@
+class Solution {
+    // APPROACH:
+    // We want to count subarrays whose sum is divisible by k.
+    // Trick: instead of tracking the exact sum, we track sum % k (the remainder).
+    // Why? Because if two prefix sums have the SAME remainder when divided by k,
+    // then the subarray between them has a sum that is a clean multiple of k.
+    // (Basic math: if sum1 % k == sum2 % k, then (sum1 - sum2) % k == 0)
+    //
+    // So we use a HashMap to remember how many times each remainder has
+    // appeared so far while scanning the array left to right.
+
+    public int subarraysDivByK(int[] nums, int k) {
+        
+        int n = nums.length; // length of the array (not really used further, just stored)
+
+        // This map stores: remainder value -> how many times we have seen this remainder so far
+        Map<Integer, Integer> count = new HashMap<>();
+
+        // We start by saying remainder 0 has already occurred once.
+        // This represents the "empty prefix" before the array starts.
+        // It's needed so that if the running sum itself becomes divisible by k,
+        // we correctly count the subarray from index 0 up to that point.
+        count.put(0, 1);
+
+        int sum = 0; // this will store the running prefix sum as we go through the array
+        int res = 0; // this will store our final answer: total count of valid subarrays
+
+        // go through every number in the array one by one
+        for (int num : nums) {
+
+            sum += num; // add current number to our running sum (this is prefix sum till current index)
+
+            int rem = sum % k; // find remainder when prefix sum is divided by k
+
+            // in Java, remainder can come out negative if sum is negative
+            // example: -7 % 5 = -2 (not 3), so we fix it by adding k
+            if (rem < 0) rem += k;
+
+            // check: how many times has this exact remainder occurred BEFORE this point?
+            // each of those earlier occurrences means there is a subarray between
+            // that earlier point and now, which is divisible by k
+            res += count.getOrDefault(rem, 0);
+
+            // now we store/update this remainder's count in the map
+            // because this current prefix can be used as a "match" for future indices too
+            count.put(rem, count.getOrDefault(rem, 0) + 1);
+        }
+
+        // return the total number of subarrays found whose sum is divisible by k
+        return res;
+    }
+}
