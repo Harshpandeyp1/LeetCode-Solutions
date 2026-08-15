@@ -1,0 +1,54 @@
+class Solution {
+    // APPROACH:
+    // Brute force would check all combinations of i, j, k, l => O(n^4). Too slow.
+    // Better idea: split the 4 arrays into two halves (nums1+nums2) and (nums3+nums4).
+    // We want: nums1[i] + nums2[j] + nums3[k] + nums4[l] = 0
+    // This can be rewritten as: (nums1[i] + nums2[j]) = -(nums3[k] + nums4[l])
+    // So:
+    //   Step 1: calculate all possible sums of nums1[i] + nums2[j], and store 
+    //           how many times each sum occurs in a HashMap.
+    //   Step 2: for every sum of nums3[k] + nums4[l], check if its negative
+    //           value exists in the map. If yes, add that count to result,
+    //           because each such match forms a valid (i, j, k, l) tuple.
+    // This reduces time complexity from O(n^4) to O(n^2).
+
+    // SIMILAR QUESTIONS TO PRACTICE AFTER THIS ONE:
+    // 1. Two Sum (LeetCode 1) - basic hashmap pair matching
+    // 2. 3Sum (LeetCode 15) - three arrays/pointers version, sorted + two pointer approach
+    // 3. Subarray Sum Equals K (LeetCode 560) - same prefix-sum + hashmap pattern
+    // 4. Subarray Sums Divisible by K (LeetCode 974) - same pattern with remainders
+    // 5. Two Sum II - Input Array Is Sorted (LeetCode 167) - two pointer variant
+
+    public int fourSumCount(int[] nums1, int[] nums2, int[] nums3, int[] nums4) {
+
+        // this map will store: sum value -> how many times that sum occurred
+        HashMap<Integer, Integer> map = new HashMap<>();
+
+        int res = 0; // this will hold our final answer (count of valid tuples)
+
+        // STEP 1: go through every possible pair from nums1 and nums2
+        // and store the frequency of each possible sum (a + b) in the map
+        for (int a : nums1) {
+            for (int b : nums2) {
+                // if a+b already exists in map, increase its count by 1
+                // if not, this line will start it at 0 and then add 1
+                map.put(a + b, map.getOrDefault(a + b, 0) + 1);
+            }
+        }
+
+        // STEP 2: go through every possible pair from nums3 and nums4
+        for (int c : nums3) {
+            for (int d : nums4) {
+                // we need (a+b) + (c+d) = 0
+                // which means (a+b) must equal -(c+d)
+                // so we check: how many times did -(c+d) occur as a sum in step 1?
+                // that count tells us how many valid (i, j) pairs exist
+                // that can combine with this (k, l) pair to make total sum zero
+                res += map.getOrDefault(-(c + d), 0);
+            }
+        }
+
+        // return total number of valid (i, j, k, l) tuples found
+        return res;
+    }
+}
