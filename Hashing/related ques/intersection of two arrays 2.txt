@@ -1,0 +1,69 @@
+/*
+ * LEETCODE 350 - INTERSECTION OF TWO ARRAYS II
+ * -----------------------------------------------
+ * QUESTION:
+ * Given two integer arrays nums1 and nums2, return an array of their
+ * intersection. Each element in the result must appear as many times
+ * as it shows in BOTH arrays (i.e., the minimum of its counts in the
+ * two arrays). The result can be in any order.
+ *
+ * Example:
+ *   nums1 = [1,2,2,1], nums2 = [2,2]  -> [2,2]
+ *   nums1 = [4,9,5],   nums2 = [9,4,9,4,8,4] -> [4,9]
+ *
+ * Note: this is different from "Intersection of Two Arrays I", where
+ * each common element appears only ONCE in the result. Here frequency
+ * (the minimum count between the two arrays) matters.
+ *
+ * APPROACH:
+ * 1. Count how many times each number appears in nums1, using a
+ *    HashMap<Integer, Integer> (number -> frequency).
+ * 2. Loop through nums2. For each number:
+ *      - if it exists in the map AND its remaining count is > 0,
+ *        it means this number is a valid intersection element.
+ *      - add it to the result list, then decrement its count in the map
+ *        so it can't be reused more times than it actually appeared.
+ * 3. Convert the result List<Integer> into an int[] array to return
+ *    (since we don't know the final size upfront, a List is used first).
+ *
+ * WHY DECREMENTING WORKS:
+ * It naturally enforces "minimum count" - once a number's count hits 0,
+ * it won't be added again even if it still appears in nums2, because
+ * we've already used up all its occurrences from nums1.
+ *
+ * COMPLEXITY:
+ *   Time:  O(n + m)  -> one pass to build map, one pass to check nums2
+ *   Space: O(n)       -> for the hashmap (n = size of nums1), plus result
+ */
+
+class Solution {
+    public int[] intersect(int[] nums1, int[] nums2) {
+
+        // map to store frequency of each number in nums1 (number -> count)
+        Map<Integer, Integer> map = new HashMap<>();
+        for (int num : nums1) {
+            // increment count for this number, starting from 0 if not seen before
+            map.put(num, map.getOrDefault(num, 0) + 1);
+        }
+
+        // list to collect intersection elements (size not known in advance)
+        List<Integer> result = new ArrayList<>();
+
+        // walk through nums2, checking each number against the frequency map
+        for (int num : nums2) {
+            // valid intersection only if number exists in map AND has remaining count
+            if (map.containsKey(num) && map.get(num) > 0) {
+                result.add(num);                 // it's a valid intersection element
+                map.put(num, map.get(num) - 1);  // use up one occurrence so it's not reused too many times
+            }
+        }
+
+        // convert List<Integer> result into a plain int[] array to match return type
+        int[] output = new int[result.size()];
+        for (int i = 0; i < output.length; i++) {
+            output[i] = result.get(i);
+        }
+
+        return output; // final array containing the intersection with correct frequencies
+    }
+}
