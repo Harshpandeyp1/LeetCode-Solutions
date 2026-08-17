@@ -1,0 +1,56 @@
+/*
+ * LEETCODE 1512 - NUMBER OF GOOD PAIRS
+ * ----------------------------------------
+ * QUESTION:
+ * Given an array of integers nums, a "good pair" is a pair (i, j) such
+ * that nums[i] == nums[j] and i < j. Return the total number of good
+ * pairs in the array.
+ *
+ * Example: nums = [1,2,3,1,1,3] -> 4 good pairs
+ *          nums = [1,1,1,1]     -> 6 good pairs
+ *          nums = [1,2,3]       -> 0 good pairs
+ *
+ * APPROACH:
+ * 1. Use a HashMap<Integer, Integer> to track how many times each
+ *    number has been seen SO FAR (as we scan left to right).
+ * 2. For each number in nums:
+ *      - Before updating the count, check how many times this number
+ *        has already appeared (call it c).
+ *      - Every one of those c earlier occurrences can pair with the
+ *        CURRENT occurrence to form a good pair (since i < j is
+ *        automatically satisfied, as those occurrences came first).
+ *      - So add c to our running total of good pairs.
+ *      - Then increment this number's count in the map by 1.
+ * 3. After scanning the whole array, return the total count.
+ *
+ * WHY THIS WORKS (MATH INTUITION):
+ * If a number appears k times total, the number of good pairs among
+ * just those k occurrences is C(k, 2) = k*(k-1)/2. Adding "count so far"
+ * at each new occurrence effectively builds up this same total
+ * incrementally: 0 + 1 + 2 + ... + (k-1) = k*(k-1)/2.
+ *
+ * COMPLEXITY:
+ *   Time:  O(n) - single pass through the array
+ *   Space: O(n) - worst case, map holds every distinct number
+ */
+
+class Solution {
+    public int numIdenticalPairs(int[] nums) {
+        // map: number -> how many times it has appeared so far
+        Map<Integer, Integer> map = new HashMap<>();
+        int count = 0; // running total of good pairs
+
+        for (int num : nums) {
+            // if this number was seen before, each prior occurrence
+            // forms a new good pair with the current one
+            if (map.containsKey(num)) {
+                count += map.get(num);
+            }
+
+            // update this number's frequency count
+            map.put(num, map.getOrDefault(num, 0) + 1);
+        }
+
+        return count;
+    }
+}
