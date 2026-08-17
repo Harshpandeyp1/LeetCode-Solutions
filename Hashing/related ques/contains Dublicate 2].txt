@@ -1,0 +1,48 @@
+/*
+ * LEETCODE 219 - CONTAINS DUPLICATE II
+ * ---------------------------------------
+ * QUESTION:
+ * Given an array nums and an integer k, return true if there are two
+ * DISTINCT indices i and j such that nums[i] == nums[j] AND
+ * abs(i - j) <= k. In short: find a duplicate value whose two
+ * occurrences are within k positions of each other.
+ *
+ * APPROACH:
+ * 1. Use a HashMap<Integer, Integer> to store: number -> last index it was seen at.
+ * 2. Loop through nums with an INDEX (needed to compare positions).
+ * 3. For each number:
+ *      - if it's already in the map, check (currentIndex - storedIndex) <= k.
+ *        If true, we found a valid nearby duplicate -> return true.
+ *      - update the map with the number's latest index (so we always
+ *        compare against the CLOSEST previous occurrence).
+ * 4. If loop finishes with no match, return false.
+ *
+ * COMPLEXITY:
+ *   Time:  O(n) - single pass through the array
+ *   Space: O(n) - worst case, map holds every distinct number
+ */
+
+class Solution {
+    public boolean containsNearbyDuplicate(int[] nums, int k) {
+        int n = nums.length;
+
+        // map: number -> index where it was last seen
+        HashMap<Integer, Integer> map = new HashMap<>();
+
+        // must use a normal indexed loop here, since we need "i" to compare positions
+        for (int i = 0; i < n; i++) {
+            int num = nums[i]; // current value at this index
+
+            // if this number was seen before, check the index gap
+            if (map.containsKey(num) && i - map.get(num) <= k) {
+                return true; // found duplicate within k distance
+            }
+
+            // store/update this number's most recent index
+            map.put(num, i);
+        }
+
+        // no valid nearby duplicate found
+        return false;
+    }
+}
