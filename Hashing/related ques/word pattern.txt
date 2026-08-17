@@ -1,0 +1,75 @@
+/*
+ * LEETCODE 290 - WORD PATTERN
+ * ----------------------------
+ * QUESTION:
+ * Given a "pattern" (a string of single characters, e.g. "abba")
+ * and a string "s" (a sentence of space-separated words, e.g. "dog cat cat dog"),
+ * find if "s" follows the same pattern.
+ *
+ * "Follows the pattern" means there is a FULL MATCH (bijection) between
+ * each character in pattern and each word in s:
+ *   - Same character in pattern always maps to the same word in s.
+ *   - Different characters in pattern must map to different words in s
+ *     (no two characters can share the same word).
+ *
+ * Example:
+ *   pattern = "abba", s = "dog cat cat dog"  -> true
+ *   pattern = "abba", s = "dog cat cat fish" -> false (last 'a' doesn't match "dog")
+ *   pattern = "aaaa", s = "dog cat cat dog"  -> false (same char 'a' maps to different words)
+ *   pattern = "ab",   s = "dog dog"          -> false (two different chars map to same word)
+ *
+ * APPROACH:
+ * 1. Split s into an array of words.
+ * 2. If word count != pattern length, it's impossible to match one-to-one -> false.
+ * 3. Use a HashMap<Character, String> to remember which word each character is bound to.
+ * 4. For each position i, check two things at once:
+ *      a) If the character was seen before, its stored word must equal the current word.
+ *         (enforces: same char -> same word)
+ *      b) If the character is new, make sure no OTHER character already claimed this word.
+ *         We check this using map.values().contains(word).
+ *         (enforces: same word -> same char, i.e. no two chars share a word)
+ * 5. If either check fails, return false immediately.
+ * 6. Otherwise, store/update the mapping and continue.
+ * 7. If we finish the loop with no conflicts, the pattern matches -> return true.
+ *
+ * NOTE ON EFFICIENCY:
+ * map.values().contains(word) scans all current values, so this approach
+ * is O(n^2) in the worst case. Using a second HashMap<String, Character>
+ * (word -> char) would bring this down to O(n), at the cost of extra space.
+ */
+
+class Solution {
+    public boolean wordPattern(String pattern, String s) {
+        // map to store: character -> word it is currently linked to
+        Map<Character, String> map = new HashMap<>();
+
+        // break the sentence into individual words, aligned by index with pattern's characters
+        String[] arr = s.split(" ");
+
+        // if counts don't match, a one-to-one pairing is impossible
+        if (arr.length != pattern.length()) {
+            return false;
+        }
+
+        // walk through pattern and words together, position by position
+        for (int i = 0; i < pattern.length(); i++) {
+            char c = pattern.charAt(i);      // pattern character at this position
+            String word = arr[i];            // corresponding word at this position
+
+            // CHECK 1 (char -> word consistency):
+            //   c was already mapped before, but now points to a DIFFERENT word -> conflict
+            // CHECK 2 (word -> char consistency):
+            //   c is new, but this word already belongs to some OTHER character -> conflict
+            if (map.containsKey(c) && !map.get(c).equals(word)
+                || !map.containsKey(c) && map.values().contains(word)) {
+                return false; // either rule broken -> pattern doesn't match
+            }
+
+            // no conflict found, so bind (or re-confirm) c -> word
+            map.put(c, word);
+        }
+
+        // completed the loop with no violations -> s follows the pattern
+        return true;
+    }
+}
