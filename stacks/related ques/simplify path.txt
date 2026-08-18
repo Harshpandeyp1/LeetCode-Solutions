@@ -1,0 +1,59 @@
+class Solution {
+    public String simplifyPath(String path) {
+        // QUESTION: Simplify Path (LeetCode 71)
+        // Given an absolute Unix-style path (starting with '/'), convert it
+        // to its simplified canonical form. Rules:
+        //   - Multiple slashes "//" count as a single slash "/"
+        //   - "."  means "stay in current directory" -> ignore it
+        //   - ".." means "go up one directory" -> pop the last folder (if any)
+        //   - Any other name is a real folder/file name -> push it
+        // Example: "/a/./b/../../c/"  ->  "/c"
+
+        // APPROACH: Split by "/" + use a Stack to build the path
+        // Splitting on "/" breaks the path into segments; segments can be
+        // "", ".", "..", or a real name. We push real names, pop on "..",
+        // and skip "" and "." entirely. The stack at the end holds the
+        // final simplified folder structure in correct order (bottom -> top).
+
+        // Split the path on "/" — gives us all segments, including empty
+        // strings (from "//") and "." / ".." markers
+        String arr[] = path.split("/");
+
+        // Stack to hold valid directory names in order
+        Stack<String> st = new Stack<>();
+
+        // Go through every segment one by one
+        for (String i : arr) {
+
+            // Case 1: segment is ".." (go up one directory)
+            // Only pop if the stack is not empty, otherwise there's
+            // nothing to go up to (avoids EmptyStackException)
+            if (i.equals("..") && !st.isEmpty()) {
+                st.pop();
+            }
+            // Case 2: segment is a real folder name
+            // (not empty string, not ".", not "..") -> push it onto stack
+            else if (!i.equals("") && !i.equals(".") && !i.equals("..")) {
+                st.push(i);
+            }
+            // Case 3 (implicit): segment is "", ".", or ".." with empty
+            // stack -> do nothing, just skip it
+        }
+
+        // Build the final simplified path from the stack contents
+        StringBuilder sb = new StringBuilder();
+
+        // For-each on a Stack iterates bottom-to-top, i.e. in the same
+        // order the folders were pushed (correct left-to-right order)
+        for (String i : st) {
+            // Add a "/" before every folder name
+            sb.append("/");
+            // Add the folder name itself
+            sb.append(i);
+        }
+
+        // If stack was empty (e.g. path was "/" or "/../"), return root "/"
+        // Otherwise return the built path
+        return sb.length() == 0 ? "/" : sb.toString();
+    }
+}
