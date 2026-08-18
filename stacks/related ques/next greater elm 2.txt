@@ -1,0 +1,86 @@
+/**
+ * QUESTION: Next Greater Element II (Circular Array)
+ * ----------------------------------------------------
+ * Given a circular integer array `nums` (the last element's next element
+ * is the first element of the array), return the Next Greater Element
+ * for every element in nums.
+ *
+ * The Next Greater Number of a number x is the first greater number to its
+ * traversing-order next in the array, which means you could search circularly
+ * to find its next greater number. If it doesn't exist, output -1 for this number.
+ *
+ * Example:
+ * Input:  nums = [1,2,1]
+ * Output: [2,-1,2]
+ * Explanation:
+ *   - The first 1's next greater number is 2.
+ *   - The number 2 can't find next greater number (even after wrapping around) -> -1.
+ *   - The second 1's search circularly finds 2 (wraps back to index 0).
+ *
+ * APPROACH: Monotonic Decreasing Stack + Circular Simulation via i % n
+ * ----------------------------------------------------
+ * 1. Since the array is circular, an element might need to look "past the end"
+ *    and wrap around to the beginning to find its next greater element.
+ *    We simulate this by iterating from (2*n - 1) down to 0, and mapping
+ *    each virtual index back to a real index using (i % n). This effectively
+ *    lets us traverse the array twice without physically duplicating it.
+ *
+ * 2. We traverse RIGHT TO LEFT and maintain a stack of INDICES such that
+ *    the values at those indices are in DECREASING order from bottom to top.
+ *    This stack represents "candidates" for being someone's next greater element.
+ *
+ * 3. Before processing nums[indx], we pop all stack elements whose value is
+ *    <= nums[indx] — they can never be the answer for anything further left,
+ *    since nums[indx] is both bigger AND closer.
+ *
+ * 4. Whatever remains on top of the stack after popping (if anything) is
+ *    exactly the Next Greater Element for nums[indx] — record it, but ONLY
+ *    during the second pass (i < n), since the first pass (i >= n) is just
+ *    used to "warm up" the stack with proper wrap-around context.
+ *
+ * 5. Push the current index onto the stack — it may become the answer for
+ *    some element further to the left (or after wrapping around).
+ *
+ * TIME COMPLEXITY:  O(n)  -> even though we loop 2n times, each index is
+ *                            pushed/popped a constant number of times overall.
+ * SPACE COMPLEXITY: O(n)  -> for the stack and the result array.
+ */
+class Solution {
+    public int[] nextGreaterElements(int[] nums) {
+        int n = nums.length;
+
+        // Stack holds INDICES (not values), kept in decreasing order of nums[index]
+        // from bottom to top. It represents "next greater" candidates.
+        Stack<Integer> st = new Stack<>();
+
+        // res[i] will store the next greater element for nums[i]; defaults to 0,
+        // but every index gets explicitly overwritten during the i < n pass.
+        int res[] = new int[n];
+
+        // Loop twice virtually (2*n total iterations) to simulate circular wrap-around.
+        // i%n maps the "extended" index back into the real array bounds [0, n-1].
+        for (int i = 2 * n - 1; i >= 0; i--) {
+            int indx = i % n;
+
+            // Pop everything smaller than OR EQUAL TO nums[indx].
+            // <= (not just <) is important: it correctly clears out stale/duplicate
+            // values left over from the first "warm-up" pass, preventing wrong
+            // self-matches when the array has repeated values.
+            while (!st.isEmpty() && nums[st.peek()] <= nums[indx]) {
+                st.pop();
+            }
+
+            // Only record answers in the second (real) pass.
+            // The first pass (i >= n) exists purely to prime the stack with
+            // elements that come "after wrapping around" for real indices.
+            if (i < n) {
+                res[indx] = st.isEmpty() ? -1 : nums[st.peek()];
+            }
+
+            // Push current index as a future candidate for elements further left.
+            st.push(indx);
+        }
+
+        return res;
+    }
+}
