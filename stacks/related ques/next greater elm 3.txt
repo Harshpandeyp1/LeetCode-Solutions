@@ -1,0 +1,119 @@
+import java.util.Arrays;
+
+public class Solution {
+    /*
+     * APPROACH: Next Permutation Technique
+     * ---------------------------------------------------------------------
+     * Goal: Given n, rearrange its digits to form the smallest number that
+     * is strictly greater than n, using the same digits. If no such
+     * arrangement exists (digits are in fully descending order), return -1.
+     * If the result overflows a 32-bit int, also return -1.
+     *
+     * The algorithm has 4 steps:
+     *
+     * 1. FIND THE PIVOT (scan right to left):
+     *    Find the first index (from the right) where a digit is smaller
+     *    than the digit right after it. This is the "pivot". Everything
+     *    to the right of the pivot is already in non-increasing order,
+     *    meaning that suffix is at its maximum possible arrangement.
+     *    If no such pivot exists, the whole number is the largest
+     *    permutation already -> return -1.
+     *
+     * 2. FIND THE SMALLEST SUFFIX DIGIT GREATER THAN THE PIVOT:
+     *    Scan the suffix (everything after the pivot) and find the
+     *    smallest digit that is still bigger than the pivot digit.
+     *    Swapping in the SMALLEST valid bigger digit keeps the resulting
+     *    number as close to n as possible (i.e., minimally larger).
+     *
+     * 3. SWAP:
+     *    Swap the pivot digit with that smallest-larger digit found in
+     *    step 2. This increases the number at that digit position.
+     *
+     * 4. SORT THE SUFFIX ASCENDING:
+     *    After swapping, the suffix is no longer guaranteed sorted, so
+     *    sort it in ascending order. This produces the smallest possible
+     *    arrangement of the remaining digits, keeping the overall result
+     *    minimal while still being greater than n.
+     *
+     * Finally, parse the digits back into a number using `long` (in case
+     * it overflows int range) and return -1 if it doesn't fit in an int.
+     * ---------------------------------------------------------------------
+     */
+    public int nextGreaterElement(int n) {
+        char[] number = (n + "").toCharArray();
+        // Convert n to a string, then to a char array so we can
+        // look at / rearrange individual digits.
+
+        int i, j;
+        for (i = number.length - 1; i > 0; i--)
+            if (number[i - 1] < number[i])
+                break;
+        // Scan from the right, comparing each digit to the one before it.
+        // We're looking for the first spot (from the right) where the digit
+        // BEFORE is smaller than the digit AFTER — that's our "pivot point".
+        // This works because everything to the right of that point is
+        // already in non-increasing order (i.e., maxed out — can't be
+        // rearranged to get bigger). Once digits start increasing as you
+        // move left, you've found where you have room to improve.
+        // Note: this loop finds index i such that number[i-1] is the pivot digit.
+
+        if (i == 0)
+            return -1;
+        // If we never broke out of the loop, i has decremented all the way
+        // to 0 — meaning the whole number is non-increasing left to right
+        // (e.g. "4321"). That's already the biggest arrangement possible,
+        // so there's no next greater number. Return -1.
+
+        int x = number[i - 1], smallest = i;
+        // x = the pivot digit itself (the one we need to replace with
+        // something slightly bigger).
+        // smallest = will track the index of the best candidate to swap
+        // with x. Start by assuming index i is the best.
+
+        for (j = i + 1; j < number.length; j++)
+            if (number[j] > x && number[j] <= number[smallest])
+                smallest = j;
+        // Now scan the entire suffix (everything after the pivot) to find
+        // the SMALLEST digit that is still bigger than x.
+        // Why smallest? Because we want the next greater number to be as
+        // close as possible to n — swapping in the smallest valid digit
+        // keeps the result minimal.
+        // condition: number[j] > x           -> must be bigger than pivot
+        //            number[j] <= number[smallest]  -> but not bigger than
+        //                                        the best candidate found so far
+        // This avoids the earlier bug (in the stack version) where a
+        // "closest" digit was picked instead of the "smallest-but-still-bigger"
+        // digit — here we explicitly compare against x every time, not
+        // against some other suffix digit, so nothing gets popped/lost
+        // prematurely.
+
+        char temp = number[i - 1];
+        number[i - 1] = number[smallest];
+        number[smallest] = temp;
+        // Swap the pivot digit with the chosen smallest-larger digit.
+        // Now position i-1 holds a digit bigger than before, which makes
+        // the overall number bigger at that position — that's the core
+        // "increase" step.
+
+        Arrays.sort(number, i, number.length);
+        // The suffix (from index i to the end) may no longer be sorted
+        // after the swap, so we sort it in ascending order. This gives
+        // the smallest possible arrangement of those digits, which keeps
+        // the final result as small as possible while still being greater
+        // than n. (This plays the same role as "reverse" in the two-pointer
+        // version — but reverse only works if the suffix was guaranteed to
+        // be in a known descending order already; sorting is more general
+        // and works here too since we don't maintain that invariant.)
+
+        long val = Long.parseLong(new String(number));
+        // Convert the rearranged digits back into a number. Use `long`
+        // instead of `int` because the result of parsing might exceed
+        // Integer.MAX_VALUE (n is guaranteed to fit in int, but the next
+        // permutation of its digits might not).
+
+        return (val <= Integer.MAX_VALUE) ? (int) val : -1;
+        // If it fits within int range, return it as an int.
+        // Otherwise, per problem constraints, return -1 (no valid answer
+        // fits in a 32-bit int).
+    }
+}
