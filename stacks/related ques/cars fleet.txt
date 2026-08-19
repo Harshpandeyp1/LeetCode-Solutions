@@ -1,0 +1,90 @@
+/**
+ * LeetCode 853 - Car Fleet
+ *
+ * PROBLEM: n cars drive on a single-lane road toward `target`.
+ * Each car has a position and speed. A faster car behind a slower car
+ * can never overtake it - it just slows down and drives at the same speed,
+ * forming a "fleet" (a group of cars sticking together).
+ * Return the number of distinct fleets that will arrive at the target.
+ *
+ * APPROACH:
+ * 1. For each car, compute the time it WOULD take to reach the target
+ *    if nothing were blocking it: time = distance / speed.
+ * 2. Sort cars by their distance to target (ascending) -> this orders
+ *    cars from "closest to target" (front of the road) to
+ *    "farthest from target" (back of the road).
+ * 3. Walk through cars front-to-back, keeping a stack of the arrival
+ *    times of confirmed "fleet leaders" (cars that never catch up to
+ *    anyone ahead of them):
+ *      - If this car's time > time of the leader ahead (stack top),
+ *        it's slower -> it can NEVER catch up -> it becomes its own
+ *        new fleet leader -> push its time.
+ *      - If this car's time <= leader ahead's time, it would catch up
+ *        to (or arrive same time as) the car ahead before the target
+ *        -> it merges into that fleet, capped to the leader's speed
+ *        -> do nothing (don't push).
+ * 4. The final stack size = number of fleets, since every push
+ *    represents one fleet that never merged with another.
+ *
+ * TIME COMPLEXITY:  O(n log n) - dominated by the sort; building the
+ *                    CarState array and the counting loop are both O(n).
+ * SPACE COMPLEXITY: O(n) - for the CarState[] array and, worst case
+ *                    (no merges at all), the stack can hold all n times.
+ */
+class Solution {
+    public int carFleet(int target, int[] position, int[] speed) {
+        int n = position.length;
+        CarState[] carStates = new CarState[n];
+
+        // Step 1: compute distance-to-target and solo arrival time for each car
+        for (int i = 0; i < position.length; i++) {
+            carStates[i] = new CarState(target - position[i], speed[i],
+                    1.0 * (target - position[i]) / speed[i]);
+        }
+
+        // Step 2: sort cars from closest-to-target to farthest-from-target
+        Arrays.sort(carStates, (a, b) -> a.distanceFromTarget - b.distanceFromTarget);
+
+        // Step 3: walk front-to-back, tracking fleet-leader arrival times on a stack
+        Stack<Double> st = new Stack<>();
+        for (CarState car : carStates) {
+            // empty stack -> first (frontmost) car -> automatically its own leader
+            // OR this car is slower than the leader ahead -> can't catch up -> new fleet
+            if (st.isEmpty() || car.time > st.peek()) {
+                st.push(car.time);
+            }
+            // else: car.time <= st.peek() -> catches up to the fleet ahead -> merges,
+            // nothing pushed, stack size stays the same
+        }
+
+        // Step 4: number of un-merged fleet leaders = number of fleets
+        return st.size();
+
+        // --- Alternative O(1)-extra-space version (same logic, no stack needed) ---
+        // int fleet = 0;
+        // double prevTime = 0.0;
+        // for (int i = 0; i < carStates.length; i++) {
+        //     if (carStates[i].time > prevTime) {
+        //         fleet++;
+        //         prevTime = carStates[i].time;
+        //     }
+        // }
+        // return fleet;
+    }
+}
+
+// Bundles a car's distance, speed, and computed arrival time together
+// so that sorting the CarState[] array keeps all three fields correctly
+// paired to the same car (sorting 3 separate arrays independently
+// would break that pairing).
+class CarState {
+    public int distanceFromTarget;
+    public int speed;
+    public double time;
+
+    public CarState(int distanceFromTarget, int speed, double time) {
+        this.distanceFromTarget = distanceFromTarget;
+        this.speed = speed;
+        this.time = time;
+    }
+}
