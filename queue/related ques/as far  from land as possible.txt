@@ -1,0 +1,94 @@
+/*
+ * PROBLEM: As Far from Land as Possible (LeetCode 1162)
+ * 
+ * Given an n x m binary grid where 1 = land and 0 = water,
+ * find the water cell that is FARTHEST from any land cell
+ * (using Manhattan/grid distance), and return that max distance.
+ * Return -1 if the grid has no land, or no water (all one type).
+ *
+ * APPROACH: Multi-Source BFS
+ * - Instead of doing BFS separately from each water cell to find nearest land
+ *   (which would be slow), we reverse the direction:
+ *   Start BFS simultaneously from ALL land cells at once.
+ * - Expand outward level by level (like ripples from multiple stones dropped
+ *   in water together).
+ * - Each BFS "level" = one more step away from the nearest land.
+ * - The last level reached before the queue empties = the max distance
+ *   any water cell has from its nearest land cell.
+ */
+class Solution {
+    public int maxDistance(int[][] grid) {
+        
+        // n = number of rows, m = number of columns
+        int n = grid.length;
+        int m = grid[0].length;
+        
+        // count will track the "distance" — starts at -1 so that after 
+        // the first BFS level completes, it becomes 0 (correct baseline)
+        int count = -1;
+        
+        // queue to hold all the cells we need to process (BFS frontier)
+        Queue<int[]> q = new LinkedList<>();
+        
+        // STEP 1: Add every land cell (value 1) into the queue as a starting point.
+        // This is what makes it "multi-source" BFS — all sources pushed together.
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                if (grid[i][j] == 1) {
+                    q.offer(new int[]{i, j});   // store coordinates as [row, col]
+                }
+            }
+        }
+        
+        // EDGE CASE CHECK:
+        // if queue is empty -> no land at all -> can't compute distance -> return -1
+        // if queue size == n*m -> entire grid is land, no water exists -> return -1
+        if (q.isEmpty() || q.size() == n * m) {
+            return -1;
+        }
+        
+        // the 4 possible directions to move: right, left, down, up
+        int[][] direction = {{0,1}, {0,-1}, {1,0}, {-1,0}};
+
+        // STEP 2: Standard BFS, but processing level by level
+        while (!q.isEmpty()) {
+            
+            // number of cells present at the CURRENT level (before we add new ones)
+            int size = q.size();
+            
+            // process every cell that belongs to this current level
+            for (int i = 0; i < size; i++) {
+                
+                int[] curr = q.poll();   // take one cell out of the queue
+                int row = curr[0];
+                int col = curr[1];
+
+                // check all 4 neighbouring directions from this cell
+                for (int[] dir : direction) {
+                    int newR = row + dir[0];
+                    int newC = col + dir[1];
+
+                    // valid conditions to expand into this neighbour:
+                    // 1. within grid bounds (row-wise and column-wise)
+                    // 2. the cell is water (0) — meaning it hasn't been visited yet
+                    if (newR >= 0 && newR < n && newC >= 0 && newC < m && grid[newR][newC] == 0) {
+                        
+                        // mark this water cell as visited by converting it to land (1)
+                        // (reusing the grid itself instead of a separate visited array)
+                        grid[newR][newC] = 1;
+                        
+                        // add it to the queue so its neighbours get explored in the NEXT level
+                        q.offer(new int[]{newR, newC});
+                    }
+                }
+            }
+            
+            // one full level of BFS completed = one more step of distance covered
+            count++;
+        }
+        
+        // once the queue is empty, no more water cells are reachable —
+        // count now holds the maximum distance from land to the farthest water cell
+        return count;
+    }
+}
