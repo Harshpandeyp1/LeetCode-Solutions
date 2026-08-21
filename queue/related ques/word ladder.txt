@@ -1,0 +1,117 @@
+/*
+ * PROBLEM: Word Ladder
+ * Given a beginWord, an endWord, and a wordList, find the length of the 
+ * shortest transformation sequence from beginWord to endWord such that:
+ *   1. Only one letter can be changed at a time.
+ *   2. Each transformed word must exist in the wordList.
+ * Return 0 if no such sequence exists.
+ *
+ * APPROACH: BFS (Breadth-First Search)
+ * - Treat each word as a node in a graph.
+ * - Two words are connected (neighbours) if they differ by exactly one letter
+ *   AND the resulting word exists in the word set.
+ * - BFS naturally finds the SHORTEST path in an unweighted graph, so we do
+ *   a level-by-level BFS starting from beginWord.
+ * - Each "level" of BFS = one more transformation step.
+ * - We remove words from the set once visited so we don't revisit them 
+ *   (avoids cycles / repeated work).
+ */
+class Solution {
+
+    // Helper method: given a word, generate all valid neighbours
+    // (words that differ by exactly one character and exist in the set)
+    public List<String> getNeighbour(String word, Set<String> set) {
+        // list to store all valid one-letter-different neighbours found in set
+        List<String> neighbours = new ArrayList<>();
+
+        // try changing every position 'i' in the word
+        for (int i = 0; i < word.length(); i++) {
+
+            // try replacing that position with every letter from 'a' to 'z'
+            for (char ch = 'a'; ch <= 'z'; ch++) {
+
+                // skip if the new character is same as original (no change made)
+                if (ch == word.charAt(i)) {
+                    continue;
+                }
+
+                // build the new word: 
+                // (part before i) + (new char) + (part after i)
+                String newWord = word.substring(0, i) + ch + word.substring(i + 1, word.length());
+
+                // if this newly formed word exists in our word set,
+                // it's a valid neighbour (one valid transformation)
+                if (set.contains(newWord)) {
+                    neighbours.add(newWord);
+                }
+            }
+        }
+
+        // return all neighbours found for this word
+        return neighbours;
+    }
+
+    public int ladderLength(String beginWord, String endWord, List<String> wordList) {
+
+        // convert wordList to a HashSet for O(1) lookup and O(1) removal
+        Set<String> set = new HashSet<>(wordList);
+
+        // if endWord doesn't even exist in the dictionary, 
+        // no transformation sequence is possible -> return 0
+        if (!set.contains(endWord)) {
+            return 0;
+        }
+
+        // queue for BFS traversal, starts with beginWord
+        Queue<String> queue = new LinkedList<>();
+        queue.offer(beginWord);
+
+        // remove beginWord from set (if present) so we don't process it again
+        // as a "neighbour" later — safe to call even if it's not in the set
+        set.remove(beginWord);
+
+        // 'level' represents number of transformations made so far
+        // (beginWord itself is level 0, i.e., 0 transformations)
+        int level = 0;
+
+        // standard BFS loop: continue until queue is empty
+        while (!queue.isEmpty()) {
+
+            // number of nodes (words) present at the current BFS level
+            int currlevelSize = queue.size();
+
+            // process every word at the current level before moving to next level
+            for (int i = 0; i < currlevelSize; i++) {
+
+                // pop the front word from the queue
+                String node = queue.poll();
+
+                // if we've reached the endWord, 
+                // return level+1 because 'level' counts completed steps,
+                // and reaching endWord itself is one more transformation
+                if (node.equals(endWord)) {
+                    return level + 1;
+                }
+
+                // get all valid one-letter-transformed neighbours of current word
+                List<String> neighbour = getNeighbour(node, set);
+
+                // add all these neighbours to queue for processing in next level
+                for (String word : neighbour) {
+                    queue.offer(word);
+
+                    // remove from set immediately to prevent it being 
+                    // added again as a neighbour of some other word in same level
+                    set.remove(word);
+                }
+            }
+
+            // one full level of BFS completed = one transformation step done
+            level++;
+        }
+
+        // if BFS completes without reaching endWord, 
+        // no valid transformation sequence exists
+        return 0;
+    }
+}
