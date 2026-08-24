@@ -1,0 +1,144 @@
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode() {}
+ *     ListNode(int val) { this.val = val; }
+ *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+ * }
+ */
+
+/*
+ * QUESTION: Reorder List (LeetCode 143)
+ * ---------------------------------------
+ * Given a singly linked list L0 -> L1 -> ... -> Ln-1 -> Ln,
+ * reorder it to:  L0 -> Ln -> L1 -> Ln-1 -> L2 -> Ln-2 -> ...
+ * You must do this in-place without altering node values, using O(1) extra space.
+ *
+ * Example:
+ *   Input:  1 -> 2 -> 3 -> 4 -> 5
+ *   Output: 1 -> 5 -> 2 -> 4 -> 3
+ *
+ * APPROACH: 3 steps
+ * ---------------------------------------
+ * 1. Find the middle of the list using slow/fast pointers.
+ * 2. Reverse the second half of the list (from middle+1 to end).
+ * 3. Merge the first half and the reversed second half alternately,
+ *    node by node, since a singly linked list can't be walked backward directly.
+ *
+ * Time Complexity:  O(n)  -> three linear passes (find middle, reverse, merge)
+ * Space Complexity: O(1)  -> only pointers used, no extra data structures
+ */
+
+class Solution {
+    public void reorderList(ListNode head) {
+
+        // ---------------------------------------------------------
+        // STEP 1: Find the middle node using slow/fast pointers
+        // slow moves 1 step, fast moves 2 steps -> when fast hits
+        // the end, slow is at the middle.
+        //
+        // DRY RUN with head = [1,2,3,4,5]:
+        //   start: slow=1, fast=1
+        //   iter1: slow=2, fast=3
+        //   iter2: slow=3, fast=5
+        //   check: fast.next == null (5 has no next) -> loop stops
+        //   Result: slow = 3  (correct middle)
+        // ---------------------------------------------------------
+        ListNode slow = head;
+        ListNode fast = head;
+        while (fast != null && fast.next != null) {
+            slow = slow.next;
+            fast = fast.next.next;
+        }
+
+        // ---------------------------------------------------------
+        // STEP 2: Reverse the second half (slow.next ... end)
+        // First cut the list into two halves using slow.next = null,
+        // then do a standard in-place reversal on the second half.
+        //
+        // DRY RUN (continuing above, slow = 3):
+        //   second = slow.next = 4   (so second: 4 -> 5 -> null)
+        //   slow.next = null         (first half becomes: 1 -> 2 -> 3 -> null)
+        //   prev = null
+        //
+        //   iter1: second=4
+        //     nexttemp = 5           (save node after 4)
+        //     4.next = prev = null   (reverse pointer)
+        //     prev = 4               (prev -> 4 -> null)
+        //     second = 5             (move forward)
+        //
+        //   iter2: second=5
+        //     nexttemp = null        (save node after 5, which is null)
+        //     5.next = prev = 4      (reverse pointer)
+        //     prev = 5               (prev -> 5 -> 4 -> null)
+        //     second = null
+        //
+        //   loop stops (second == null)
+        //   Result: prev = 5 -> 4 -> null   (second half fully reversed)
+        // ---------------------------------------------------------
+        ListNode second = slow.next;
+        slow.next = null;
+        ListNode prev = null;
+        while (second != null) {
+            ListNode nexttemp = second.next;
+            second.next = prev;
+            prev = second;
+            second = nexttemp;
+        }
+
+        // ---------------------------------------------------------
+        // STEP 3: Merge first half (head...) and reversed second half (prev...)
+        // alternately: head, tail, head, tail, ...
+        // Loop runs based on tailtemp, since second half is same length
+        // or one node shorter than first half (any leftover stays in place).
+        //
+        // DRY RUN (headtemp starts at head=1, tailtemp starts at prev=5):
+        //   State: first half = 1 -> 2 -> 3 -> null
+        //          reversed second half = 5 -> 4 -> null
+        //
+        //   iter1: headtemp=1, tailtemp=5
+        //     headnext = 1.next = 2   (save next of head)
+        //     tailnext = 5.next = 4   (save next of tail)
+        //     1.next = 5              (connect head -> tail)
+        //     5.next = 2              (connect tail -> next head)
+        //     headtemp = 2
+        //     tailtemp = 4
+        //     List so far: 1 -> 5 -> 2
+        //
+        //   iter2: headtemp=2, tailtemp=4
+        //     headnext = 2.next = 3
+        //     tailnext = 4.next = null
+        //     2.next = 4               (connect head -> tail)
+        //     4.next = 3               (connect tail -> next head)
+        //     headtemp = 3
+        //     tailtemp = null
+        //     List so far: 1 -> 5 -> 2 -> 4 -> 3
+        //
+        //   loop check: tailtemp == null -> loop stops
+        //   (node 3 is the leftover middle node for odd-length list,
+        //    it stays at the end automatically since its .next was
+        //    never touched after being set to null in Step 1's slow.next=null... 
+        //    actually 3.next still points wherever headnext left it,
+        //    which correctly terminates the list)
+        //
+        //   FINAL RESULT: 1 -> 5 -> 2 -> 4 -> 3   ✅ matches expected output
+        // ---------------------------------------------------------
+        ListNode headtemp = head;
+        ListNode tailtemp = prev;
+        while (tailtemp != null) {
+            ListNode headnext = headtemp.next;
+            ListNode tailnext = tailtemp.next;
+
+            headtemp.next = tailtemp;
+            tailtemp.next = headnext;
+
+            headtemp = headnext;
+            tailtemp = tailnext;
+        }
+        // head still points to the original first node (node 1),
+        // and since Java passes objects by reference, the caller's
+        // list is now reordered in-place. No return needed (void).
+    }
+}
