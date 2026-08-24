@@ -1,0 +1,54 @@
+/**
+ * Problem: Linked List Cycle II (LeetCode 142)
+ * 
+ * Question:
+ * Given the head of a linked list, return the node where the cycle begins. 
+ * If there is no cycle, return null.
+ * 
+ * Notice: Do not modify the linked list.
+ * 
+ * Approach: Floyd's Tortoise and Hare (Two-Pointer Technique)
+ * 
+ * 1. Cycle Detection:
+ *    - Initialize two pointers: 'slow' and 'fast' at head.
+ *    - Move 'slow' by 1 step and 'fast' by 2 steps.
+ *    - If 'fast' reaches null (or fast.next is null), the list has no cycle -> return null.
+ *    - If 'slow' and 'fast' meet, a cycle exists.
+ * 
+ * 2. Find Cycle Start:
+ *    - Let distance from head to cycle start be 'L1', and distance from start to meeting point be 'L2'.
+ *    - Mathematically, distance from head to cycle start equals distance from meeting point to cycle start:
+ *      (Head -> Start) = (Meeting Point -> Start) [modulo cycle length].
+ *    - Keep one pointer ('temp') at head and keep 'slow' at the meeting point.
+ *    - Move both one step at a time; the node where they collide is the starting node of the cycle.
+ * 
+ * Time Complexity: O(N) - Linear traversal.
+ * Space Complexity: O(1) - Constant auxiliary space.
+ */
+
+public class Solution {
+    public ListNode detectCycle(ListNode head) {
+        ListNode slow = head;
+        ListNode fast = head;
+        ListNode temp = head;
+
+        // Step 1: Detect if a cycle exists
+        while (fast != null && fast.next != null) {
+            slow = slow.next;
+            fast = fast.next.next;
+
+            // Pointers met -> cycle detected
+            if (fast == slow) {
+                // Step 2: Find the entry point of the cycle
+                while (temp != slow) {
+                    temp = temp.next;
+                    slow = slow.next;
+                }
+                return temp; // Starting node of the cycle
+            }
+        }
+
+        // No cycle found
+        return null;
+    }
+}
