@@ -1,0 +1,86 @@
+/**
+ * ============================================================================
+ * QUESTION:
+ * LeetCode 82 - Remove Duplicates from Sorted List II
+ * 
+ * Given the head of a sorted linked list, delete all nodes that have duplicate 
+ * numbers, leaving only distinct numbers from the original list. Return the 
+ * linked list sorted as well.
+ * 
+ * Example 1:
+ *   Input: head = [1, 2, 3, 3, 4, 4, 5]
+ *   Output: [1, 2, 5]
+ * 
+ * Example 2:
+ *   Input: head = [1, 1, 1, 2, 3]
+ *   Output: [2, 3]
+ * ============================================================================
+ * 
+ * APPROACH:
+ * Sentinel (Dummy) Node + Two Pointers (`prev` and `curr`)
+ * 
+ * 1. Dummy Node:
+ *    Because the original head node itself might be a duplicate and need removal,
+ *    we attach a dummy node before `head` (`dummy.next = head`).
+ * 
+ * 2. Scan for Sequences of Duplicates:
+ *    Traverse the list using `curr`. Whenever `curr.val == curr.next.val`, 
+ *    a duplicate sublist starts. We advance `curr` until it reaches the last 
+ *    node of this duplicate sequence.
+ * 
+ * 3. Re-link or Advance:
+ *    - If duplicates were found: bypass all of them by linking `prev.next` 
+ *      directly to `curr.next` (without moving `prev`, since the new next node 
+ *      could also be part of a duplicate group).
+ *    - If no duplicate: simply advance `prev = prev.next`.
+ * 
+ * 4. Step Forward:
+ *    Advance `curr = curr.next` at each iteration and return `dummy.next`.
+ * 
+ * COMPLEXITY:
+ * - Time Complexity:  O(N) — each node is visited at most twice.
+ * - Space Complexity: O(1) — in-place pointer manipulation.
+ * ============================================================================
+ */
+
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode() {}
+ *     ListNode(int val) { this.val = val; }
+ *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+ * }
+ */
+class Solution {
+    public ListNode deleteDuplicates(ListNode head) {
+        // Step 1: Create a dummy node to handle cases where head itself is removed
+        ListNode dummy = new ListNode(0);
+        dummy.next = head;
+
+        // 'prev' tracks the last confirmed distinct node
+        ListNode prev = dummy;
+        // 'curr' scans through the list
+        ListNode curr = head;
+
+        while (curr != null) {
+            // Step 2: Check if current node is the start of a duplicate sequence
+            if (curr.next != null && curr.val == curr.next.val) {
+                // Move curr to the last node of the duplicate sequence
+                while (curr.next != null && curr.val == curr.next.val) {
+                    curr = curr.next;
+                }
+                // Step 3a: Skip all duplicate nodes by linking prev to the node after duplicates
+                prev.next = curr.next;
+            } else {
+                // Step 3b: No duplicates found for this value; safe to move prev forward
+                prev = prev.next;
+            }
+            // Move curr forward to continue inspection
+            curr = curr.next;
+        }
+
+        return dummy.next;
+    }
+}
