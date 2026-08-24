@@ -1,0 +1,86 @@
+/**
+ * ============================================================================
+ * QUESTION:
+ * LeetCode 61: Rotate List
+ * Given the head of a linked list, rotate the list to the right by k places.
+ *
+ * Example 1:
+ * Input: head = [1,2,3,4,5], k = 2
+ * Output: [4,5,1,2,3]
+ *
+ * Example 2:
+ * Input: head = [0,1,2], k = 4
+ * Output: [2,0,1]
+ * ============================================================================
+ * 
+ * APPROACH:
+ * 1. Find Length & Edge Cases:
+ *    - Calculate total length (n) of the list.
+ *    - If list is empty, has 1 node, or k == 0, return head immediately.
+ *
+ * 2. Modulo Arithmetic (Normalize k):
+ *    - Rotating n times yields the original list.
+ *    - Set k = k % n. If k becomes 0, no rotation is needed.
+ *
+ * 3. Locate Split Point:
+ *    - The new tail will be at the (n - k)-th position (1-indexed).
+ *    - The new head will be the node immediately following the new tail.
+ *
+ * 4. Cut and Reconnect:
+ *    - Traverse to the end to get the old tail.
+ *    - Point oldTail.next to the original head.
+ *    - Point newTail.next to null (to terminate the list).
+ *    - Return newHead.
+ *
+ * Time Complexity:  O(N) - One pass to find length/tail, one pass to find split point.
+ * Space Complexity: O(1) - Constant auxiliary space (only pointer manipulations).
+ * ============================================================================
+ */
+
+class Solution {
+    // Helper method to compute the total number of nodes
+    private int getLength(ListNode head) {
+        int length = 0;
+        ListNode temp = head;
+        while (temp != null) {
+            length++;
+            temp = temp.next;
+        }
+        return length;
+    }
+
+    public ListNode rotateRight(ListNode head, int k) {
+        // Base case: 0 or 1 node, or no rotations requested
+        if (head == null || head.next == null || k == 0) {
+            return head;
+        }
+
+        // Step 1: Compute total length
+        int n = getLength(head);
+
+        // Step 2: Normalize k to eliminate redundant full rotations
+        k = k % n;
+        if (k == 0) {
+            return head; // Rotation brings it back to original list
+        }
+
+        // Step 3: Find the original tail node
+        ListNode oldTail = head;
+        while (oldTail.next != null) {
+            oldTail = oldTail.next;
+        }
+
+        // Step 4: Traverse to the (n - k)-th node (which becomes the new tail)
+        ListNode newTail = head;
+        for (int i = 1; i < (n - k); i++) {
+            newTail = newTail.next;
+        }
+
+        // Step 5: Break the link and reconnect
+        ListNode newHead = newTail.next; // Node (n - k + 1) is the new head
+        newTail.next = null;             // Terminate the rotated list
+        oldTail.next = head;             // Attach former prefix after former suffix
+
+        return newHead;
+    }
+}
