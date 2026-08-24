@@ -1,0 +1,126 @@
+/**
+ * ============================================================================
+ * QUESTION:
+ * LeetCode 25 - Reverse Nodes in k-Group
+ * 
+ * Given the head of a linked list, reverse the nodes of the list k at a time, 
+ * and return the modified list.
+ * 
+ * k is a positive integer and is less than or equal to the length of the linked list. 
+ * If the number of nodes is not a multiple of k then left-out nodes, in the end, 
+ * should remain as it is.
+ * 
+ * You may not alter the values in the list's nodes, only nodes themselves may be changed.
+ * 
+ * Example 1:
+ *   Input: head = [1, 2, 3, 4, 5], k = 2
+ *   Output: [2, 1, 4, 3, 5]
+ * 
+ * Example 2:
+ *   Input: head = [1, 2, 3, 4, 5], k = 3
+ *   Output: [3, 2, 1, 4, 5]
+ * ============================================================================
+ * 
+ * APPROACH:
+ * Length Counting + Group-by-Group Iterative Reversal
+ * 
+ * 1. Count Total Length:
+ *    Traverse the list once to find the total number of nodes `n`.
+ *    Compute the number of full groups to reverse: `group = n / k`.
+ * 
+ * 2. Reverse Each k-Group:
+ *    For each group:
+ *    - Standard in-place linked list reversal for exactly `k` nodes.
+ *    - After reversal, `prev` becomes the new head of the reversed group, 
+ *      and `currHead` becomes the new tail.
+ * 
+ * 3. Connect Groups:
+ *    - For the first group (`prevHead == null`), the new group head `prev` 
+ *      becomes the overall return head (`ansNode`).
+ *    - For subsequent groups, connect the previous group's tail to the current 
+ *      group's head (`prevHead.next = prev`).
+ * 
+ * 4. Connect Leftover Nodes:
+ *    After reversing all `group` batches, connect the tail of the last reversed 
+ *    group (`prevHead`) to the remaining unreversed nodes (`currHead`).
+ * 
+ * COMPLEXITY:
+ * - Time Complexity:  O(N) — one pass to count length, one pass to reverse nodes.
+ * - Space Complexity: O(1) — constant extra space for pointers.
+ * ============================================================================
+ */
+
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode() {}
+ *     ListNode(int val) { this.val = val; }
+ *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+ * }
+ */
+class Solution {
+    
+    // Helper method to compute total length of the linked list
+    private int getLength(ListNode head) {
+        int count = 0;
+        ListNode temp = head;
+        while (temp != null) {
+            count++;
+            temp = temp.next;
+        }
+        return count;
+    }
+
+    public ListNode reverseKGroup(ListNode head, int k) {
+        // Base case: empty list or single-node group requires no change
+        if (head == null || k <= 1) {
+            return head;
+        }
+
+        // Step 1: Calculate total nodes and number of full k-groups
+        int n = getLength(head);
+        int group = n / k;
+
+        ListNode prevHead = null;    // Tracks the tail of the previously processed group
+        ListNode currHead = head;    // Tracks the start of the current group before reversal
+        ListNode ansNode = head;     // Tracks the new overall head of the modified list
+
+        // Step 2: Iterate and reverse each full group
+        for (int i = 0; i < group; i++) {
+            ListNode prev = null;
+            ListNode curr = currHead;
+            ListNode next = null;
+
+            // Reverse k nodes locally
+            for (int j = 0; j < k; j++) {
+                next = curr.next;
+                curr.next = prev;
+                prev = curr;
+                curr = next;
+            }
+
+            // Step 3: Connect this reversed group with the previous segment
+            if (prevHead == null) {
+                // The head of the first reversed group is the overall new head
+                ansNode = prev;
+            } else {
+                // Link the tail of the previous group to the new head of this group
+                prevHead.next = prev;
+            }
+
+            // Update trackers: currHead is now the tail of the reversed group
+            prevHead = currHead;
+            // Advance currHead to start of next group
+            currHead = curr;
+        }
+
+        // Step 4: Attach any remaining nodes (less than k) to the last group's tail
+        if (prevHead != null) {
+            prevHead.next = currHead;
+        }
+
+        return ansNode;
+    }
+}
