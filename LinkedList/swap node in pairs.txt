@@ -1,0 +1,89 @@
+/**
+ * ============================================================================
+ * QUESTION:
+ * LeetCode 24 - Swap Nodes in Pairs
+ * 
+ * Given a linked list, swap every two adjacent nodes and return its head. 
+ * You must solve the problem without modifying the values in the list's nodes 
+ * (i.e., only nodes themselves may be changed.)
+ * 
+ * Example 1:
+ *   Input: head = [1, 2, 3, 4]
+ *   Output: [2, 1, 4, 3]
+ * 
+ * Example 2:
+ *   Input: head = []
+ *   Output: []
+ * 
+ * Example 3:
+ *   Input: head = [1]
+ *   Output: [1]
+ * ============================================================================
+ * 
+ * APPROACH:
+ * Iterative Pointer Manipulation with Sentinel (Dummy) Node
+ * 
+ * 1. Dummy Node Setup:
+ *    Because the original `head` will become the second node after the first swap,
+ *    we attach a dummy node before `head` (`dummy.next = head`) to maintain a 
+ *    stable reference to the new head.
+ * 
+ * 2. Pair Identification:
+ *    At each iteration, ensure at least two nodes exist ahead (`prev.next != null` 
+ *    and `prev.next.next != null`).
+ *    - `first`  = `prev.next`      (1st node of pair)
+ *    - `second` = `prev.next.next` (2nd node of pair)
+ * 
+ * 3. Rewire Three Pointers in Order:
+ *    - `first.next = second.next` : Connect 1st node to the remaining unswapped list.
+ *    - `second.next = first`      : Reverse the pair (2nd node now points to 1st).
+ *    - `prev.next = second`       : Connect the preceding list to the 2nd node.
+ * 
+ * 4. Advance:
+ *    Move `prev = first` (since `first` is now the end of the swapped pair and 
+ *    sits right before the next pair to process).
+ * 
+ * COMPLEXITY:
+ * - Time Complexity:  O(N) — every pair of nodes is processed exactly once.
+ * - Space Complexity: O(1) — purely in-place pointer manipulation.
+ * ============================================================================
+ */
+
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode() {}
+ *     ListNode(int val) { this.val = val; }
+ *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+ * }
+ */
+class Solution {
+    public ListNode swapPairs(ListNode head) {
+        // Step 1: Create a dummy node to anchor the new head
+        ListNode dummy = new ListNode(0);
+        dummy.next = head;
+
+        // 'prev' tracks the node right before the current pair being swapped
+        ListNode prev = dummy;
+
+        // Step 2: Continue while there is at least a pair of nodes left to swap
+        while (prev.next != null && prev.next.next != null) {
+            // Identify the two nodes to be swapped
+            ListNode first = prev.next;
+            ListNode second = prev.next.next;
+
+            // Step 3: Re-link pointers to swap the pair
+            first.next = second.next; // Connect first node to the rest of the list
+            second.next = first;       // Point second node back to the first node
+            prev.next = second;        // Connect previous segment to the second node
+
+            // Step 4: Advance 'prev' to 'first' (which is now the tail of this swapped pair)
+            prev = first;
+        }
+
+        // Return the new head of the modified list
+        return dummy.next;
+    }
+}
