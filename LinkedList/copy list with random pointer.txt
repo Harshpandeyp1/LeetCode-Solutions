@@ -1,0 +1,127 @@
+/*
+ * ============================================================
+ * QUESTION: Copy List with Random Pointer
+ * ============================================================
+ * A linked list is given such that each node contains an
+ * additional random pointer, which could point to any node
+ * in the list, or null.
+ *
+ * Construct a DEEP COPY of the list. The deep copy should
+ * consist of exactly n brand new nodes, where each new node
+ * has:
+ *   - its value set to the value of its corresponding
+ *     original node
+ *   - its 'next' pointer pointing to the new node
+ *     corresponding to the original node's 'next' pointer
+ *   - its 'random' pointer pointing to the new node
+ *     corresponding to the original node's 'random' pointer
+ *
+ * Return the head of the copied linked list.
+ * ============================================================
+ *
+ * APPROACH (HashMap method):
+ * The tricky part of this problem is the 'random' pointer -
+ * it can point FORWARD to a node we haven't created a copy
+ * of yet. We solve this using a HashMap as a lookup table.
+ *
+ * STEP 1 (First pass):
+ *   Walk through the original list and create a new copy
+ *   node for every original node (just the value, nothing
+ *   wired up yet). Store the mapping:
+ *       original node -> its copy node
+ *   in a HashMap. This guarantees that by the time we need
+ *   to wire up any pointer (next or random), the copy of
+ *   the target node already exists in the map, no matter
+ *   which direction it points.
+ *
+ * STEP 2 (Second pass):
+ *   Walk through the original list again. For each original
+ *   node, look up its copy in the map, and set:
+ *       copy.next   = map.get(original.next)
+ *       copy.random = map.get(original.random)
+ *   Since map.get(null) safely returns null, this also
+ *   correctly handles nodes whose next/random is null.
+ *
+ * STEP 3:
+ *   Return map.get(head) -> the copy of the original head,
+ *   which is the head of our new deep-copied list.
+ *
+ * TIME COMPLEXITY:  O(n) — two linear passes over the list
+ * SPACE COMPLEXITY: O(n) — HashMap storing n node mappings
+ * ============================================================
+ */
+
+/*
+// Definition for a Node.
+class Node {
+    int val;
+    Node next;
+    Node random;
+
+    public Node(int val) {
+        this.val = val;
+        this.next = null;
+        this.random = null;
+    }
+}
+*/
+
+class Solution {
+    public Node copyRandomList(Node head) {
+
+        // Edge case: empty list -> nothing to copy, return null immediately.
+        if (head == null) return null;
+
+        // map stores: original node -> its corresponding copy node.
+        // This is what lets us instantly translate any original node
+        // reference into its new copy, in O(1) time.
+        Map<Node, Node> map = new HashMap<>();
+
+        // ------------------------------------------------------
+        // FIRST PASS: create a copy (val only) of every node,
+        // and register the original -> copy mapping.
+        // We do NOT wire up next/random yet, because some
+        // target nodes (for random pointers) might not have
+        // been created yet if we tried to do it in one pass.
+        // ------------------------------------------------------
+        Node curr = head; // curr = current node while walking the original list
+        while (curr != null) {
+            map.put(curr, new Node(curr.val)); // create copy, map original -> copy
+            curr = curr.next; // move forward in the original list
+        }
+        // At this point, curr has been walked all the way to null
+        // (that's why the while loop stopped). curr is NOT pointing
+        // at the head anymore.
+
+        // ------------------------------------------------------
+        // SECOND PASS: now every original node already has a
+        // copy sitting in the map (created in the first pass).
+        // So we can safely wire up next/random pointers on the
+        // COPIES, translating original references via the map.
+        // ------------------------------------------------------
+
+        // Reset curr back to the start of the original list.
+        // Without this, curr would still be null from the first
+        // pass, and this while loop would never execute.
+        curr = head;
+
+        while (curr != null) {
+            Node copy = map.get(curr); // the copy corresponding to curr
+
+            // Set copy.next to the COPY of curr.next.
+            // If curr.next is null, map.get(null) returns null safely.
+            copy.next = map.get(curr.next);
+
+            // Set copy.random to the COPY of curr.random.
+            // Handles null random pointers safely the same way.
+            copy.random = map.get(curr.random);
+
+            curr = curr.next; // move forward in the original list
+        }
+
+        // head still refers to the ORIGINAL first node (we never
+        // modified it). map.get(head) translates it into the
+        // copy of the first node -> the head of our new list.
+        return map.get(head);
+    }
+}

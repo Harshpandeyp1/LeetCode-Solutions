@@ -1,0 +1,108 @@
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode() {}
+ *     ListNode(int val) { this.val = val; }
+ *     ListNode(int val, ListNode next) {
+ *         this.val = val;
+ *         this.next = next;
+ *     }
+ * }
+ */
+
+class Solution {
+
+    public ListNode removeNthFromEnd(ListNode head, int n) {
+
+        /*
+         * APPROACH:
+         *
+         * We use two pointers with a gap of n nodes.
+         *
+         * The second pointer is moved n steps ahead first.
+         *
+         * Then we move both pointers together.
+         *
+         * When second reaches null,
+         * temp will be at the node BEFORE the node
+         * that needs to be removed.
+         *
+         * We use a dummy node so that even if the HEAD
+         * itself has to be removed, the same logic works.
+         */
+
+        // Dummy node is placed before head.
+        ListNode dummy = new ListNode(0);
+        dummy.next = head;
+
+        /*
+         * second will move n nodes ahead.
+         */
+        ListNode second = head;
+
+        /*
+         * temp starts at dummy.
+         *
+         * We start from dummy instead of head because
+         * we need temp to point to the PREVIOUS node
+         * of the node we want to delete.
+         */
+        ListNode temp = dummy;
+
+
+        // STEP 1:
+        // Move second pointer n positions ahead.
+        for (int i = 0; i < n; i++) {
+            second = second.next;
+        }
+
+
+        /*
+         * STEP 2:
+         *
+         * Move both pointers together.
+         *
+         * second moves toward null.
+         * temp moves toward the node before the target.
+         */
+        while (second != null) {
+
+            second = second.next;
+            temp = temp.next;
+        }
+
+
+        /*
+         * STEP 3:
+         *
+         * temp is now the node BEFORE the node
+         * that needs to be removed.
+         *
+         * Example:
+         *
+         * temp
+         *  ↓
+         *  3 → 4 → 5
+         *
+         * If 4 has to be removed:
+         *
+         * temp.next = temp.next.next
+         *
+         * becomes:
+         *
+         * 3 → 5
+         */
+        temp.next = temp.next.next;
+
+
+        /*
+         * Return dummy.next instead of head.
+         *
+         * This is important because the original head
+         * might have been removed.
+         */
+        return dummy.next;
+    }
+}

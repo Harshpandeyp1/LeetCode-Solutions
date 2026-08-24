@@ -1,0 +1,72 @@
+You are given two non-empty linked lists representing two non-negative integers. The digits are stored in reverse order, and each of their nodes contains a single digit. Add the two numbers and return the sum as a linked list.
+
+You may assume the two numbers do not contain any leading zero, except the number 0 itself.
+
+
+/**
+ * APPROACH:
+ * The two numbers are stored as linked lists with digits in REVERSE order,
+ * so the head of each list is the LEAST significant digit.
+ * This means we can add the numbers exactly like elementary school addition:
+ *   - Walk both lists from head to tail (least significant to most significant).
+ *   - At each step, add the two current digits + carry from the previous step.
+ *   - The result digit = sum % 10, the new carry = sum / 10.
+ *   - Build a new node for each result digit and link it to the output list.
+ *   - Keep going until both lists are exhausted AND there is no carry left
+ *     (a final carry, e.g. 5+5=10, needs an extra node).
+ * Use a dummy head node so we don't need special-case code for the first node.
+ *
+ * Time Complexity:  O(max(m, n)) - one pass through the longer list
+ * Space Complexity: O(max(m, n)) - for the newly created result list
+ */
+
+class Solution {
+    public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
+
+        // Dummy node acts as a placeholder before the real head of result list.
+        // Makes it easy to build the list without handling "first node" separately.
+        ListNode dummy = new ListNode(0);
+
+        // 'current' pointer is used to build/extend the result list step by step.
+        ListNode current = dummy;
+
+        // 'carry' stores the carry-over value when a digit sum exceeds 9.
+        int carry = 0;
+
+        // Loop continues as long as there are digits left in l1, l2,
+        // OR there is a leftover carry that still needs to be added as a new digit.
+        while (l1 != null || l2 != null || carry != 0) {
+
+            // Get current digit from l1, or 0 if l1 has already ended.
+            int val1 = (l1 != null) ? l1.val : 0;
+
+            // Get current digit from l2, or 0 if l2 has already ended.
+            int val2 = (l2 != null) ? l2.val : 0;
+
+            // Add both digits along with carry from the previous iteration.
+            int total = val1 + val2 + carry;
+
+            // New carry for the next iteration (0 or 1, since max sum is 9+9+1=19).
+            carry = total / 10;
+
+            // The actual digit to store in the current result node.
+            int digit = total % 10;
+
+            // Create a new node with this digit and attach it to the result list.
+            current.next = new ListNode(digit);
+
+            // Move 'current' pointer forward to the newly added node.
+            current = current.next;
+
+            // Move l1 forward to its next digit, only if l1 hasn't ended yet.
+            if (l1 != null) l1 = l1.next;
+
+            // Move l2 forward to its next digit, only if l2 hasn't ended yet.
+            if (l2 != null) l2 = l2.next;
+        }
+
+        // dummy.next is the actual head of the result list
+        // (dummy itself was just a placeholder holding value 0).
+        return dummy.next;
+    }
+}
