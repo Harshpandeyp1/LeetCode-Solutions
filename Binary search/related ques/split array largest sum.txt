@@ -1,0 +1,101 @@
+/*
+ * QUESTION: Split Array Largest Sum
+ * ------------------------------------
+ * Given an integer array `nums` and an integer `k`, split `nums` into `k`
+ * non-empty CONTIGUOUS subarrays such that the LARGEST sum among these
+ * subarrays is MINIMIZED. Return that minimized largest sum.
+ *
+ * Example:
+ * Input:  nums = [7,2,5,10,8], k = 2
+ * Output: 18
+ * Explanation: split into [7,2,5] and [10,8] -> sums are 14 and 18.
+ * The max of these is 18, and this is the best (smallest possible) max
+ * achievable over any valid split into 2 pieces.
+ *
+ * APPROACH: Binary Search on the ANSWER
+ * -----------------------------------------
+ * We don't binary search over array indices — we binary search over the
+ * space of POSSIBLE ANSWER VALUES (candidate "max subarray sum limits"),
+ * and for each candidate we run a greedy feasibility check.
+ *
+ * Search space (the range of possible answers):
+ * - LOWER BOUND = max single element in nums.
+ *   Why: whichever subarray contains the largest element can never have
+ *   a sum smaller than that element itself.
+ * - UPPER BOUND = sum of the entire array.
+ *   Why: this is the answer if k = 1 (no splitting at all, one big piece).
+ *
+ * Monotonic property that makes binary search valid:
+ * - If a small "sum limit" is INfeasible (too restrictive, forces more
+ *   than k pieces), then all smaller limits are also infeasible.
+ * - If a limit is feasible (needs <= k pieces), then all LARGER limits
+ *   are also feasible (more room = fewer pieces needed).
+ * This gives a clean boolean pattern: [false, false, ..., true, true]
+ * and binary search finds the exact tipping point (the SMALLEST feasible
+ * limit), which is exactly the minimized largest sum we want.
+ *
+ * GREEDY FEASIBILITY CHECK (canSplit):
+ * For a candidate `sum` limit, greedily pack elements into the current
+ * piece. The moment adding the next element would exceed `sum`, close
+ * off the current piece (count it) and start a new piece with that
+ * element. If the total pieces needed stays <= k, this limit is feasible.
+ *
+ * Time Complexity:  O(n log(sum of nums))
+ *   - each binary search step costs O(n) for the greedy check
+ *   - binary search itself runs O(log(sum - max)) times
+ * Space Complexity: O(1) extra
+ */
+class Solution {
+    public int splitArray(int[] nums, int k) {
+        int left = 0;
+        int right = 0;
+
+        // determine binary search boundaries
+        for (int i : nums) {
+            left = Math.max(left, i);   // lower bound: largest single element
+            right += i;                  // upper bound: total sum of array
+        }
+
+        // binary search for the SMALLEST feasible "max sum limit"
+        while (left < right) {
+            int mid = left + (right - left) / 2; // candidate max-sum limit
+
+            if (canSplit(mid, nums, k)) {
+                // mid is achievable with <= k pieces -> try an even
+                // smaller limit to see if we can minimize further
+                right = mid;
+            } else {
+                // mid is too restrictive -> needs more than k pieces
+                // -> must allow a bigger limit
+                left = mid + 1;
+            }
+        }
+
+        // left == right here -> this is the minimized largest subarray sum
+        return left;
+    }
+
+    /*
+     * Greedy check: can we split `nums` into pieces, none exceeding
+     * `sum`, using k or fewer pieces?
+     */
+    private boolean canSplit(int sum, int[] nums, int k) {
+        int count = 1;   // at least 1 piece is always needed
+        int total = 0;   // running sum of the current piece
+
+        for (int n : nums) {
+            total += n;
+            if (total > sum) {
+                // current piece would overflow the limit -> close it off
+                // and start a brand new piece with just this element
+                total = n;
+                count++;
+            }
+            // too many pieces already needed -> this `sum` limit fails
+            if (count > k) return false;
+        }
+
+        // successfully fit everything within k pieces
+        return true;
+    }
+}
