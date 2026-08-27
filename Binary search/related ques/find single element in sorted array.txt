@@ -1,0 +1,72 @@
+/*
+ * QUESTION: Single Element in a Sorted Array
+ * --------------------------------------------
+ * You are given a sorted array consisting of only integers where every
+ * element appears exactly twice, except for one element which appears
+ * only once. Find and return that single element.
+ *
+ * You must design an algorithm that runs in O(log n) time and O(1) space.
+ *
+ * Example:
+ * Input:  nums = [1,1,2,3,3,4,4,8,8]
+ * Output: 2
+ *
+ * Input:  nums = [3,3,7,7,10,11,11]
+ * Output: 10
+ *
+ * APPROACH: Binary Search using index parity (even/odd)
+ * --------------------------------------------------------
+ * BEFORE the single element, every pair sits at (even, odd) index
+ * positions:
+ *      index:  0  1  2  3  4  5  6  7  8
+ *      value:  1  1  2  3  3  4  4  8  8
+ *              [pair] single [pair][pair][pair]
+ *
+ * AFTER the single element, that pattern flips: pairs now start at ODD
+ * indices instead of even ones. This flip is the signal we binary search
+ * on — we don't need to find the single element directly, we just need
+ * to find WHERE the pairing pattern breaks.
+ *
+ * Steps:
+ * 1. Force `mid` to always be EVEN (if mid is odd, decrement it by 1).
+ *    This ensures we always compare a potential pair-start with its
+ *    expected partner at mid+1.
+ * 2. Compare nums[mid] with nums[mid+1]:
+ *      - EQUAL     -> pattern still unbroken up to here -> the single
+ *                     element must be somewhere to the RIGHT
+ *                     -> left = mid + 2 (skip this whole intact pair)
+ *      - NOT EQUAL -> pattern already broken by this point -> the single
+ *                     element is at `mid` OR somewhere to the LEFT
+ *                     -> right = mid (keep mid in range, it could be the answer)
+ * 3. Loop until left == right -> that index holds the single element.
+ *
+ * Time Complexity:  O(log n)
+ * Space Complexity: O(1)
+ */
+class Solution {
+    public int singleNonDuplicate(int[] nums) {
+        int left = 0;
+        int right = nums.length - 1;
+
+        while (left < right) {
+            int mid = left + (right - left) / 2;
+
+            // Force mid to be even, so mid+1 is always its "expected pair"
+            if (mid % 2 == 1) {
+                mid--;
+            }
+
+            if (nums[mid] == nums[mid + 1]) {
+                // pair intact -> single element is to the right
+                // skip both mid and mid+1 entirely
+                left = mid + 2;
+            } else {
+                // pair broken -> single element is at mid or to the left
+                right = mid;
+            }
+        }
+
+        // left == right here -> pointing at the single element
+        return nums[left];
+    }
+}
