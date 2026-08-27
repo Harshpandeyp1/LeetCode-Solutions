@@ -1,0 +1,63 @@
+/*
+ * QUESTION: Find Peak Element
+ * ----------------------------
+ * A peak element is an element that is strictly greater than its neighbors.
+ * Given an integer array nums, find a peak element, and return its index.
+ * If the array contains multiple peaks, return the index to ANY of the peaks.
+ *
+ * You may imagine that nums[-1] = nums[n] = -infinity (i.e., out-of-bound
+ * elements are always considered smaller than any element in the array).
+ * You must write an algorithm that runs in O(log n) time.
+ *
+ * Example: nums = [1,2,3,1] -> peak is at index 2 (value 3)
+ * Example: nums = [1,2,1,3,5,6,4] -> peak can be index 1 OR index 5
+ */
+
+class Solution {
+    public int findPeakElement(int[] nums) {
+        int n = nums.length;
+
+        // Search space: entire array
+        int left = 0;
+        int right = n - 1;
+
+        /*
+         * APPROACH: Binary Search
+         * ------------------------
+         * Instead of linear scan (O(n)), we use binary search (O(log n))
+         * by comparing nums[mid] with nums[mid+1] only (one comparison per step).
+         *
+         * Why this works:
+         * - If nums[mid] < nums[mid+1]  -> we are on an "uphill" slope.
+         *   This means nums[mid] is DEFINITELY not a peak, but a peak is
+         *   guaranteed to exist somewhere to the right (since array
+         *   boundaries act as -infinity). So we discard the left half
+         *   including mid: left = mid + 1
+         *
+         * - If nums[mid] >= nums[mid+1] -> we are on a "downhill" (or flat) slope.
+         *   This means nums[mid] MIGHT be a peak (we haven't checked its left
+         *   neighbor yet), so we CANNOT discard mid. A peak is guaranteed to
+         *   exist somewhere in [left, mid]. So we shrink the range but KEEP mid:
+         *   right = mid   (NOT mid - 1, because mid could be the answer)
+         *
+         * Loop ends when left == right, which is guaranteed to be a peak index,
+         * because:
+         *   nums[left - 1] < nums[left] > nums[left + 1]
+         * (with out-of-bound neighbors treated as -infinity)
+         */
+        while (left < right) {
+            int mid = left + (right - left) / 2; // avoids overflow vs (left+right)/2
+
+            if (nums[mid] < nums[mid + 1]) {
+                // uphill -> mid is not the peak, move right
+                left = mid + 1;
+            } else {
+                // downhill/flat -> mid could be the peak, keep it in range
+                right = mid;
+            }
+        }
+
+        // left == right here -> pointing at a valid peak index
+        return left;
+    }
+}
