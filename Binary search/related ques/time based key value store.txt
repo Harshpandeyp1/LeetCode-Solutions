@@ -1,0 +1,135 @@
+/*
+ * QUESTION: Time Based Key-Value Store
+ * -----------------------------------------
+ * Design a time-based key-value data structure that can store multiple
+ * values for the same key at different time stamps, and retrieve the
+ * key's value at a certain timestamp.
+ *
+ * Implement the TimeMap class:
+ * - set(String key, String value, int timestamp): stores the key with
+ *   the value at the given time timestamp.
+ * - get(String key, int timestamp): returns a value such that
+ *   set was called previously, with timestamp_prev <= timestamp.
+ *   If there are multiple such values, it returns the value associated
+ *   with the LARGEST timestamp_prev. If there are no values, returns "".
+ *
+ * Example:
+ * set("foo", "bar", 1)
+ * get("foo", 1)   -> "bar"
+ * get("foo", 3)   -> "bar"   (no exact match at 3, but 1 is the largest <= 3)
+ * set("foo", "bar2", 4)
+ * get("foo", 4)   -> "bar2"
+ * get("foo", 5)   -> "bar2"  (largest timestamp <= 5 is 4)
+ *
+ * KEY CONSTRAINT: timestamps for `set` calls on the SAME key are
+ * guaranteed to be strictly increasing. This means the list of stored
+ * (timestamp, value) pairs for any key is ALWAYS sorted by timestamp
+ * just by appending in the order set() is called — no need to sort.
+ * This sorted property is exactly what makes binary search possible.
+ *
+ * APPROACH: HashMap of Lists + Binary Search ("floor" search)
+ * -----------------------------------------------------------------
+ * 1. Store data as: Map<String key, List<(timestamp, value)>>
+ *    Each key's list stays sorted by timestamp automatically because
+ *    set() calls arrive in increasing timestamp order.
+ *
+ * 2. On get(key, timestamp): binary search that key's sorted list to
+ *    find the RIGHTMOST (largest) timestamp that is <= the query
+ *    timestamp. This is the same "find last occurrence satisfying a
+ *    condition" pattern used in problems like "Find First and Last
+ *    Position" — except here the condition is "<= target" instead of
+ *    "== target".
+ *
+ * Binary search logic per step:
+ *   - if cur.timestamp <= target -> this is a VALID candidate answer,
+ *     but a later (closer) one might still exist to the right ->
+ *     save it, then search RIGHT (left = mid + 1)
+ *   - if cur.timestamp > target -> too far in the future, this and
+ *     everything to its right can be discarded -> search LEFT
+ *     (right = mid - 1)
+ *
+ * Time Complexity:
+ *   - set(): O(1) amortized (ArrayList append)
+ *   - get(): O(log n) where n = number of set() calls for that key
+ * Space Complexity: O(n) total across all keys
+ */
+
+class TimeStampedValue {
+  public int timestamp;
+  public String value;
+
+  public TimeStampedValue(int timestamp, String value) {
+    this.timestamp = timestamp;
+    this.value = value;
+  }
+}
+
+public class TimeMap {
+  // maps each key to its list of (timestamp, value) pairs,
+  // kept naturally sorted by timestamp since set() timestamps
+  // are guaranteed strictly increasing per key
+  Map<String, ArrayList<TimeStampedValue>> entriesByKey;
+
+  public TimeMap() {
+    entriesByKey = new HashMap<>();
+  }
+
+  public void set(String key, String value, int timestamp) {
+    // create the list for this key if it doesn't exist yet
+    if (!entriesByKey.containsKey(key)) {
+      entriesByKey.put(key, new ArrayList<>());
+    }
+    ArrayList<TimeStampedValue> timeStampedValues = entriesByKey.get(key);
+    // simply append -> list stays sorted because timestamps only increase
+    timeStampedValues.add(new TimeStampedValue(timestamp, value));
+  }
+
+  public String get(String key, int timestamp) {
+    // key was never set -> nothing to return
+    if (!entriesByKey.containsKey(key)) return "";
+
+    ArrayList<TimeStampedValue> timeStampedValues = entriesByKey.get(key);
+
+    // binary search for the floor (largest timestamp <= given timestamp)
+    Optional<TimeStampedValue> timeStamp =
+        binarySearchTimestamp(timeStampedValues, timestamp);
+
+    if (timeStamp.isEmpty()) {
+      // no stored timestamp is <= the query timestamp
+      return "";
+    }
+
+    return timeStamp.get().value;
+  }
+
+  /*
+   * Binary search for the RIGHTMOST entry whose timestamp is <= target.
+   * (This is a "floor" search, not an exact-match search.)
+   */
+  private Optional<TimeStampedValue> binarySearchTimestamp(
+      ArrayList<TimeStampedValue> arr, int target) {
+    int left = 0, right = arr.size() - 1;
+    int matchIndex = -1; // -1 means no valid entry found yet
+
+    while (left <= right) {
+      int mid = left + (right - left) / 2;
+      TimeStampedValue cur = arr.get(mid);
+
+      if (cur.timestamp <= target) {
+        // valid candidate -> remember it, but keep searching RIGHT
+        // in case there's an even later timestamp that's still <= target
+        matchIndex = mid;
+        left = mid + 1;
+      } else {
+        // cur.timestamp is too big (in the future) -> discard this
+        // and everything to the right, search LEFT instead
+        right = mid - 1;
+      }
+    }
+
+    if (matchIndex == -1) {
+      return Optional.empty(); // no timestamp <= target exists
+    }
+    return Optional.of(arr.get(matchIndex));
+  }
+}
