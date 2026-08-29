@@ -1,0 +1,98 @@
+/**
+ * LeetCode 79 - Word Search
+ *
+ * QUESTION:
+ * Given an m x n grid of characters `board` and a string `word`,
+ * return true if `word` exists in the grid.
+ *
+ * The word can be constructed from letters of sequentially adjacent cells,
+ * where adjacent cells are horizontally or vertically neighboring.
+ * The same cell may not be used more than once in a single word.
+ *
+ * Example:
+ *   board = [["A","B","C","E"],
+ *             ["S","F","C","S"],
+ *             ["A","D","E","E"]]
+ *   word  = "ABCCED"  -> true
+ *   word  = "SEE"     -> true
+ *   word  = "ABCB"    -> false (cell 'B' would be reused)
+ *
+ * APPROACH: Backtracking (DFS from every cell)
+ * 1. Try every cell in the grid as a potential starting point for the word.
+ *    (Quick pre-check: only bother starting if it matches word's first letter.)
+ * 2. From a starting cell, do a DFS that tries to match the word letter by
+ *    letter by moving to one of the 4 neighboring cells (up/down/left/right).
+ * 3. While visiting a cell, temporarily mark it (overwrite with ' ') so the
+ *    same path can't reuse it — this enforces the "no cell reused" rule.
+ * 4. After exploring all 4 directions from a cell, restore its original
+ *    character (backtrack) so it's available for other paths/starting points.
+ * 5. If any of the 4 directions leads to matching the entire word, success
+ *    bubbles back up via the `||` short-circuit chain.
+ * 6. If no starting cell leads to a full match, the word doesn't exist in
+ *    the grid.
+ *
+ * TIME COMPLEXITY:  O(m * n * 4^L)  where L = word.length()
+ *                    (in the worst case, DFS branches 4 ways at each of the
+ *                    L letters, from each of the m*n starting cells)
+ * SPACE COMPLEXITY: O(L) for the recursion stack (depth = word length)
+ */
+class Solution {
+
+    // Entry point: scans the whole board looking for a valid starting cell.
+    public boolean exist(char[][] board, String word) {
+        int m = board.length;
+        int n = board[0].length;
+
+        // Try starting the search from every cell in the grid.
+        for (int r = 0; r < m; r++) {
+            for (int c = 0; c < n; c++) {
+                // Cheap pre-check: only start DFS if first letters match.
+                if (word.charAt(0) == board[r][c]) {
+                    if (dfs(board, r, c, word, 0)) {
+                        return true; // found a full match starting here
+                    }
+                }
+            }
+        }
+        return false; // no starting cell led to a match
+    }
+
+    // Recursive backtracking search: tries to match word[wordIndex..] starting at (r, c).
+    public boolean dfs(char[][] board, int r, int c, String word, int wordIndex) {
+
+        // Base case: matched every character of the word successfully.
+        if (wordIndex == word.length()) {
+            return true;
+        }
+
+        int rows = board.length;
+        int cols = board[0].length;
+
+        // Out of bounds -> this path is invalid.
+        if (r < 0 || c < 0 || r >= rows || c >= cols) {
+            return false;
+        }
+
+        // Either this cell was already used in the current path (' ')
+        // or its letter doesn't match the letter we need next -> invalid path.
+        if (board[r][c] == ' ' || board[r][c] != word.charAt(wordIndex)) {
+            return false;
+        }
+
+        // --- Mark current cell as visited (backtracking setup) ---
+        char ch = board[r][c];   // save original letter to restore later
+        board[r][c] = ' ';       // temporarily blank it out so it can't be reused
+
+        // Explore all 4 directions looking for the next letter of the word.
+        // Short-circuits: stops at the first direction that succeeds.
+        boolean found = dfs(board, r - 1, c, word, wordIndex + 1)   // up
+                      || dfs(board, r + 1, c, word, wordIndex + 1)  // down
+                      || dfs(board, r, c + 1, word, wordIndex + 1)  // right
+                      || dfs(board, r, c - 1, word, wordIndex + 1); // left
+
+        // --- Backtrack: restore the cell so other paths can use it again ---
+        board[r][c] = ch;
+
+        return found;
+    }
+}
