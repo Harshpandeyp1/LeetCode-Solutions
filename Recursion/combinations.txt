@@ -1,0 +1,76 @@
+/**
+ * LeetCode 77 - Combinations
+ *
+ * QUESTION:
+ * Given two integers `n` and `k`, return all possible combinations of
+ * `k` distinct numbers chosen from the range [1, n].
+ * Order does NOT matter within a combination (e.g. [1,2] and [2,1] are
+ * considered the same and should only appear once in the output).
+ *
+ * Example:
+ *   n = 4, k = 2
+ *   Output: [1,2], [1,3], [1,4], [2,3], [2,4], [3,4]
+ *
+ * APPROACH: Backtracking via "Take or Skip" decision (subset-style)
+ * Instead of picking the next number from a growing "start" pointer,
+ * this version walks the numbers from n down to 1, and at EACH number
+ * makes a binary decision:
+ *   1. TAKE it -> add it to the current combination, then recurse on
+ *      the remaining smaller numbers, needing one fewer pick (k-1).
+ *   2. SKIP it -> don't add it, recurse on the remaining smaller numbers,
+ *      still needing the same number of picks (k).
+ *
+ * This produces a binary recursion tree of depth ~n (two branches at
+ * every number), and every root-to-leaf path that hits "k == 0" exactly
+ * represents one valid combination.
+ *
+ * BASE CASES:
+ *   - k == 0        -> we've already picked enough numbers; save a COPY
+ *                       of the current combination (must copy since
+ *                       `curr` keeps mutating as recursion continues).
+ *   - n == 0 (k > 0) -> ran out of numbers before reaching k picks;
+ *                       this path is invalid, just return without saving.
+ *
+ * BACKTRACKING STEP:
+ *   After trying the "take n" branch, we must undo it
+ *   (curr.remove(...)) before trying "skip n", so that `curr` correctly
+ *   reflects the state for sibling branches in the recursion tree.
+ *
+ * TIME COMPLEXITY:  O(2^n) worst case for the decision tree (bounded in
+ *                    practice by valid paths ~ C(n, k)), plus O(k) to
+ *                    copy each valid combination into the result.
+ * SPACE COMPLEXITY: O(n) recursion depth + O(k) for `curr`
+ *                    (excluding the output list).
+ */
+class Solution {
+
+    public List<List<Integer>> combine(int n, int k) {
+        List<List<Integer>> ans = new ArrayList<>(); // stores all valid combinations
+        solve(n, k, new ArrayList<>(), ans);
+        return ans;
+    }
+
+    // Tries, for the current number `n`, both including it and excluding it
+    // in the combination being built (`curr`), recursing down to n-1 either way.
+    public void solve(int n, int k, List<Integer> curr, List<List<Integer>> ans) {
+
+        // Success base case: picked exactly k numbers -> save this combination.
+        if (k == 0) {
+            ans.add(new ArrayList<>(curr)); // copy, since curr keeps changing
+            return;
+        }
+
+        // Failure base case: no numbers left but still need more picks -> dead end.
+        if (n == 0) {
+            return;
+        }
+
+        // --- Branch 1: TAKE number `n` ---
+        curr.add(n);                       // choose n
+        solve(n - 1, k - 1, curr, ans);     // recurse: one fewer number needed
+        curr.remove(curr.size() - 1);       // un-choose (backtrack) before next branch
+
+        // --- Branch 2: SKIP number `n` ---
+        solve(n - 1, k, curr, ans);         // recurse: still need k numbers
+    }
+}
