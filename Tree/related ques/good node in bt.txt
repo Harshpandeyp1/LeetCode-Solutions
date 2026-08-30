@@ -1,0 +1,76 @@
+/**
+ * ============================================================================
+ * QUESTION: Count Good Nodes in Binary Tree (LeetCode 1448)
+ * ============================================================================
+ * Given a binary tree root, a node X in the tree is named "good" if in the 
+ * path from the root to X, there are no nodes with a value greater than X.
+ * 
+ * Return the number of good nodes in the binary tree.
+ *
+ * ============================================================================
+ * APPROACH: Top-Down DFS (Path Maximum Tracking)
+ * ============================================================================
+ * 1. Tracking State:
+ *    - As we traverse down from the root, pass along the maximum node value 
+ *      seen so far on the current path (`max`).
+ *
+ * 2. Base Case:
+ *    - If `node == null`, return 0.
+ *
+ * 3. Good Node Condition:
+ *    - If `node.val >= max`, the current node is a "good node".
+ *    - Set `count = 1` and update `max = node.val` for its child subtrees.
+ *    - Otherwise, `count = 0` and keep the existing `max`.
+ *
+ * 4. Recursive Step:
+ *    - Recurse on `node.left` and `node.right` with the updated `max`.
+ *    - Return `count + dfs(left) + dfs(right)`.
+ *
+ * 5. Complexity:
+ *    - Time:  O(N) -> Each node is visited exactly once.
+ *    - Space: O(H) -> Stack space proportional to tree height 
+ *                     (O(N) worst-case skewed, O(log N) balanced).
+ * ============================================================================
+ */
+
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+class Solution {
+    public int goodNodes(TreeNode root) {
+        // Start DFS from root with the root's own value as the initial maximum
+        return dfs(root, root.val);
+    }
+
+    public int dfs(TreeNode node, int max) {
+        // 1. Base case: null node contributes 0 good nodes
+        if (node == null) {
+            return 0;
+        }
+
+        // 2. Evaluate if current node is a "good node"
+        int count = 0;
+        if (node.val >= max) {
+            count = 1;
+            max = node.val; // Update max for downstream nodes in this path
+        }
+
+        // 3. Accumulate good nodes from left and right subtrees
+        count += dfs(node.left, max);
+        count += dfs(node.right, max);
+
+        return count;
+    }
+}
