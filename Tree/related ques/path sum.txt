@@ -1,0 +1,64 @@
+/**
+ * ============================================================================
+ * QUESTION: Path Sum (LeetCode 112)
+ * ============================================================================
+ * Given the root of a binary tree and an integer targetSum, return true if 
+ * the tree has a root-to-leaf path such that adding up all the values along 
+ * the path equals targetSum.
+ *
+ * A leaf is a node with no children.
+ *
+ * ============================================================================
+ * APPROACH: Recursive DFS (Top-Down Reduction)
+ * ============================================================================
+ * 1. Base Case (Null Node):
+ *    - If the node is null, there is no path -> return false.
+ *
+ * 2. Leaf Node Check:
+ *    - If both left and right children are null, check if the current node's 
+ *      value equals the remaining targetSum.
+ *
+ * 3. Recursive Step:
+ *    - Subtract the current node's value from targetSum (`remaining = targetSum - root.val`).
+ *    - Check if either the left subtree OR right subtree has a valid path 
+ *      summing to `remaining`.
+ *
+ * 4. Complexity:
+ *    - Time:  O(N) -> Visits each node at most once.
+ *    - Space: O(H) -> Recursion call stack equals the height of the tree 
+ *                     (O(N) worst-case for skewed trees, O(log N) for balanced).
+ * ============================================================================
+ */
+
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+class Solution {
+    public boolean hasPathSum(TreeNode root, int targetSum) {
+        // 1. Base case: an empty subtree cannot contain a path
+        if (root == null) {
+            return false;
+        }
+
+        // 2. Leaf node check: verify if the remaining sum matches the leaf's value
+        if (root.left == null && root.right == null) {
+            return targetSum == root.val;
+        }
+
+        // 3. Deduct current node's value and search both subtrees
+        int remaining = targetSum - root.val;
+        return hasPathSum(root.left, remaining) || hasPathSum(root.right, remaining);
+    }
+}
