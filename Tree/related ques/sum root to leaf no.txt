@@ -1,0 +1,75 @@
+/**
+ * ============================================================================
+ * QUESTION: Sum Root to Leaf Numbers (LeetCode 129)
+ * ============================================================================
+ * You are given the root of a binary tree containing digits from 0 to 9 only.
+ * Each root-to-leaf path in the tree represents a number.
+ * 
+ * For example, the root-to-leaf path 1 -> 2 -> 3 represents the number 123.
+ * Return the total sum of all root-to-leaf numbers.
+ *
+ * ============================================================================
+ * APPROACH: Top-Down DFS (Pre-order Traversal)
+ * ============================================================================
+ * 1. Base Case (Null Node):
+ *    - If the node is null, it contributes 0 to the sum -> return 0.
+ *
+ * 2. Digit Shift Formula:
+ *    - To append a digit as we descend the tree, shift the accumulated value 
+ *      left by one decimal place and add the current node value:
+ *      `currentNumber = currentNumber * 10 + node.val`
+ *
+ * 3. Leaf Node Check:
+ *    - If the node has no left or right child, a complete root-to-leaf path is formed.
+ *    - Return `currentNumber` directly.
+ *
+ * 4. Recursive Step:
+ *    - If it's an internal node, recursively compute the sums of the left and 
+ *      right subtrees and return their total (`dfs(left) + dfs(right)`).
+ *
+ * 5. Complexity:
+ *    - Time:  O(N) -> Visits each node exactly once.
+ *    - Space: O(H) -> Recursion call stack corresponds to tree height 
+ *                     (O(N) worst-case for skewed trees, O(log N) for balanced trees).
+ * ============================================================================
+ */
+
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+class Solution {
+    public int sumNumbers(TreeNode root) {
+        // Start DFS traversal with initial accumulated value 0
+        return dfs(root, 0);
+    }
+
+    private int dfs(TreeNode node, int currentNumber) {
+        // 1. Base case: null node adds nothing to the total sum
+        if (node == null) {
+            return 0;
+        }
+
+        // 2. Accumulate current digit into the path number
+        currentNumber = currentNumber * 10 + node.val;
+
+        // 3. Leaf node check: path is complete, return the constructed number
+        if (node.left == null && node.right == null) {
+            return currentNumber;
+        }
+
+        // 4. Recurse down both branches and combine their path sums
+        return dfs(node.left, currentNumber) + dfs(node.right, currentNumber);
+    }
+}
