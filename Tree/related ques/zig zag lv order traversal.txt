@@ -1,0 +1,97 @@
+/**
+ * ============================================================================
+ * QUESTION: Binary Tree Zigzag Level Order Traversal (LeetCode 103)
+ * ============================================================================
+ * Given the root of a binary tree, return the zigzag level order traversal of 
+ * its nodes' values. (i.e., from left to right, then right to left for the 
+ * next level and alternate between).
+ *
+ * ============================================================================
+ * APPROACH: Two Stacks (LIFO)
+ * ============================================================================
+ * 1. Why Stacks?
+ *    - A Stack reverses the order of elements (Last-In, First-Out).
+ *    - By pushing child nodes onto a next-level stack in a specific order,
+ *      popping them in the next round naturally flips the traversal direction.
+ *
+ * 2. Alternating Push Orders:
+ *    - Left-to-Right level (isleft = true):
+ *        Push 'left' child first, then 'right' child.
+ *        -> When popped in the next level, 'right' comes out before 'left'.
+ *    - Right-to-Left level (isleft = false):
+ *        Push 'right' child first, then 'left' child.
+ *        -> When popped in the next level, 'left' comes out before 'right'.
+ *
+ * 3. Complexity:
+ *    - Time:  O(N) -> Every node is pushed and popped exactly once.
+ *    - Space: O(N) -> Stacks store up to the maximum width of the tree.
+ * ============================================================================
+ */
+
+import java.util.*;
+
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+class Solution {
+    public List<List<Integer>> zigzagLevelOrder(TreeNode root) {
+        List<List<Integer>> res = new ArrayList<>();
+
+        // Base case: empty tree
+        if (root == null) {
+            return res;
+        }
+
+        // 'st' holds nodes for the current level
+        Stack<TreeNode> st = new Stack<>();
+        st.push(root);
+
+        // Flag to track direction: true = Left-to-Right, false = Right-to-Left
+        boolean isleft = true;
+
+        while (!st.isEmpty()) {
+            // 'st2' collects children for the next level
+            Stack<TreeNode> st2 = new Stack<>();
+            // 'lvres' stores values for the current level
+            List<Integer> lvres = new ArrayList<>();
+
+            // Process all nodes in the current level
+            while (!st.isEmpty()) {
+                TreeNode node = st.pop();
+                lvres.add(node.val);
+
+                // Push children based on the current level's direction
+                if (isleft) {
+                    // Next level will pop Right -> Left
+                    if (node.left != null) st2.push(node.left);
+                    if (node.right != null) st2.push(node.right);
+                } else {
+                    // Next level will pop Left -> Right
+                    if (node.right != null) st2.push(node.right);
+                    if (node.left != null) st2.push(node.left);
+                }
+            }
+
+            // Save current level result
+            res.add(lvres);
+
+            // Move to the next level and flip direction flag
+            st = st2;
+            isleft = !isleft;
+        }
+
+        return res;
+    }
+}
