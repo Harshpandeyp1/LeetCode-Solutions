@@ -1,0 +1,77 @@
+/**
+ * ============================================================================
+ * QUESTION: Flatten Binary Tree to Linked List (LeetCode 114)
+ * ============================================================================
+ * Given the root of a binary tree, flatten the tree into a "linked list":
+ * 1. The "linked list" should use the same TreeNode class where the right 
+ *    child pointer points to the next node in the list and the left child 
+ *    pointer is always null.
+ * 2. The "linked list" should be in the same order as a pre-order traversal 
+ *    of the binary tree (Root -> Left -> Right).
+ *
+ * ============================================================================
+ * APPROACH: Post-Order Recursive Splice (Bottom-Up)
+ * ============================================================================
+ * 1. Post-Order Recursion:
+ *    - First, recursively flatten both the left and right subtrees so they 
+ *      are already transformed into right-skewed lists.
+ *
+ * 2. Rewiring Connections:
+ *    - Save the flattened `right` subtree in a temporary variable (`rightSubtree`).
+ *    - Move the flattened `left` subtree over to `root.right` and set `root.left = null`.
+ *
+ * 3. Splicing at the Tail:
+ *    - Traverse down to the end (tail) of the newly attached right chain.
+ *    - Attach the saved `rightSubtree` to the tail's `right` pointer.
+ *
+ * 4. Complexity:
+ *    - Time:  O(N) on balanced/average trees, O(N^2) in the worst case (skewed tree) 
+ *             due to walking to the tail of the chain at each level.
+ *    - Space: O(H) -> Recursion call stack space proportional to tree height 
+ *                     (O(N) worst-case skewed, O(log N) balanced).
+ * ============================================================================
+ */
+
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+class Solution {
+    public void flatten(TreeNode root) {
+        // Base case: an empty subtree requires no flattening
+        if (root == null) {
+            return;
+        }
+
+        // Step 1: Recursively flatten left and right subtrees first (bottom-up)
+        flatten(root.left);
+        flatten(root.right);
+
+        // Step 2: Temporarily store the already-flattened right branch
+        TreeNode rightSubtree = root.right;
+
+        // Step 3: Shift the flattened left branch to the right and wipe left pointer
+        root.right = root.left;
+        root.left = null;
+
+        // Step 4: Traverse to the tail of the newly moved chain
+        TreeNode curr = root;
+        while (curr.right != null) {
+            curr = curr.right;
+        }
+
+        // Step 5: Stitch the original flattened right branch to the end
+        curr.right = rightSubtree;
+    }
+}
