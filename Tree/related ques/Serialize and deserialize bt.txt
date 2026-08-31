@@ -1,0 +1,116 @@
+/**
+ * ============================================================================
+ * QUESTION: Serialize and Deserialize Binary Tree (LeetCode 297)
+ * ============================================================================
+ * Serialization is the process of converting a data structure or object into 
+ * a sequence of bits/string so that it can be stored in a file or memory buffer, 
+ * or transmitted across a network connection link.
+ * 
+ * Design an algorithm to serialize and deserialize a binary tree. There is no 
+ * restriction on how your serialization/deserialization algorithm should work.
+ *
+ * ============================================================================
+ * APPROACH: Breadth-First Search (BFS / Level-Order Traversal)
+ * ============================================================================
+ * 1. Serialization (Tree -> String):
+ *    - Use a standard BFS queue to traverse the tree level by level.
+ *    - For each node:
+ *        - If it is valid, append its value to StringBuilder and offer its 
+ *          left and right children (even if null).
+ *        - If it is null, append a marker ("n") and do not offer any children.
+ *    - Separate values using a comma delimiter.
+ *
+ * 2. Deserialization (String -> Tree):
+ *    - Split the CSV string into an array of token strings.
+ *    - Instantiate the root using `parts[0]` and push it to a BFS queue.
+ *    - Use an index pointer `i = 1` to assign left and right children in pairs 
+ *      for each parent polled from the queue:
+ *        - If `parts[i] != "n"`, create the left node, link it, and queue it.
+ *        - Advance `i`.
+ *        - If `parts[i] != "n"`, create the right node, link it, and queue it.
+ *        - Advance `i`.
+ *
+ * 3. Complexity:
+ *    - Time:  O(N) for both serialize and deserialize -> each node is processed once.
+ *    - Space: O(N) for queue storage and the resulting serialized string array.
+ * ============================================================================
+ */
+
+import java.util.*;
+
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+public class Codec {
+
+    // Encodes a tree to a single string using BFS level-order traversal
+    public String serialize(TreeNode root) {
+        if (root == null) return "";
+
+        StringBuilder sb = new StringBuilder();
+        Queue<TreeNode> q = new LinkedList<>();
+        q.offer(root);
+
+        while (!q.isEmpty()) {
+            TreeNode node = q.poll();
+
+            // Add delimiter between tokens
+            if (sb.length() > 0) sb.append(',');
+
+            if (node == null) {
+                // Use 'n' as a placeholder for null nodes
+                sb.append("n");
+            } else {
+                sb.append(node.val);
+                // Enqueue children (even if null) to preserve the structural layout
+                q.offer(node.left);
+                q.offer(node.right);
+            }
+        }
+        return sb.toString();
+    }
+
+    // Decodes your encoded data back to the binary tree structure
+    public TreeNode deserialize(String data) {
+        if (data == null || data.isEmpty()) return null;
+
+        String[] parts = data.split(",");
+        TreeNode root = new TreeNode(Integer.parseInt(parts[0]));
+        Queue<TreeNode> q = new LinkedList<>();
+        q.offer(root);
+
+        int i = 1; // Pointer to track child positions in the parts array
+        while (!q.isEmpty() && i < parts.length) {
+            TreeNode parent = q.poll();
+
+            // 1. Process left child
+            if (i < parts.length && !parts[i].equals("n")) {
+                TreeNode left = new TreeNode(Integer.parseInt(parts[i]));
+                parent.left = left;
+                q.offer(left);
+            }
+            i++;
+
+            // 2. Process right child
+            if (i < parts.length && !parts[i].equals("n")) {
+                TreeNode right = new TreeNode(Integer.parseInt(parts[i]));
+                parent.right = right;
+                q.offer(right);
+            }
+            i++;
+        }
+
+        return root;
+    }
+}
+
+// Your Codec object will be instantiated and called as such:
+// Codec ser = new Codec();
+// Codec deser = new Codec();
+// TreeNode ans = deser.deserialize(ser.serialize(root));
