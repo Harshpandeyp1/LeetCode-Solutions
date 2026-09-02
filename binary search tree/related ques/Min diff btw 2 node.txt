@@ -1,0 +1,68 @@
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+class Solution {
+    public int getMinimumDifference(TreeNode root) {
+        /*
+         * Question: Minimum Absolute Difference in BST (LeetCode 530 / 783)
+         * - Given the root of a Binary Search Tree (BST), return the minimum
+         *   absolute difference between the values of any two different nodes in the tree.
+         *
+         * Approach: In-order Traversal to Sorted List + Linear Scan
+         * 1. BST In-order Property:
+         *    - In-order traversal (Left -> Node -> Right) of a BST visits node values
+         *      in strictly ascending order.
+         *    - The minimum difference between any two numbers in an array always occurs
+         *      between two adjacent elements once the array is sorted.
+         *
+         * 2. Execution:
+         *    - Flatten the BST into a list `arr` via recursive in-order traversal.
+         *    - Iterate through `arr` from index 1 to `arr.size() - 1`, tracking the
+         *      minimum difference: `min = Math.min(min, arr.get(i) - arr.get(i - 1))`.
+         *    - Return the minimum difference found.
+         *
+         * Complexity:
+         * - Time Complexity: O(N) — O(N) to traverse all nodes + O(N) to scan adjacent pairs.
+         * - Space Complexity: O(N) — O(N) space to store the list of values + O(H) call stack.
+         *
+         * Note (Optimization):
+         * - The O(N) list space can be reduced to O(1) auxiliary space (O(H) recursion stack)
+         *   by keeping a single `prevNode` pointer and computing differences on the fly.
+         */
+        List<Integer> arr = new ArrayList<>();
+        inorder(root, arr);
+
+        int min = Integer.MAX_VALUE;
+        // Compare adjacent values in sorted order to find the minimum difference
+        for (int i = 1; i < arr.size(); i++) {
+            min = Math.min(min, arr.get(i) - arr.get(i - 1));
+        }
+
+        return min;
+    }
+
+    // Traverses the BST in-order to populate values in ascending order
+    public void inorder(TreeNode root, List<Integer> arr) {
+        if (root == null) {
+            return;
+        }
+        inorder(root.left, arr);
+        arr.add(root.val);
+        inorder(root.right, arr);
+    }
+}
