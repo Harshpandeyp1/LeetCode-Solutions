@@ -1,0 +1,95 @@
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+class Solution {
+    private Integer prev = null;
+    private int currentCount = 1;
+    private int maxCount = 0;
+    private List<Integer> modes = new ArrayList<>();
+
+    public int[] findMode(TreeNode root) {
+        /*
+         * Question: Find Mode in Binary Search Tree (LeetCode 501)
+         * - Given the root of a Binary Search Tree (BST) with duplicates, return all
+         *   the mode(s) (the most frequently occurred elements) in it.
+         * - If the tree has more than one mode, return them in any order.
+         *
+         * Approach: In-order Traversal with Streak Counting (O(1) Extra Space besides output)
+         * 1. BST In-order Property:
+         *    - An in-order traversal (Left -> Node -> Right) visits nodes in non-decreasing order.
+         *    - Duplicates appear consecutively, identical to finding the most frequent
+         *      element(s) in a sorted array.
+         *
+         * 2. Tracking Streaks & Frequencies:
+         *    - Maintain `prev` to track the previous node's value and `currentCount` for the
+         *      streak length of the current value.
+         *    - If `node.val == prev`, increment `currentCount`; otherwise, reset `currentCount = 1`.
+         *    - Compare `currentCount` against `maxCount`:
+         *        a. `currentCount > maxCount`: A new strict maximum is found. Update `maxCount`,
+         *           clear previously stored modes, and add `node.val`.
+         *        b. `currentCount == maxCount`: The current value ties with the maximum frequency.
+         *           Append `node.val` to `modes`.
+         *    - Update `prev = node.val`.
+         *
+         * 3. Result Conversion:
+         *    - Convert the `modes` list to a primitive `int[]` array.
+         *
+         * Complexity:
+         * - Time Complexity: O(N) — Every node is visited once during in-order traversal.
+         * - Space Complexity: O(H) recursion stack (O(log N) average, O(N) worst case).
+         *   No hash map is needed.
+         */
+        inorder(root);
+
+        // Convert the dynamic list to a primitive array
+        int[] result = new int[modes.size()];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = modes.get(i);
+        }
+        return result;
+    }
+
+    private void inorder(TreeNode node) {
+        if (node == null) {
+            return;
+        }
+
+        // 1. Visit left subtree
+        inorder(node.left);
+
+        // 2. Process current node
+        if (prev != null && node.val == prev) {
+            currentCount++;
+        } else {
+            currentCount = 1;
+        }
+
+        if (currentCount > maxCount) {
+            maxCount = currentCount;
+            modes.clear();
+            modes.add(node.val);
+        } else if (currentCount == maxCount) {
+            modes.add(node.val);
+        }
+
+        prev = node.val;
+
+        // 3. Visit right subtree
+        inorder(node.right);
+    }
+}
