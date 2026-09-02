@@ -1,0 +1,78 @@
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+class Solution {
+    public TreeNode balanceBST(TreeNode root) {
+        /*
+         * Question: Balance a Binary Search Tree (LeetCode 1382)
+         * - Given the root of a binary search tree, return a balanced binary search tree 
+         *   with the same node values. If there is more than one answer, return any of them.
+         * - A binary search tree is balanced if the depth of the two subtrees of every 
+         *   node never differs by more than 1.
+         *
+         * Approach: In-order Traversal + Divide and Conquer (Sorted Array to Balanced BST)
+         * 1. Extract Sorted Elements:
+         *    - An in-order traversal (Left -> Root -> Right) of any BST yields nodes in 
+         *      strictly ascending order.
+         *    - Traverse the BST and collect all values into an array/list `arr`.
+         * 
+         * 2. Build Height-Balanced BST:
+         *    - With the sorted array, apply a divide-and-conquer strategy similar to binary search.
+         *    - Pick the middle element `mid = left + (right - left) / 2` as the root of the 
+         *      current subtree to evenly distribute elements between both sides.
+         *    - Recursively construct the left subtree from `arr[left ... mid - 1]`.
+         *    - Recursively construct the right subtree from `arr[mid + 1 ... right]`.
+         *    - Base case: if `left > right`, no elements remain in this range, return null.
+         *
+         * Complexity:
+         * - Time Complexity: O(N) — O(N) to flatten tree into the list, and O(N) to rebuild it.
+         * - Space Complexity: O(N) — O(N) space to store node values in the list, plus O(log N) 
+         *   call stack depth during tree reconstruction.
+         */
+        List<Integer> arr = new ArrayList<>();
+        inorder(root, arr);
+        return helper(arr, 0, arr.size() - 1);
+    }
+
+    // Traverses the BST in-order to store values in strictly ascending order
+    public void inorder(TreeNode root, List<Integer> arr) {
+        if (root == null) {
+            return;
+        }
+        inorder(root.left, arr);
+        arr.add(root.val);
+        inorder(root.right, arr);
+    }
+
+    // Recursively constructs a height-balanced BST from the sorted list
+    public TreeNode helper(List<Integer> arr, int left, int right) {
+        if (left > right) {
+            return null;
+        }
+
+        // Choose the median element to maintain minimal height difference
+        int mid = left + (right - left) / 2;
+        TreeNode node = new TreeNode(arr.get(mid));
+
+        // Subdivide ranges and build left/right subtrees
+        node.left = helper(arr, left, mid - 1);
+        node.right = helper(arr, mid + 1, right);
+
+        return node;
+    }
+}
