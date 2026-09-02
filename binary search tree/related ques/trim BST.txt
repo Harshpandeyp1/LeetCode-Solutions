@@ -1,0 +1,64 @@
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+class Solution {
+    public TreeNode trimBST(TreeNode root, int low, int high) {
+        /*
+         * Question: Trim a Binary Search Tree (LeetCode 669)
+         * - Given the root of a BST and the lowest and highest boundaries [low, high],
+         *   trim the tree so that all its elements lie in [low, high].
+         * - Trimming the tree should not change the relative structure of the elements
+         *   that will remain in the tree (it should still remain a valid BST).
+         *
+         * Approach: Recursive Post-order / Top-down Pruning via BST Properties
+         * - If the current node is null, there is nothing to trim; return null.
+         * - If `root.val < low`:
+         *     Since it's a BST, all nodes in the left subtree are strictly smaller
+         *     than `root.val` and therefore also strictly smaller than `low`.
+         *     We discard the entire left subtree and the current node, returning
+         *     the result of trimming the right subtree.
+         * - If `root.val > high`:
+         *     All nodes in the right subtree are strictly larger than `root.val`
+         *     and therefore exceed `high`. We discard the entire right subtree and
+         *     the current node, returning the result of trimming the left subtree.
+         * - If `low <= root.val <= high`:
+         *     The current node is valid. Recursively trim both its left and right
+         *     subtrees and attach the trimmed subtrees back to `root.left` and `root.right`.
+         * 
+         * Complexity:
+         * - Time Complexity: O(N), where N is the number of nodes (each node visited at most once).
+         * - Space Complexity: O(H), where H is tree height for the recursion call stack (O(log N) average, O(N) worst-case).
+         */
+        if (root == null) {
+            return null;
+        }
+
+        // Case 1: Node value is too small; discard node and left subtree
+        if (root.val < low) {
+            return trimBST(root.right, low, high);
+        }
+
+        // Case 2: Node value is too large; discard node and right subtree
+        if (root.val > high) {
+            return trimBST(root.left, low, high);
+        }
+
+        // Case 3: Node value is within [low, high]; trim both children
+        root.left = trimBST(root.left, low, high);
+        root.right = trimBST(root.right, low, high);
+
+        return root;
+    }
+}
