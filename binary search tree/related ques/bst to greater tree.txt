@@ -1,0 +1,54 @@
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+class Solution {
+    // Keeps track of the cumulative sum of nodes visited so far in reverse in-order
+    int sum = 0;
+
+    public TreeNode convertBST(TreeNode root) {
+        /*
+         * Question: Convert BST to Greater Tree (LeetCode 538)
+         * - Given the root of a Binary Search Tree (BST), convert it to a Greater Tree such that 
+         *   every key of the original BST is changed to the original key plus the sum of all 
+         *   keys greater than the original key in BST.
+         * 
+         * Approach: Reverse In-order Traversal (Right -> Root -> Left)
+         * - A standard in-order traversal of a BST visits nodes in ascending order (smallest to largest).
+         * - A reverse in-order traversal visits nodes in descending order (largest to smallest).
+         * - By visiting the right subtree first, then the root, and finally the left subtree, 
+         *   we always visit larger elements before smaller elements.
+         * - We maintain a running `sum` variable. For each node, we add its value to `sum` 
+         *   and update the node's value to this new `sum`.
+         */
+        inorder(root);
+        return root;
+    }
+    
+    public void inorder(TreeNode root) {
+        if (root == null) {
+            return;
+        }
+        
+        // 1. Traverse the right subtree first (contains values greater than the current node)
+        inorder(root.right);
+        
+        // 2. Process the current node
+        sum += root.val;
+        root.val = sum;
+        
+        // 3. Traverse the left subtree last (contains values smaller than the current node)
+        inorder(root.left);
+    }
+}
