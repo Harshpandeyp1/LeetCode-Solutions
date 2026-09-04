@@ -1,0 +1,33 @@
+class Solution {
+    public int kthSmallest(int[][] matrix, int k) {
+    int n = matrix.length;
+    
+    // min-heap holding [value, row, col]
+    PriorityQueue<int[]> minHeap = new PriorityQueue<>((a, b) -> a[0] - b[0]);
+    
+    // Step 1: seed the heap with the first element of every row
+    for (int i = 0; i < n; i++) {
+        minHeap.offer(new int[]{matrix[i][0], i, 0});
+    }
+    
+    int count = 0;
+    int result = -1;
+    
+    // Step 2: pop k times
+    while (!minHeap.isEmpty()) {
+        int[] curr = minHeap.poll();      // smallest candidate right now
+        result = curr[0];
+        count++;
+        
+        if (count == k) break;            // found the kth smallest, stop
+        
+        int row = curr[1], col = curr[2];
+        // Step 3: push the next element in that same row (if it exists)
+        if (col + 1 < n) {
+            minHeap.offer(new int[]{matrix[row][col + 1], row, col + 1});
+        }
+    }
+    
+    return result;
+}
+}
