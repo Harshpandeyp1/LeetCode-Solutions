@@ -1,0 +1,93 @@
+You are given an array of k linked-lists lists, each linked-list is sorted in ascending order.
+
+Merge all the linked-lists into one sorted linked-list and return it.
+
+ 
+
+Approach (Simple Explanation)
+
+We have k sorted linked lists. We want to merge them all into one sorted linked list.
+
+Core idea — Min-Heap:
+
+Put the head node of every list into a min-heap (a heap ordered by node value, smallest on top).
+Repeatedly take out the smallest node from the heap and attach it to our result list.
+Whenever we take a node out, if it had a next node in its original list, push that next node into the heap too — since it's now the new "smallest available" candidate from that list.
+Keep repeating until the heap is empty — meaning all nodes from all lists have been used up.
+
+This works because each individual list is already sorted, so we never need to look at more than one "current candidate" node per list at any time. The heap efficiently tracks the smallest candidate among all k lists.
+
+Code with Comments
+java
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode() {}
+ *     ListNode(int val) { this.val = val; }
+ *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+ * }
+ */
+class Solution {
+    public ListNode mergeKLists(ListNode[] lists) {
+        
+        // Create a min-heap of ListNodes, ordered by node value
+        // The node with the SMALLEST value always sits at the top
+        PriorityQueue<ListNode> pq = new PriorityQueue<>(
+            (a, b) -> a.val - b.val
+        );
+        
+        // Step 1: Push the head of every list into the heap
+        // Skip null heads (empty lists) to avoid NullPointerException later
+        for (ListNode list : lists) {
+            if (list != null) {
+                pq.offer(list);
+            }
+        }
+        
+        // Dummy node acts as a placeholder before the real head of result list
+        // This avoids extra null-checks when attaching the very first node
+        ListNode dummy = new ListNode(-1);
+        ListNode tail = dummy; // tail always points to the last node added so far
+        
+        // Step 2: Keep pulling the smallest available node until heap is empty
+        while (!pq.isEmpty()) {
+            
+            // Remove the node with the smallest value across all lists
+            ListNode smallest = pq.poll();
+            
+            // Attach this node to our growing result list
+            tail.next = smallest;
+            tail = tail.next; // move tail pointer forward
+            
+            // That list just lost its smallest node -> reveal its next node (if any)
+            // and push it into the heap so it can compete in future comparisons
+            if (smallest.next != null) {
+                pq.offer(smallest.next);
+            }
+        }
+        
+        // dummy itself is not part of the real answer, so skip it
+        return dummy.next;
+    }
+}
+Walkthrough Example
+
+lists = [[1,4,5],[1,3,4],[2,6]]
+
+Step	Heap before poll	Polled (smallest)	Result list so far	Pushed back (next of polled)
+1	[1,1,2]	1 (list1)	1	4
+2	[1,2,4]	1 (list2)	1,1	3
+3	[2,3,4]	2 (list3)	1,1,2	6
+4	[3,4,6]	3 (list2)	1,1,2,3	4
+5	[4,4,6]	4	1,1,2,3,4	5
+...	...	...	continues...	...
+
+Final result: 1,1,2,3,4,4,5,6 ✅
+
+Complexity
+Time: O(N log k)
+N = total number of nodes across all lists, k = number of lists. Each node is pushed and popped from the heap exactly once, and heap operations cost O(log k) since the heap never holds more than k nodes at a time.
+Space: O(k)
+The heap holds at most one node per list at any given time.
