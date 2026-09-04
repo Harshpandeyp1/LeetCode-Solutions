@@ -1,0 +1,280 @@
+
+Brute Force
+
+Generate every pair.
+
+m × n pairs
+
+Store all of them.
+
+Sort them.
+
+Take first k.
+
+Time Complexity
+
+O(m*n log(m*n))
+
+Very expensive.
+
+Observation
+
+Arrays are already sorted.
+
+For every element in nums1,
+
+nums2 is also sorted.
+
+For example
+
+nums1
+
+1
+7
+11
+
+nums2
+
+2
+4
+6
+
+Think like a matrix.
+
+          2      4      6
+
+1        3      5      7
+
+7        9     11     13
+
+11      13     15     17
+
+Every row is sorted.
+
+Every column is also sorted.
+
+Now the question becomes
+
+Find k smallest values from this sorted matrix.
+
+Key Idea
+
+Suppose first row
+
+1+2
+1+4
+1+6
+
+Second row
+
+7+2
+7+4
+7+6
+
+Third row
+
+11+2
+11+4
+11+6
+
+The smallest element of every row is always
+
+(i,0)
+
+because
+
+nums2[0]
+
+is the smallest element.
+
+So initially insert
+
+(0,0)
+(1,0)
+(2,0)
+
+inside heap.
+
+Heap initially
+
+1+2=3
+
+7+2=9
+
+11+2=13
+
+Top
+
+(1,2)
+
+Remove it.
+
+Now next smallest from same row is
+
+1+4
+
+Push it.
+
+Heap becomes
+
+1+4=5
+
+7+2=9
+
+11+2=13
+
+Again remove top.
+
+Push next from same row.
+
+Repeat.
+
+Exactly like merging sorted lists.
+
+Why only move right?
+
+Suppose
+
+1+2
+
+is removed.
+
+Next possible smallest in same row is
+
+1+4
+
+No need to revisit left.
+
+Rows are sorted.
+
+Why only first k rows?
+
+Imagine
+
+nums1
+
+1
+2
+3
+4
+5
+1000
+
+If
+
+k=3
+
+Will row
+
+1000
+
+ever contribute?
+
+No.
+
+Its first element is already huge.
+
+So initialize only
+
+min(nums1.length,k)
+
+rows.
+
+This saves memory.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class Solution {
+
+    public List<List<Integer>> kSmallestPairs(int[] nums1, int[] nums2, int k) {
+
+        // Stores the final answer
+        List<List<Integer>> res = new ArrayList<>();
+
+        // Edge cases
+        // If either array is empty or k is 0,
+        // there are no pairs to return.
+        if (nums1.length == 0 || nums2.length == 0 || k == 0) {
+            return res;
+        }
+
+        /*
+         * Min Heap
+         *
+         * Each element inside the heap is an int[] of size 2:
+         * [i, j]
+         *
+         * i -> index in nums1
+         * j -> index in nums2
+         *
+         * The heap is ordered by:
+         * nums1[i] + nums2[j]
+         */
+        PriorityQueue<int[]> pq = new PriorityQueue<>(
+                (a, b) ->
+                        (nums1[a[0]] + nums2[a[1]])
+                                - (nums1[b[0]] + nums2[b[1]])
+        );
+
+        /*
+         * Initially insert the first element of every row.
+         *
+         * Row i starts with pair:
+         * (nums1[i], nums2[0])
+         *
+         * We only need the first min(nums1.length, k) rows,
+         * because we will never need more than k starting rows.
+         */
+        for (int i = 0; i < Math.min(nums1.length, k); i++) {
+            pq.offer(new int[]{i, 0});
+        }
+
+        /*
+         * Extract the smallest pair k times
+         * (or until heap becomes empty).
+         */
+        while (k > 0 && !pq.isEmpty()) {
+
+            // Get the pair with the smallest sum
+            int[] curr = pq.poll();
+
+            int i = curr[0];
+            int j = curr[1];
+
+            // Add actual values (not indices) to the result
+            res.add(Arrays.asList(nums1[i], nums2[j]));
+
+            /*
+             * Move to the next element in the same row.
+             *
+             * Current pair:
+             * (i, j)
+             *
+             * Next pair:
+             * (i, j + 1)
+             */
+            if (j + 1 < nums2.length) {
+                pq.offer(new int[]{i, j + 1});
+            }
+
+            // One pair has been processed
+            k--;
+        }
+
+        return res;
+    }
+}
+
+O(k log(min(m, k)))
