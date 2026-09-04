@@ -1,0 +1,85 @@
+import java.util.*;
+
+/*
+ * ============================================================================
+ * QUESTION: LeetCode 767 - Reorganize String
+ * ============================================================================
+ * Given a string 's', rearrange the characters of 's' so that any two adjacent 
+ * characters are not the same.
+ * Return any possible valid rearrangement, or return "" if it is impossible.
+ *
+ * ============================================================================
+ * APPROACH: Greedy with Max-Heap + Holding Buffer ("prev" state)
+ * ============================================================================
+ * 1. Count Frequencies:
+ *    Count the frequency of each character using a Hash Map.
+ *
+ * 2. Prioritize Most Frequent First (Max-Heap):
+ *    Store pairs of [frequency, character] in a Max-Heap ordered by frequency.
+ *    Greedy Idea: Always pick the character with the highest remaining count.
+ *    If we don't exhaust high-frequency characters early, they will be forced 
+ *    to cluster together at the end.
+ *
+ * 3. Enforce the "No Two Adjacent Same" Rule:
+ *    After choosing a character 'curr', we CANNOT use it on the very next slot.
+ *    Instead of immediately offering 'curr' back into the heap, we hold it in 
+ *    a temporary pointer 'prev'.
+ *    Only after picking a *different* character in the next turn do we return 
+ *    'prev' back to the heap (if its count > 0).
+ *
+ * 4. Validity Check:
+ *    If the most frequent character appears more than (N + 1) / 2 times,
+ *    the heap will run dry while 'prev' still has leftovers.
+ *    At the end, if res.length() != s.length(), return "".
+ *
+ * Time Complexity:  O(N log A) = O(N) where A <= 26 (alphabet size)
+ * Space Complexity: O(A) = O(1) auxiliary space
+ * ============================================================================
+ */
+
+class Solution {
+    public String reorganizeString(String s) {
+        // Step 1: Count frequency of each character
+        Map<Character, Integer> freq = new HashMap<>();
+        for (char c : s.toCharArray()) {
+            freq.put(c, freq.getOrDefault(c, 0) + 1);
+        }
+
+        // Step 2: Max-Heap storing int[]{frequency, char_ascii_value}
+        // Ordered by frequency descending: b[0] - a[0]
+        PriorityQueue<int[]> max = new PriorityQueue<>(
+            (a, b) -> b[0] - a[0]
+        );
+
+        // Populate the Max-Heap with all distinct characters and their counts
+        for (Map.Entry<Character, Integer> entry : freq.entrySet()) {
+            max.offer(new int[]{entry.getValue(), entry.getKey()});
+        }
+
+        StringBuilder res = new StringBuilder();
+
+        // 'prev' acts as a quarantine buffer to prevent placing the same
+        // character two times consecutively
+        int[] prev = null;
+
+        // Step 3: Greedily poll the most frequent available character
+        while (!max.isEmpty()) {
+            int[] curr = max.poll();          // Pick the character with highest remaining count
+            res.append((char) curr[1]);      // Place it in the output string
+            curr[0]--;                       // Use up one instance of this character
+
+            // If the previously held character still has remaining occurrences,
+            // it is now safe to return it to the heap because 'curr' separates it
+            if (prev != null && prev[0] > 0) {
+                max.offer(prev);
+            }
+
+            // Quarantine 'curr' so it cannot be chosen in the very next step
+            prev = curr;
+        }
+
+        // Step 4: If we successfully placed all characters, return the string.
+        // Otherwise, it was mathematically impossible (rearrangement failed).
+        return res.length() == s.length() ? res.toString() : "";
+    }
+}
