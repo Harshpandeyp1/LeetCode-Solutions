@@ -1,0 +1,156 @@
+import java.util.*;
+
+/*
+ * ============================================================================
+ * QUESTION: LeetCode 632 - Smallest Range Covering Elements from K Lists
+ * ============================================================================
+ * You have 'k' lists of sorted integers in non-decreasing order.
+ * Find the smallest range [a, b] that includes at least one number from each 
+ * of the 'k' lists.
+ *
+ * Range [a, b] is considered smaller than [c, d] if:
+ * 1. (b - a) < (d - c), OR
+ * 2. (b - a) == (d - c) and a < c.
+ *
+ * ============================================================================
+ * APPROACH: Min-Heap Multiway Frontier (Sliding Window on K Lists)
+ * ============================================================================
+ * 1. Maintain a candidate window containing exactly one element from each list.
+ * 2. At any moment, the window covers all k lists. Its range is [minElm, max].
+ *    - minElm = minimum value currently in the window (tracked by Min-Heap).
+ *    - max    = maximum value currently in the window (tracked by variable 'max').
+ * 3. Range width = max - minElm.
+ * 4. To shrink this range, we MUST increase the lower bound (minElm).
+ *    - Pop minElm from the Min-Heap.
+ *    - Insert the next element from the same list into the Min-Heap.
+ *    - Update 'max' if this newly inserted element is larger.
+ * 5. Termination: If any list runs out of elements, STOP immediately.
+ *    Why? Because no subsequent window can ever contain an element from that list,
+ *    meaning no further valid range can cover all k lists.
+ *
+ * Time Complexity:  O(N * log k), where N is total numbers across all k lists.
+ * Space Complexity: O(k) for the priority queue holding 1 element per list.
+ * ============================================================================
+ */
+
+class Solution {
+    public int[] smallestRange(List<List<Integer>> nums) {
+        // Create a Min-Heap ordered ascending by value (a[0] vs b[0])
+        // Each entry is a triplet: [value, listIndex, elementIndex]
+        PriorityQueue<int[]> pq = new PriorityQueue<>(new Comparator<int[]>() {
+            public int compare(int a[], int b[]) {
+                // Return negative if a[0] < b[0], positive if a[0] > b[0]
+                return Integer.compare(a[0], b[0]);
+            }
+        });
+
+        // Store the number of lists
+        int k = nums.size();
+
+        // Track the current maximum value present among all elements in the heap
+        int max = Integer.MIN_VALUE;
+
+        // Seed the heap with the first element (index 0) from every single list
+        // Dry Run Initial State:
+        // nums = [ [4, 10, 15], [0, 9, 12], [5, 18, 22] ]
+        for (int i = 0; i < k; i++) {
+            // Fetch the 0-th element of list i
+            int min = nums.get(i).get(0); // i=0: 4 | i=1: 0 | i=2: 5
+
+            // Offer [value, listIndex, elementIndex] into the heap
+            pq.offer(new int[]{min, i, 0});
+
+            // Update the global maximum of the initial window
+            max = Math.max(max, min); // max becomes max(4, 0, 5) = 5
+        }
+        // At this point:
+        // Heap contains: [ [0, list:1, idx:0], [4, list:0, idx:0], [5, list:2, idx:0] ]
+        // max = 5
+
+        // Initialize minRange with [0, MAX_VALUE] to ensure any real range beats it
+        // Note: Using a wide initial range. Cast to long in comparisons avoids overflow.
+        int[] minRange = {0, Integer.MAX_VALUE};
+
+        // Continually pop the smallest element and advance its list
+        while (true) {
+            // Extract the smallest candidate currently in the window
+            int top[] = pq.poll();
+
+            // Extract value, which list it came from, and its index in that list
+            int minElm = top[0];      // e.g., Iteration 1: 0
+            int listIndex = top[1];   // e.g., Iteration 1: list 1
+            int elmIndex = top[2];    // e.g., Iteration 1: idx 0
+
+            // Check if current range [minElm, max] is strictly smaller than minRange
+            // Dry Run Iteration 1: max=5, minElm=0 -> span = 5 - 0 = 5 < MAX_VALUE -> UPDATE!
+            if ((long) max - minElm < (long) minRange[1] - minRange[0]) {
+                minRange[0] = minElm; // minRange[0] = 0
+                minRange[1] = max;    // minRange[1] = 5 -> Best range is now [0, 5]
+            }
+
+            // If the list that provided minElm has reached its end, break immediately!
+            // Once this list is exhausted, no future range can include an element from it
+            // Dry Run Iteration 1: elmIndex (0) != size - 1 (2) -> continue
+            if (elmIndex == nums.get(listIndex).size() - 1) {
+                break;
+            }
+
+            // Retrieve the next element from that same list to advance the window
+            // Dry Run Iteration 1: next = nums.get(1).get(0 + 1) = 9
+            int next = nums.get(listIndex).get(elmIndex + 1);
+
+            // Update global window max if this newly added element is larger
+            // Dry Run Iteration 1: max = Math.max(5, 9) = 9
+            max = Math.max(max, next);
+
+            // Push this new element into the heap with its updated index
+            // Dry Run Iteration 1: pq.offer([9, list:1, idx:1])
+            // Heap now: [ [4, list:0, idx:0], [5, list:2, idx:0], [9, list:1, idx:1] ]
+            pq.offer(new int[]{next, listIndex, elmIndex + 1});
+
+            /*
+             * --- DRY RUN CONTINUATION ---
+             *
+             * Iteration 2:
+             *   - top = poll() -> [4, list:0, idx:0]. minElm = 4, max = 9.
+             *   - span = 9 - 4 = 5. (Not strictly smaller than current span [0, 5] = 5).
+             *   - list 0 has next: next = 10.
+             *   - max = max(9, 10) = 10.
+             *   - pq.offer([10, list:0, idx:1]).
+             *   - Heap now: [ [5, list:2, idx:0], [9, list:1, idx:1], [10, list:0, idx:1] ]
+             *
+             * Iteration 3:
+             *   - top = poll() -> [5, list:2, idx:0]. minElm = 5, max = 10.
+             *   - span = 10 - 5 = 5.
+             *   - list 2 has next: next = 18.
+             *   - max = max(10, 18) = 18.
+             *   - pq.offer([18, list:2, idx:1]).
+             *   - Heap now: [ [9, list:1, idx:1], [10, list:0, idx:1], [18, list:2, idx:1] ]
+             *
+             * Iteration 4:
+             *   - top = poll() -> [9, list:1, idx:1]. minElm = 9, max = 18.
+             *   - span = 18 - 9 = 9 (larger than 5).
+             *   - list 1 has next: next = 12.
+             *   - max = max(18, 12) = 18.
+             *   - pq.offer([12, list:1, idx:2]).
+             *   - Heap now: [ [10, list:0, idx:1], [12, list:1, idx:2], [18, list:2, idx:1] ]
+             *
+             * Iteration 5:
+             *   - top = poll() -> [10, list:0, idx:1]. minElm = 10, max = 18.
+             *   - span = 18 - 10 = 8.
+             *   - list 0 has next: next = 15.
+             *   - max = max(18, 15) = 18.
+             *   - pq.offer([15, list:0, idx:2]).
+             *   - Heap now: [ [12, list:1, idx:2], [15, list:0, idx:2], [18, list:2, idx:1] ]
+             *
+             * Iteration 6:
+             *   - top = poll() -> [12, list:1, idx:2]. minElm = 12, max = 18.
+             *   - elmIndex == nums.get(1).size() - 1 (idx 2 == 2) -> BREAK!
+             */
+        }
+
+        // Return the tightest range discovered that contains an element from each list
+        // Returns [0, 5]
+        return minRange;
+    }
+}
