@@ -1,0 +1,163 @@
+import java.util.*;
+
+/*
+ * ============================================================================
+ * QUESTION: LeetCode 857 - Minimum Cost to Hire K Workers
+ * ============================================================================
+ * There are n workers. You are given two integer arrays:
+ * - quality[i]: the work quality of the ith worker.
+ * - wage[i]: the minimum wage expectation of the ith worker.
+ *
+ * We need to hire exactly k workers to form a paid group under two constraints:
+ * 1. Every worker must be paid proportionally to their quality:
+ *      paid_wage[i] / quality[i] == paid_wage[j] / quality[j] == R (a constant ratio)
+ * 2. Every worker must receive at least their minimum wage:
+ *      paid_wage[i] >= wage[i]
+ *
+ * Return the least amount of money needed to form this k-worker paid group.
+ *
+ * ============================================================================
+ * APPROACH: Sorting by Ratio + Max-Heap for Quality
+ * ============================================================================
+ * 1. Deriving the Formula:
+ *    Let R be the common wage-to-quality ratio paid to every hired worker.
+ *    Condition 2 gives:
+ *      quality[i] * R >= wage[i]  ==>  R >= wage[i] / quality[i] (baseWage)
+ *
+ *    For all k chosen workers to be satisfied, the group ratio R must be AT LEAST
+ *    the MAXIMUM baseWage among all selected workers:
+ *      R = max(wage[i] / quality[i]) for all workers in the group.
+ *
+ *    Total payout for the group:
+ *      Total Cost = sum(quality[i] * R) = R * sum(quality[i]).
+ *
+ * 2. Optimization Strategy:
+ *    - To control R, sort all workers in ascending order of their ratio (baseWage).
+ *    - As we iterate through the sorted list, the current worker's baseWage can serve
+ *      as the group's ratio R (all previously considered workers have baseWage <= R,
+ *      so they will all satisfy their minimum wage requirements!).
+ *    - With R fixed to the current worker's baseWage, to MINIMIZE (R * sum(quality)),
+ *      we must MINIMIZE sum(quality).
+ *    - We maintain a Max-Heap of qualities for the k selected workers.
+ *    - When the heap reaches size k:
+ *        cost = totalQuality * current worker's baseWage
+ *        ans = min(ans, cost)
+ *        evict the largest quality from the heap (pq.poll()) to greedily leave
+ *        smaller qualities for future turns!
+ *
+ * Time Complexity:  O(N log N + N log K) = O(N log N)
+ * Space Complexity: O(N + K)
+ *
+ * ============================================================================
+ * STEP-BY-STEP DRY RUN
+ * ============================================================================
+ * Input: quality = [10, 20, 5], wage = [70, 50, 30], k = 2
+ *
+ * Step 1: Compute baseWage (wage / quality)
+ *   - Worker 0: 70 / 10 = 7.0, quality = 10
+ *   - Worker 1: 50 / 20 = 2.5, quality = 20
+ *   - Worker 2: 30 / 5  = 6.0, quality = 5
+ *
+ * Step 2: Sort workers by baseWage ascending
+ *   list = [
+ *     Worker(baseWage=2.5, quality=20), // original index 1
+ *     Worker(baseWage=6.0, quality=5),  // original index 2
+ *     Worker(baseWage=7.0, quality=10)  // original index 0
+ *   ]
+ *
+ * Step 3: Loop through sorted list with Max-Heap (pq)
+ *
+ *   --- Iteration i = 0 ---
+ *   Current: Worker(baseWage=2.5, quality=20)
+ *   pq.offer(Worker(2.5, 20))
+ *   totalQuality = 0 + 20 = 20
+ *   pq.size() is 1, which is < k (2) -> Condition not met, continue.
+ *
+ *   --- Iteration i = 1 ---
+ *   Current: Worker(baseWage=6.0, quality=5)
+ *   pq.offer(Worker(6.0, 5)) -> Heap orders by quality descending: [20, 5]
+ *   totalQuality = 20 + 5 = 25
+ *   pq.size() == 2 == k:
+ *     cost = totalQuality * baseWage = 25 * 6.0 = 150.0
+ *     ans = min(Double.MAX_VALUE, 150.0) = 150.0
+ *     Evict largest quality: totalQuality -= pq.poll().quality (removes quality 20)
+ *     totalQuality = 25 - 20 = 5
+ *     pq now contains: [5]
+ *
+ *   --- Iteration i = 2 ---
+ *   Current: Worker(baseWage=7.0, quality=10)
+ *   pq.offer(Worker(7.0, 10)) -> Heap: [10, 5] (top is 10)
+ *   totalQuality = 5 + 10 = 15
+ *   pq.size() == 2 == k:
+ *     cost = totalQuality * baseWage = 15 * 7.0 = 105.0
+ *     ans = min(150.0, 105.0) = 105.0
+ *     Evict largest quality: totalQuality -= pq.poll().quality (removes quality 10)
+ *     totalQuality = 15 - 10 = 5
+ *     pq now contains: [5]
+ *
+ * Loop terminates.
+ * Return ans = 105.0
+ * ============================================================================
+ */
+
+class Worker {
+    double baseWage; // Ratio of wage / quality
+    int quality;     // Quality of the worker
+
+    public Worker(double baseWage, int quality) {
+        this.baseWage = baseWage;
+        this.quality = quality;
+    }
+}
+
+class Solution {
+    public double mincostToHireWorkers(int[] quality, int[] wage, int k) {
+        ArrayList<Worker> list = new ArrayList<>();
+        int n = quality.length;
+
+        // Step 1: Calculate the unit baseWage (wage / quality) for every worker
+        // Dry Run: Computes ratios (2.5, 6.0, 7.0) paired with their respective qualities
+        for (int i = 0; i < n; i++) {
+            double baseWage = 1.0 * wage[i] / quality[i];
+            list.add(new Worker(baseWage, quality[i]));
+        }
+
+        // Step 2: Sort workers in ascending order of their baseWage
+        // Dry Run: list becomes [Worker(2.5, 20), Worker(6.0, 5), Worker(7.0, 10)]
+        Collections.sort(list, (w1, w2) -> Double.compare(w1.baseWage, w2.baseWage));
+
+        // Step 3: Max-Heap to track qualities of hired workers (largest quality at the top)
+        // Whenever size exceeds/meets k, the largest quality worker will be polled
+        PriorityQueue<Worker> pq = new PriorityQueue<>((w1, w2) -> Integer.compare(w2.quality, w1.quality));
+
+        double ans = Double.MAX_VALUE;
+        int totalQuality = 0; // Tracks running sum of qualities currently in the heap
+
+        // Step 4: Iterate through workers sorted by their ratio
+        for (int i = 0; i < n; i++) {
+            // Push the current worker into the pool and add their quality to the sum
+            pq.offer(list.get(i));
+            totalQuality += list.get(i).quality;
+
+            // When exactly k workers are assembled in the heap:
+            // The current worker's baseWage is the highest ratio in this group of k,
+            // satisfying all k workers' minimum wage constraints.
+            if (pq.size() == k) {
+                // Total group cost = sum(qualities) * current ratio
+                // Dry run i=1: 25 * 6.0 = 150.0
+                // Dry run i=2: 15 * 7.0 = 105.0
+                double cost = totalQuality * list.get(i).baseWage;
+                ans = Math.min(ans, cost);
+
+                // Evict the worker with the highest quality to minimize sum(quality)
+                // for subsequent iterations
+                // Dry run i=1: evicts 20, totalQuality drops to 5
+                // Dry run i=2: evicts 10, totalQuality drops to 5
+                totalQuality -= pq.poll().quality;
+            }
+        }
+
+        // Return the minimum cost found across all valid k-worker groups (105.0)
+        return ans;
+    }
+}
