@@ -1,0 +1,154 @@
+import java.util.*;
+
+/*
+ * ============================================================================
+ * QUESTION: LeetCode 1834 - Single-Threaded CPU
+ * ============================================================================
+ * You are given 'n' tasks where tasks[i] = [enqueueTime_i, processingTime_i].
+ * A single-threaded CPU processes tasks according to these rules:
+ * 
+ * 1. If the CPU is idle and there are no available tasks, it remains idle until 
+ *    a task arrives.
+ * 2. If the CPU is free and tasks are waiting, it picks the task with the 
+ *    SHORTEST processing time (Shortest Job First / SJF).
+ * 3. Tie-breaker: If multiple tasks share the exact same processing time, pick 
+ *    the one with the SMALLEST original index.
+ * 4. Once a task starts, the CPU runs it to completion without interruption.
+ * 
+ * Return the order in which the CPU will process all tasks.
+ *
+ * ============================================================================
+ * APPROACH: Sorting + Min-Heap (Two-Tier Event Simulation)
+ * ============================================================================
+ * 1. Track Original Indices:
+ *    Since sorting changes array order, bundle each task with its original 
+ *    index: [enqueueTime, processingTime, originalIndex].
+ *
+ * 2. Sort by Arrival Time:
+ *    Sort all tasks primarily by enqueueTime ascending. This allows us to 
+ *    simulate the timeline sequentially using a pointer `i`.
+ *
+ * 3. Ready Queue (Min-Heap):
+ *    Use a Min-Heap to store available/ready tasks.
+ *    Order by: processingTime ascending -> then originalIndex ascending.
+ *
+ * 4. Timeline Simulation Loop:
+ *    Maintain a timeline counter `curr` (use `long` to prevent 32-bit overflow):
+ *    - Push all tasks that have arrived (enqueueTime <= curr) into `minHeap`.
+ *    - If `minHeap` is empty, the CPU is idle! Fast-forward `curr` directly to 
+ *      the next task's arrival time (`allTasks[i][0]`).
+ *    - Otherwise, poll the best task from `minHeap`, append its index to `res`, 
+ *      and advance clock: `curr += processingTime`.
+ *
+ * Time Complexity:  O(N log N) - Sorting takes O(N log N), and each task is
+ *                   pushed and polled from the heap once (O(N log N)).
+ * Space Complexity: O(N) to store augmented task records and the heap.
+ *
+ * ============================================================================
+ * STEP-BY-STEP DRY RUN
+ * ============================================================================
+ * Input: tasks = [[1, 2], [2, 4], [3, 2], [4, 1]]
+ * 
+ * Pre-processing:
+ * allTasks = [
+ *   [1, 2, idx:0],
+ *   [2, 4, idx:1],
+ *   [3, 2, idx:2],
+ *   [4, 1, idx:3]
+ * ] (already sorted by arrival time)
+ * 
+ * Simulation:
+ * - Start: curr = 0, i = 0, minHeap = []
+ * 
+ * Iteration 1:
+ *   - Available check: allTasks[0][0] = 1 > curr(0). minHeap is empty.
+ *   - Fast-forward time: curr = 1.
+ * 
+ * Iteration 2:
+ *   - Enqueue arrived: task 0 arrives at 1 <= curr(1). 
+ *     minHeap receives [1, 2, idx:0]. i becomes 1.
+ *   - Poll best task: [1, 2, idx:0]
+ *     res[0] = 0
+ *     curr = 1 + 2 = 3
+ * 
+ * Iteration 3:
+ *   - Enqueue arrived (<= curr=3):
+ *     task 1 arrives at 2 <= 3 -> push [2, 4, idx:1]
+ *     task 2 arrives at 3 <= 3 -> push [3, 2, idx:2]
+ *     i becomes 3.
+ *   - minHeap has: [3, 2, idx:2] (proc 2) and [2, 4, idx:1] (proc 4).
+ *   - Poll best task: [3, 2, idx:2] (shorter processing time: 2 < 4)
+ *     res[1] = 2
+ *     curr = 3 + 2 = 5
+ * 
+ * Iteration 4:
+ *   - Enqueue arrived (<= curr=5):
+ *     task 3 arrives at 4 <= 5 -> push [4, 1, idx:3]
+ *     i becomes 4 (all tasks enqueued).
+ *   - minHeap has: [4, 1, idx:3] (proc 1) and [2, 4, idx:1] (proc 4).
+ *   - Poll best task: [4, 1, idx:3] (proc 1 < proc 4)
+ *     res[2] = 3
+ *     curr = 5 + 1 = 6
+ * 
+ * Iteration 5:
+ *   - i == 4 (no more tasks to enqueue).
+ *   - Poll last remaining task: [2, 4, idx:1]
+ *     res[3] = 1
+ *     curr = 6 + 4 = 10
+ * 
+ * Termination:
+ *   - i == n AND minHeap is empty. Loop breaks.
+ *   - Output res = [0, 2, 3, 1]
+ * ============================================================================
+ */
+
+class Solution {
+    public int[] getOrder(int[][] tasks) {
+        int n = tasks.length;
+
+        // Step 1: Augment each task with its original index: [enqueueTime, processingTime, originalIndex]
+        int[][] allTasks = new int[n][3];
+        for (int i = 0; i < n; i++) {
+            allTasks[i][0] = tasks[i][0];
+            allTasks[i][1] = tasks[i][1];
+            allTasks[i][2] = i;
+        }
+
+        // Step 2: Sort tasks chronologically by arrival (enqueue) time
+        Arrays.sort(allTasks, (a, b) -> Integer.compare(a[0], b[0]));
+
+        // Step 3: Min-Heap for available jobs:
+        // Priority 1: Shorter processing time (a[1] vs b[1])
+        // Priority 2: Smaller original index (a[2] vs b[2])
+        PriorityQueue<int[]> minHeap = new PriorityQueue<>(
+            (a, b) -> a[1] != b[1] ? Integer.compare(a[1], b[1]) : Integer.compare(a[2], b[2])
+        );
+
+        int i = 0;          // Pointer to traverse through sorted allTasks
+        int index = 0;      // Insertion pointer for the result array
+        long curr = 0;      // Current timeline clock (long avoids potential 32-bit overflow)
+        int[] res = new int[n];
+
+        // Step 4: Process until all tasks are both enqueued and executed
+        while (i < n || !minHeap.isEmpty()) {
+            // Push all tasks that have arrived by current time into the waiting pool
+            while (i < n && allTasks[i][0] <= curr) {
+                minHeap.offer(allTasks[i++]);
+            }
+
+            // If no task has arrived yet, the CPU sits idle:
+            // Jump the clock directly to the arrival time of the next incoming task
+            if (minHeap.isEmpty()) {
+                curr = allTasks[i][0];
+                continue;
+            }
+
+            // CPU executes the highest priority available task
+            int[] curTask = minHeap.poll();
+            res[index++] = curTask[2]; // Record the original index
+            curr += curTask[1];        // Advance CPU time by task's duration
+        }
+
+        return res;
+    }
+}
