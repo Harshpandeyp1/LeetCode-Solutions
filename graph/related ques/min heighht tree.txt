@@ -1,0 +1,74 @@
+import java.util.*;
+
+class Solution {
+    /**
+     * Problem: LeetCode 310 - Minimum Height Trees
+     * 
+     * Approach: Topological Sort / "Peeling the Onion" (Trim Leaves Layer-by-Layer)
+     * - Any tree has at most 2 centroids (roots that yield minimum height).
+     * - Instead of calculating tree height from each node (which takes O(N^2) time),
+     *   we trim leaves (nodes with degree = 1) inward layer by layer.
+     * - When the remaining nodes count becomes <= 2, those remaining nodes are the centroids.
+     * 
+     * Time Complexity:  O(V + E) = O(N) since an undirected tree has N - 1 edges.
+     * Space Complexity: O(V + E) = O(N) to store graph and degrees.
+     */
+    public List<Integer> findMinHeightTrees(int n, int[][] edges) {
+        // Base case: A single node tree has itself as the only root with height 0.
+        if (n <= 1) {
+            return Collections.singletonList(0);
+        }
+
+        // Step 1: Build the undirected adjacency list.
+        List<List<Integer>> adj = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            adj.add(new ArrayList<>());
+        }
+
+        for (int[] edge : edges) {
+            int u = edge[0];
+            int v = edge[1];
+            adj.get(u).add(v);
+            adj.get(v).add(u);
+        }
+
+        // Step 2: Compute degree of each node.
+        // Note: Using a primitive array int[] is faster and more memory-efficient than HashMap.
+        int[] degree = new int[n];
+        for (int i = 0; i < n; i++) {
+            degree[i] = adj.get(i).size();
+        }
+
+        // Step 3: Initialize BFS queue with all outermost boundary nodes (leaves: degree == 1).
+        Queue<Integer> queue = new LinkedList<>();
+        for (int i = 0; i < n; i++) {
+            if (degree[i] == 1) {
+                queue.offer(i);
+            }
+        }
+
+        // Step 4: Peel leaves level-by-level until 1 or 2 central nodes remain.
+        int remainingNodes = n;
+        while (remainingNodes > 2) {
+            int leafCount = queue.size();
+            remainingNodes -= leafCount; // Remove current layer of leaves from count
+
+            for (int i = 0; i < leafCount; i++) {
+                int leaf = queue.poll();
+
+                // Sever connection between this leaf and its neighbors
+                for (int neighbor : adj.get(leaf)) {
+                    degree[neighbor]--;
+
+                    // If neighbor's degree drops to 1, it becomes a leaf in the next layer
+                    if (degree[neighbor] == 1) {
+                        queue.offer(neighbor);
+                    }
+                }
+            }
+        }
+
+        // Step 5: The queue now holds the 1 or 2 central nodes that form Minimum Height Trees.
+        return new ArrayList<>(queue);
+    }
+}
