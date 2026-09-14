@@ -1,0 +1,85 @@
+class Solution {
+    /**
+     * Problem: LeetCode 130 - Surrounded Regions
+     * 
+     * Approach: Boundary-first Depth-First Search (DFS) / Flood Fill
+     * - An 'O' region is captured if and only if NO cell in that region touches the boundary.
+     * - Reverse thinking: Mark all 'O' cells connected to the 4 boundaries as "safe" using a temporary marker ('#').
+     * - Finally, sweep the grid:
+     *     - Any remaining 'O' is surrounded -> flip to 'X'.
+     *     - Any '#' is safe -> revert back to 'O'.
+     *
+     * Complexity Analysis:
+     * - Let N = number of rows, M = number of columns.
+     * - Time Complexity:  O(N * M). Each cell is visited at most a constant number of times.
+     * - Space Complexity: O(N * M) auxiliary space for the DFS recursion call stack in the worst case (e.g., all cells are 'O').
+     */
+    public void solve(char[][] board) {
+        // Base case: Edge boundary checks
+        if (board == null || board.length == 0 || board[0].length == 0) {
+            return;
+        }
+
+        int n = board.length;
+        int m = board[0].length;
+
+        // Step 1: Scan first and last columns for border 'O's and flood fill safe regions.
+        for (int i = 0; i < n; i++) {
+            if (board[i][0] == 'O') {
+                dfs(board, i, 0);
+            }
+            if (board[i][m - 1] == 'O') {
+                dfs(board, i, m - 1);
+            }
+        }
+
+        // Step 2: Scan first and last rows for border 'O's and flood fill safe regions.
+        for (int j = 0; j < m; j++) {
+            if (board[0][j] == 'O') {
+                dfs(board, 0, j);
+            }
+            if (board[n - 1][j] == 'O') {
+                dfs(board, n - 1, j);
+            }
+        }
+
+        // Step 3: Traverse the full matrix:
+        // - 'O' was not reachable from any boundary -> capture it ('X').
+        // - '#' was protected by boundary connectivity -> restore to 'O'.
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                if (board[i][j] == 'O') {
+                    board[i][j] = 'X';
+                } else if (board[i][j] == '#') {
+                    board[i][j] = 'O';
+                }
+            }
+        }
+    }
+
+    /**
+     * Helper method to flood-fill boundary-connected 'O's with a temporary marker '#'.
+     *
+     * @param board The character matrix.
+     * @param i     Row coordinate.
+     * @param j     Column coordinate.
+     */
+    public void dfs(char[][] board, int i, int j) {
+        int n = board.length;
+        int m = board[0].length;
+
+        // Base cases: Out-of-bounds or not an unvisited 'O' cell.
+        if (i < 0 || i >= n || j < 0 || j >= m || board[i][j] != 'O') {
+            return;
+        }
+
+        // Mark cell as safe (boundary-connected)
+        board[i][j] = '#';
+
+        // Explore all 4 orthogonal directions
+        dfs(board, i - 1, j); // Up
+        dfs(board, i, j + 1); // Right
+        dfs(board, i + 1, j); // Down
+        dfs(board, i, j - 1); // Left
+    }
+}
