@@ -1,0 +1,82 @@
+import java.util.*;
+
+class Solution {
+    /**
+     * Problem: LeetCode 802 - Find Eventual Safe States
+     * 
+     * Approach: Reverse Graph + Topological Sort (Kahn's Algorithm)
+     * - A node is safe if every possible path starting from it ends in a terminal node
+     *   (a node with outDegree = 0) and never enters a directed cycle.
+     * - Instead of tracing forward paths (which may loop indefinitely), we reverse the edges:
+     *     - If u -> v in original graph, add v -> u in reverse graph.
+     *     - The original out-degree of u becomes its effective "in-degree" of dependencies.
+     * - Kahn's Algorithm from Terminal Nodes:
+     *     - Nodes with outDegree == 0 are base safe nodes; enqueue them.
+     *     - When polling a safe node u, for every predecessor v (where v -> u was an original edge),
+     *       decrement outDegree[v] by 1.
+     *     - When outDegree[v] drops to 0, it means ALL outgoing edges from v lead to verified 
+     *       safe nodes; enqueue v.
+     * - Nodes caught in or leading into cycles will never hit outDegree == 0.
+     * 
+     * Complexity Analysis:
+     * - Let V be the number of vertices (n) and E be the total number of edges.
+     * - Time Complexity:  O(V + E) to build reverse graph, perform Kahn's BFS, and collect results.
+     * - Space Complexity: O(V + E) to store the reversed graph, out-degree array, and queue.
+     */
+    public List<Integer> eventualSafeNodes(int[][] graph) {
+        int n = graph.length;
+
+        // Step 1: Initialize reverse graph adjacency list and out-degree tracker.
+        List<List<Integer>> revGraph = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            revGraph.add(new ArrayList<>());
+        }
+
+        int[] outDegree = new int[n];
+
+        // Step 2: Populate original out-degrees and invert directed edges.
+        for (int u = 0; u < n; u++) {
+            outDegree[u] = graph[u].length;
+            for (int v : graph[u]) {
+                // Original edge: u -> v  ==>  Reverse edge: v -> u
+                revGraph.get(v).add(u);
+            }
+        }
+
+        // Step 3: Seed queue with terminal nodes (nodes with 0 outgoing edges).
+        Queue<Integer> queue = new LinkedList<>();
+        boolean[] safe = new boolean[n];
+
+        for (int i = 0; i < n; i++) {
+            if (outDegree[i] == 0) {
+                queue.offer(i);
+                safe[i] = true;
+            }
+        }
+
+        // Step 4: Propagate safety backward along reversed edges (Kahn's BFS).
+        while (!queue.isEmpty()) {
+            int u = queue.poll();
+
+            for (int predecessor : revGraph.get(u)) {
+                outDegree[predecessor]--; // One outgoing path from predecessor is confirmed safe
+
+                // If all outgoing edges from predecessor are safe, predecessor is safe
+                if (outDegree[predecessor] == 0) {
+                    safe[predecessor] = true;
+                    queue.offer(predecessor);
+                }
+            }
+        }
+
+        // Step 5: Collect all safe nodes in ascending order (0 to n - 1).
+        List<Integer> result = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            if (safe[i]) {
+                result.add(i);
+            }
+        }
+
+        return result;
+    }
+}
