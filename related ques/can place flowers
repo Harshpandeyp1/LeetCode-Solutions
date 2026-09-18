@@ -1,0 +1,53 @@
+import java.util.*;
+
+/*
+========================================================================================
+QUESTION:
+You have a long flowerbed represented as an array `flowerbed` of 0's (empty) and 1's 
+(not empty), and an integer `n`. Flowers cannot be planted in adjacent plots. Given `n`, 
+return `true` if `n` new flowers can be planted in the flowerbed without violating 
+the no-adjacent-flowers rule, otherwise return `false`.
+
+APPROACH (Greedy Iteration):
+1. Traverse through the `flowerbed` array plot by plot.
+2. For each plot, check if three conditions are met:
+   - The current plot is empty (`flowerbed[i] == 0`).
+   - The left plot is empty OR it is the start of the array (`i == 0`).
+   - The right plot is empty OR it is the end of the array (`i == len - 1`).
+3. If all conditions hold, plant a flower (`flowerbed[i] = 1`) and decrement `n`.
+4. Short-circuit early if `n` reaches 0. If loop finishes and `n <= 0`, return true.
+
+TIME COMPLEXITY: O(N) — Single pass through the flowerbed array.
+SPACE COMPLEXITY: O(1) — Modifies array in-place without extra memory.
+========================================================================================
+*/
+
+class Solution {
+    public boolean canPlaceFlowers(int[] flowerbed, int n) {
+        // Cache the total length of the flowerbed array
+        int len = flowerbed.length;
+
+        // Iterate through each plot, stopping early if all needed flowers are planted (n <= 0)
+        for (int i = 0; i < len && n > 0; i++) {
+            
+            // Left plot is valid if current plot is at boundary index 0 OR left neighbor is empty
+            boolean leftEmpty  = (i == 0)       || flowerbed[i - 1] == 0;
+            
+            // Right plot is valid if current plot is at boundary index len-1 OR right neighbor is empty
+            boolean rightEmpty = (i == len - 1) || flowerbed[i + 1] == 0;
+
+            // Check if current plot is empty and both left & right neighbors are empty
+            if (flowerbed[i] == 0 && leftEmpty && rightEmpty) {
+                
+                // Plant a flower at the current position
+                flowerbed[i] = 1;   
+                
+                // Decrement remaining count of flowers to plant
+                n--;
+            }
+        }
+        
+        // Return true if we successfully planted at least 'n' flowers
+        return n <= 0;
+    }
+}
