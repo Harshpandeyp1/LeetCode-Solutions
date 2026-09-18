@@ -1,0 +1,114 @@
+Given a string s of lowercase letters, you need to find the maximum number of non-empty substrings of s that meet the following conditions:
+
+The substrings do not overlap, that is for any two substrings s[i..j] and s[x..y], either j < x or i > y is true.
+A substring that contains a certain character c must also contain all occurrences of c.
+Find the maximum number of substrings that meet the above conditions. If there are multiple solutions with the same number of substrings, return the one with minimum total length. It can be shown that there exists a unique solution of minimum total length.
+
+Notice that you can return the substrings in any order.
+
+
+
+
+import java.util.*;
+
+class Solution {
+    public List<String> maxNumOfSubstrings(String s) {
+        // Get the total length of the input string
+        int n = s.length();
+
+        // Step 1: Track total frequency and first occurrence index of each character ('a' through 'z')
+        int[] total = new int[26];
+        int[] first = new int[26];
+        
+        // Fill the first-occurrence array with -1 to mark characters as unseen
+        Arrays.fill(first, -1);
+        
+        // Loop through each character of the string to count frequency and store the first appearance
+        for (int i = 0; i < n; i++) {
+            // Convert character 'a'-'z' into an index 0-25
+            int c = s.charAt(i) - 'a';
+            
+            // Increase the total count of this character
+            total[c]++;
+            
+            // If this character hasn't been seen yet, record its first index
+            if (first[c] == -1) first[c] = i;
+        }
+
+        // Step 2: Try forming valid intervals starting from the first occurrence of each character
+        List<int[]> intervals = new ArrayList<>();
+        
+        // Iterate through all 26 lowercase alphabet letters
+        for (int ch = 0; ch < 26; ch++) {
+            // Skip characters that never appear in the string
+            if (first[ch] == -1) continue;
+
+            // Set the left boundary of our candidate substring
+            int l = first[ch];
+            
+            // Clone total counts so we can decrement remaining occurrences during this scan
+            int[] freq = total.clone();
+            
+            // Keep track of which characters have been encountered in the current scan
+            boolean[] seen = new boolean[26];
+            
+            // Count of distinct characters that have started inside the substring but are not yet fully included
+            int open = 0;
+
+            // Expand the right boundary from the starting point to the end of the string
+            for (int r = l; r < n; r++) {
+                // Get character at right boundary
+                int c = s.charAt(r) - 'a';
+                
+                // If seeing this character for the first time in the current scan
+                if (!seen[c]) {
+                    // Mark character as seen
+                    seen[c] = true;
+                    
+                    // Increment the open counter since a new character type entered the interval
+                    open++;
+                }
+                
+                // Decrement the remaining required count for this character
+                freq[c]--;
+                
+                // If all occurrences of this character are inside the current window [l, r]
+                if (freq[c] == 0) open--;
+
+                // If open == 0, every character inside [l, r] has ALL its string occurrences inside [l, r]
+                if (open == 0) {
+                    // Save this valid [left, right] interval
+                    intervals.add(new int[]{l, r});
+                    
+                    // Stop expanding since we found the shortest valid substring starting at 'l'
+                    break;
+                }
+            }
+            // If loop finishes with open > 0, this start position cannot form a valid closed substring
+        }
+
+        // Step 3: Sort intervals by end position ascending; if ends match, larger start (shorter substring) first
+        intervals.sort((a, b) -> a[1] != b[1] ? a[1] - b[1] : b[0] - a[0]);
+
+        // Step 4: Greedily select non-overlapping intervals
+        List<String> res = new ArrayList<>();
+        
+        // Track the end index of the last chosen valid substring
+        int prevEnd = -1;
+        
+        // Iterate through sorted candidate intervals
+        for (int[] iv : intervals) {
+            // Check if current interval starts after the previous chosen interval ends
+            if (iv[0] > prevEnd) {
+                // Add the valid substring to our result list
+                res.add(s.substring(iv[0], iv[1] + 1));
+                
+                // Update the end boundary of the last added substring
+                prevEnd = iv[1];
+            }
+        }
+        
+        // Return the final list of max valid non-overlapping substrings
+        return res;
+    }
+}
