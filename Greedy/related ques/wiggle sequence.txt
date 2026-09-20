@@ -1,0 +1,52 @@
+/*
+ * PROBLEM: 376. Wiggle Subsequence
+ * 
+ * QUESTION SUMMARY:
+ * - A wiggle sequence is a sequence where the differences between successive 
+ *   numbers strictly alternate between positive and negative (e.g., UP, DOWN, UP, DOWN).
+ * - A subsequence is obtained by deleting zero or more elements from the original array.
+ * - Given an integer array 'nums', return the length of the longest wiggle subsequence.
+ * 
+ * APPROACH (Greedy / Peak-Valley Counting):
+ * 1. Instead of actually deleting elements or checking adjacent elements directly, 
+ *    we count the number of direction changes (flips from UP to DOWN or DOWN to UP).
+ * 2. Consecutive increases (e.g., 10 -> 13 -> 15) or decreases (e.g., 15 -> 10 -> 5) 
+ *    do not flip the direction—we only care about the highest peak and lowest valley.
+ * 3. We maintain `prev` (last recorded direction) and `curr` (current step direction).
+ *    Whenever direction flips (curr > 0 && prev <= 0 OR curr < 0 && prev >= 0), 
+ *    we increment `count` and update `prev = curr`.
+ * 
+ * TIME COMPLEXITY:  O(N) - Single pass through the array of length N.
+ * SPACE COMPLEXITY: O(1) - Constant space used.
+ */
+
+class Solution {
+    public int wiggleMaxLength(int[] nums) {
+        // Base case: Arrays with 0 or 1 element are already valid wiggle sequences.
+        if (nums.length < 2) return nums.length;
+
+        // Calculate initial difference between first two elements.
+        int prev = nums[1] - nums[0];
+
+        // If initial elements are different (prev != 0), initial length is 2.
+        // If initial elements are equal (prev == 0), initial length is 1 (duplicate ignored).
+        int count = (prev != 0) ? 2 : 1;
+
+        // Traverse array starting from index 2
+        for (int i = 2; i < nums.length; i++) {
+            // Difference between current element and previous element
+            int curr = nums[i] - nums[i - 1];
+
+            // Condition for direction flip:
+            // 1. (curr > 0 && prev <= 0): Shifted from DOWN/FLAT to UP
+            // 2. (curr < 0 && prev >= 0): Shifted from UP/FLAT to DOWN
+            if ((curr > 0 && prev <= 0) || (curr < 0 && prev >= 0)) {
+                count++;      // Valid peak or valley found, increment sequence length
+                prev = curr;  // Update 'prev' ONLY when direction changes
+            }
+        }
+
+        // Return the maximum length of the wiggle subsequence
+        return count;
+    }
+}
