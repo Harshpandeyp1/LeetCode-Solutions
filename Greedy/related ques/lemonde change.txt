@@ -1,0 +1,67 @@
+import java.util.*;
+
+/*
+========================================================================================
+QUESTION:
+At a lemonade stand, each lemonade costs $5. Customers pay using $5, $10, or $20 bills.
+You start with no change in hand and must provide the exact change to every customer in line.
+Return `true` if you can give the correct change to every customer, or `false` otherwise.
+
+APPROACH (Greedy Choice Strategy):
+1. Track the available counts of $5 (`five`) and $10 (`ten`) bills. We do not need to track
+   $20 bills because they cannot be used as change.
+2. For a $5 bill: Accept it directly (`five++`).
+3. For a $10 bill: Require one $5 bill as change (`five--`, `ten++`).
+4. For a $20 bill: Require $15 as change.
+   - Greedily prefer giving ONE $10 bill and ONE $5 bill first (`ten--`, `five--`).
+   - Why? Because $5 bills are more versatile (needed for $10 customers), so keep them 
+     whenever possible.
+   - If a $10 bill is not available, fall back to giving THREE $5 bills (`five -= 3`).
+5. If at any step required change cannot be provided, return `false`.
+
+TIME COMPLEXITY: O(N) — Single pass through the `bills` array.
+SPACE COMPLEXITY: O(1) — Uses only two integer counter variables.
+========================================================================================
+*/
+
+class Solution {
+    public boolean lemonadeChange(int[] bills) {
+        // Counters to keep track of available change
+        int five = 0;
+        int ten = 0;
+
+        // Iterate through each customer in the line
+        for (int i = 0; i < bills.length; i++) {
+            
+            // Case 1: Customer pays with a $5 bill (no change needed)
+            if (bills[i] == 5) {
+                five++;
+            } 
+            // Case 2: Customer pays with a $10 bill (requires $5 change)
+            else if (bills[i] == 10) {
+                if (five == 0) return false; // Cannot provide change
+                five--;                      // Give one $5 bill
+                ten++;                       // Collect the $10 bill
+            } 
+            // Case 3: Customer pays with a $20 bill (requires $15 change)
+            else {
+                // Greedy choice: Try using one $10 bill and one $5 bill first
+                if (ten > 0 && five > 0) {
+                    ten--;
+                    five--;
+                } 
+                // Fallback choice: Use three $5 bills if no $10 bill is available
+                else if (five >= 3) {
+                    five -= 3;
+                } 
+                // Cannot provide $15 change
+                else {
+                    return false;
+                }
+            }
+        }
+
+        // Successfully served all customers with correct change
+        return true;
+    }
+}
