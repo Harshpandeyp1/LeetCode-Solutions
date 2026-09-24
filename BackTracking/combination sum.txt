@@ -1,0 +1,68 @@
+Given an array of distinct integers candidates and a target integer target, return a list of all unique combinations of candidates where the chosen numbers sum to target. You may return the combinations in any order.
+
+The same number may be chosen from candidates an unlimited number of times. Two combinations are unique if the frequency of at least one of the chosen numbers is different.
+
+The test cases are generated such that the number of unique combinations that sum up to target is less than 150 combinations for the given input. 
+
+
+class Solution {
+    // Final result list — will store all valid combinations that sum to target
+    List<List<Integer>> res = new ArrayList<>();
+
+    // Temporary list to build the current combination during recursion
+    List<Integer> curr = new ArrayList<>();
+
+    public List<List<Integer>> combinationSum(int[] candidates, int target) {
+        // Start backtracking from index 0, with an empty current combination, and the full target to reach
+        backtrack(0, curr, res, candidates, target);
+
+        // Return all valid combinations found
+        return res;
+    }
+
+    /*
+        APPROACH: Backtracking (Pick / Don't Pick, with repetition allowed)
+
+        For every candidate at index i, we have two choices:
+        1. PICK candidates[i] again (since repetition is allowed, we stay at the same index i)
+        2. DON'T PICK candidates[i], move on to the next candidate (index i+1)
+
+        We reduce 'target' by candidates[i] every time we pick it.
+        When target becomes 0, the current combination sums up correctly, so we save it.
+        If target goes below 0, or we run out of candidates, that path is invalid — stop exploring it.
+
+        Time Complexity: Exponential in the worst case, roughly O(2^target) branches
+        Space Complexity: O(target) for recursion depth (max number of times we can pick before hitting 0)
+    */
+    public void backtrack(int i, List<Integer> curr, List<List<Integer>> res, int[] candidates, int target) {
+
+        // Base case 1: if target has been reduced to exactly 0,
+        // the numbers in 'curr' add up to the original target — valid combination found
+        if (target == 0) {
+            // Add a COPY of curr (not the reference) since curr will keep changing after this
+            res.add(new ArrayList<>(curr));
+            return; // stop exploring further on this path
+        }
+
+        // Base case 2: if we've run out of candidates to try, OR target has gone negative,
+        // this path cannot lead to a valid combination — stop here
+        if (i == candidates.length || target < 0) {
+            return;
+        }
+
+        // ---------- CHOICE 1: PICK candidates[i] ----------
+        curr.add(candidates[i]); // add current candidate to the combination
+
+        // Recurse with the SAME index i (since we're allowed to reuse the same number again),
+        // and reduce target by the value we just picked
+        backtrack(i, curr, res, candidates, target - candidates[i]);
+
+        // Backtrack: remove the last added element so 'curr' goes back to its state 
+        // before we picked candidates[i] — needed before trying the "don't pick" choice
+        curr.remove(curr.size() - 1);
+
+        // ---------- CHOICE 2: DON'T PICK candidates[i] ----------
+        // Move to the next candidate (i+1), target stays unchanged since we didn't pick anything
+        backtrack(i + 1, curr, res, candidates, target);
+    }
+}
