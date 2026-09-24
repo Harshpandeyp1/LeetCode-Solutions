@@ -1,0 +1,100 @@
+Given a collection of candidate numbers (candidates) and a target number (target), find all unique combinations in candidates where the candidate numbers sum to target.
+
+Each number in candidates may only be used once in the combination.
+
+Note: The solution set must not contain duplicate combinations.
+
+
+
+class Solution {
+
+```
+// Stores all valid combinations
+List<List<Integer>>res=new ArrayList<>();
+
+// Stores the current combination being constructed
+List<Integer>curr=new ArrayList<>();
+
+public List<List<Integer>> combinationSum2(int[] candidates, int target) {
+
+    // Sort the array so duplicate elements come together
+    // and we can stop when candidates[j] becomes greater than target
+    Arrays.sort(candidates);
+
+    // Start backtracking from index 0
+    backtrack(0,res,curr,candidates,target);
+
+    // Return all valid combinations
+    return res;
+}
+
+public void backtrack(
+    int i,
+    List<List<Integer>>res,
+    List<Integer>curr,
+    int []candidates,
+    int target
+){
+
+    // If target becomes 0,
+    // the current combination is a valid answer
+    if(target==0){
+
+        // Add a copy of curr to res
+        // We must create a new ArrayList because curr keeps changing
+        res.add(new ArrayList<>(curr));
+
+        // Stop this recursion branch
+        return;
+    }
+
+    // If we have reached the end of the array,
+    // no more elements are available
+    if(i==candidates.length){
+        return;
+    }
+
+    // Try every possible element from index i onwards
+    for(int j=i;j<candidates.length;j++){
+
+        // j==i means this is the first element
+        // being considered at this recursion level
+        //
+        // candidates[j]!=candidates[j-1] means
+        // this value is different from the previous value
+        //
+        // candidates[j]<=target means
+        // the current value can still be included
+        //
+        // IMPORTANT:
+        // && has higher priority than ||
+        // so this condition is interpreted as:
+        //
+        // j==i || (
+        //     candidates[j]!=candidates[j-1]
+        //     && candidates[j]<=target
+        // )
+        if(j==i||candidates[j]!=candidates[j-1]&&candidates[j]<=target){
+
+            // Choose the current candidate
+            curr.add(candidates[j]);
+
+            // Move to j+1 because every element
+            // can be used only once
+            backtrack(
+                j+1,
+                res,
+                curr,
+                candidates,
+                target-candidates[j]
+            );
+
+            // Undo the choice
+            // so that the next candidate can be tried
+            curr.remove(curr.size()-1);
+        }
+    }
+}
+```
+
+}
