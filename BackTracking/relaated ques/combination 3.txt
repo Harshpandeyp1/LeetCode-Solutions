@@ -1,0 +1,61 @@
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * PROBLEM: LeetCode 216 - Combination Sum III
+ * 
+ * Find all valid combinations of 'k' numbers that sum up to a number 'n',
+ * given the following conditions:
+ *   1. Only numbers 1 through 9 can be used.
+ *   2. Each number is used AT MOST ONCE.
+ * 
+ * APPROACH: Binary Decision Tree (Pick / Don't Pick Backtracking)
+ * ------------------------------------------------------------------
+ * At every candidate digit from 1 to 9, we make two recursive choices:
+ *   1. PICK: Add the candidate to our path, reduce k by 1, and decrease target by candidate.
+ *   2. DON'T PICK: Skip the candidate and keep k and target unchanged.
+ * 
+ * TIME COMPLEXITY:  O(2^9) = O(512) upper bound (constant time since max candidates = 9).
+ * SPACE COMPLEXITY: O(k) recursion call stack depth (at most O(9)).
+ */
+class Solution {
+    List<List<Integer>> res = new ArrayList<>();
+
+    public List<List<Integer>> combinationSum3(int k, int n) {
+        // Start exploring choices from candidate digit 1
+        backtrack(1, k, n, new ArrayList<>(), res);
+        return res;
+    }
+
+    public void backtrack(int candidate, int k, int target, List<Integer> curr, List<List<Integer>> res) {
+        // BASE CASE 1: Valid combination found (k elements chosen and target met)
+        if (k == 0 && target == 0) {
+            res.add(new ArrayList<>(curr)); // Make a deep copy of current path
+            return;
+        }
+
+        // BASE CASE 2: Pruning / Invalid branch bounds
+        // - k == 0: Reached k elements but target sum wasn't zero.
+        // - target < 0: Exceeded target sum.
+        // - candidate > 9: Out of single-digit numbers (1 through 9).
+        if (k == 0 || target < 0 || candidate > 9) {
+            return;
+        }
+
+        // ---------------------------------------------------------
+        // CHOICE 1: PICK the current candidate
+        // ---------------------------------------------------------
+        curr.add(candidate);
+        // Move to candidate + 1, decrement k, and subtract candidate from target
+        backtrack(candidate + 1, k - 1, target - candidate, curr, res);
+        
+        // BACKTRACK: Undo choice before trying the "Don't Pick" branch
+        curr.remove(curr.size() - 1);
+
+        // ---------------------------------------------------------
+        // CHOICE 2: DON'T PICK the current candidate
+        // ---------------------------------------------------------
+        // Move to candidate + 1 without modifying k or target
+        backtrack(candidate + 1, k, target, curr, res);
+    }
+}

@@ -1,0 +1,66 @@
+import java.util.Arrays;
+
+/**
+ * PROBLEM: LeetCode 1079 - Letter Tile Possibilities
+ * 
+ * Given a string 'tiles', where each character represents a letter printed on a tile,
+ * return the total number of possible non-empty sequences (permutations of all possible 
+ * non-empty subsets) that can be formed using these tiles.
+ * 
+ * EXAMPLE:
+ *   Input: tiles = "AAB"
+ *   Output: 8
+ *   Possible Sequences: "A", "B", "AA", "AB", "BA", "AAB", "ABA", "BAA"
+ * 
+ * APPROACH: Permutation-style Backtracking with Duplicate Skipping (Sort + Visited Array)
+ * -------------------------------------------------------------------------------------
+ * 1. SORT: Sorting the array groups identical characters adjacent to each other (e.g., ['A', 'A', 'B']).
+ * 2. VISITED TRACKING: A boolean array 'visit' tracks which specific tile indices are currently used in the active branch.
+ * 3. DUPLICATE PRUNING: If current character ch[i] == ch[i-1] and the previous duplicate tile (i-1) was NOT visited 
+ *    in the current branch, it means ch[i-1] was already explored at this exact decision level. We skip ch[i] to avoid
+ *    duplicate output sequences.
+ * 4. COUNTING: Each valid choice represents a distinct non-empty sequence prefix, so we add 1 plus the count of all 
+ *    deeper sequence extensions (count += 1 + backtrack(...)).
+ * 
+ * TIME COMPLEXITY:  O(N!), where N is tiles.length (N <= 7).
+ * SPACE COMPLEXITY: O(N) recursion stack depth and boolean visited array space.
+ */
+class Solution {
+    public int numTilePossibilities(String tiles) {
+        // Convert input string to character array and sort to group duplicate letters
+        char[] ch = tiles.toCharArray();
+        Arrays.sort(ch);
+        
+        // Track which tile indices are currently in use
+        boolean[] visit = new boolean[ch.length];
+        
+        // Begin recursive backtracking exploration
+        return backtrack(ch, visit); 
+    }
+
+    public int backtrack(char[] ch, boolean[] visit) {
+        int count = 0;
+        int n = ch.length;
+
+        for (int i = 0; i < n; i++) {
+            // OPTION SKIP 1: Tile index is already used in the active sequence path
+            if (visit[i]) continue;
+
+            // OPTION SKIP 2: Avoid duplicate sequences at the same decision depth.
+            // If ch[i] == ch[i - 1] and visit[i - 1] is false, ch[i - 1] has already
+            // served as the decision choice at this current level.
+            if (i > 0 && ch[i] == ch[i - 1] && !visit[i - 1]) continue;
+
+            // CHOOSE: Mark current tile as visited
+            visit[i] = true;
+
+            // EXPLORE: 1 for current prefix sequence + recursive count of longer extensions
+            count += 1 + backtrack(ch, visit);
+
+            // UNCHOOSE (BACKTRACK): Reset state for next loop iteration choices
+            visit[i] = false;
+        }
+
+        return count; // Return total unique sequences formed from this node branch
+    }
+}

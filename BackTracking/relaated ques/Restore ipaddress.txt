@@ -1,0 +1,68 @@
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * PROBLEM: LeetCode 93 - Restore IP Addresses
+ * 
+ * Given a string 's' containing only digits, return all possible valid IPv4 addresses 
+ * that can be formed by inserting dots into 's'.
+ * 
+ * Rules for a Valid IPv4 Segment/Octet:
+ *   1. Exactly 4 parts separated by single dots.
+ *   2. Each part consists of digits with a numeric value between 0 and 255.
+ *   3. No leading zeros allowed (e.g., "0" is valid, but "01" or "00" are invalid).
+ * 
+ * APPROACH: Backtracking / Decision Tree Search
+ * --------------------------------------------
+ * At each step, try forming a segment of length 1, 2, or 3 digits starting from index 'idx'.
+ *   - Validate the segment against leading zero rules and upper bound (<= 255).
+ *   - Recurse for the next segment starting at index 'idx + i'.
+ *   - Stop when 4 parts are placed or string boundaries are exceeded.
+ * 
+ * TIME COMPLEXITY:  O(3^4) = O(81) constant bound (since max depth is 4 and branching factor is 3).
+ * SPACE COMPLEXITY: O(1) space auxiliary (recursion depth capped at 4).
+ */
+class Solution {
+    public List<String> restoreIpAddresses(String s) {
+        List<String> ans = new ArrayList<>();
+        // Handle impossible length edge cases (IPv4 requires 4 to 12 digits)
+        if (s == null || s.length() < 4 || s.length() > 12) {
+            return ans;
+        }
+        
+        helper(s, ans, 0, 0, "");
+        return ans;
+    }
+
+    private void helper(String s, List<String> ans, int idx, int part, String ip) {
+        // BASE CASE: All 4 parts processed
+        if (part >= 4) {
+            // Valid if we consumed all characters of string 's'
+            if (part == 4 && idx == s.length()) {
+                ans.add(ip);
+            }
+            return;
+        }
+
+        // Try placing segments of length 1, 2, or 3
+        for (int i = 1; i <= 3; i++) {
+            // Out of bounds check for string 's'
+            if (idx + i > s.length()) {
+                break;
+            }
+
+            // Extract segment substring
+            String dot = s.substring(idx, idx + i);
+
+            // VALIDATION CHECKS:
+            // 1. Leading Zeros: Segment longer than 1 character cannot start with '0'.
+            // 2. Out of Range: Segment value cannot exceed 255 (fixed from 225 bug).
+            if ((dot.startsWith("0") && dot.length() > 1) || (i == 3 && Integer.parseInt(dot) > 255)) {
+                continue;
+            }
+
+            // RECURSE: Move start index forward by 'i' digits (fixed from idx + 1 bug)
+            helper(s, ans, idx + i, part + 1, ip + dot + (part == 3 ? "" : "."));
+        }
+    }
+}
