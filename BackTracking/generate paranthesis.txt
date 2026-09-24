@@ -1,0 +1,127 @@
+Given n pairs of parentheses, write a function to generate all combinations of well-formed parentheses.
+
+ 
+
+Example 1:
+
+Input: n = 3
+Output: ["((()))","(()())","(())()","()(())","()()()"]
+
+
+
+class Solution {
+
+    // APPROACH:
+    // We use backtracking to generate all valid combinations of n pairs
+    // of parentheses.
+    //
+    // At every step, we have two choices:
+    //
+    // 1. Add '(' if we still have opening parentheses remaining.
+    // 2. Add ')' only if the number of closing parentheses is less than
+    //    the number of opening parentheses.
+    //
+    // The condition close < open ensures that we never create an invalid
+    // sequence such as ")(" or "())(".
+    //
+    // For every choice:
+    // Choose  -> add a parenthesis
+    // Explore -> recursively continue
+    // Undo    -> remove the last added parenthesis
+    //
+    // Time Complexity: O(4^n / sqrt(n))
+    // Space Complexity: O(n) recursion stack
+    //                  (excluding the result list)
+
+    public List<String> generateParenthesis(int n) {
+
+        // Create a list to store all valid combinations
+        List<String>res=new ArrayList<>();
+
+        // Start the backtracking process
+        //
+        // new StringBuilder() -> current combination is initially empty
+        // n                  -> total number of opening and closing brackets
+        // 0                  -> opening brackets used initially
+        // 0                  -> closing brackets used initially
+        backtrack(res,new StringBuilder(),n,0,0);
+
+        // Return all valid combinations
+        return res;
+    }
+
+    // BACKTRACKING FUNCTION:
+    //
+    // res   -> stores all valid combinations
+    // curr  -> current combination being built
+    // n     -> total number of pairs of parentheses
+    // open  -> number of '(' used so far
+    // close -> number of ')' used so far
+    public void backtrack(
+        List<String>res,
+        StringBuilder curr,
+        int n,
+        int open,
+        int close
+    ){
+
+        // BASE CASE:
+        // If we have used n opening and n closing parentheses,
+        // the current combination is complete and valid
+        if(open==n&&close==n){
+
+            // Convert StringBuilder to String
+            // and add the combination to the result
+            res.add(curr.toString());
+
+            // Stop this recursion branch
+            return;
+        }
+
+        // CHOICE 1: Add an opening parenthesis
+        //
+        // We can add '(' only if we have not used all n
+        // opening parentheses
+        if(open<n){
+
+            // Choose:
+            // Add '(' to the current combination
+            curr.append('(');
+
+            // Explore:
+            // Recursively continue with one more opening parenthesis
+            backtrack(res,curr,n,open+1,close);
+
+            // Undo:
+            // Remove the last added '('
+            // so that another choice can be tried
+            curr.deleteCharAt(curr.length()-1);
+        }
+
+        // CHOICE 2: Add a closing parenthesis
+        //
+        // close < n:
+        // We still have closing parentheses available
+        //
+        // close < open:
+        // We have an unmatched opening parenthesis available to close
+        //
+        // This condition prevents invalid combinations
+        // such as ")(" or "())("
+        if(close<n&&close<open){
+
+            // Choose:
+            // Add ')' to the current combination
+            curr.append(')');
+
+            // Explore:
+            // Recursively continue with one more closing parenthesis
+            backtrack(res,curr,n,open,close+1);
+
+            // Undo:
+            // Remove the last added ')'
+            // so that another choice can be tried
+            curr.deleteCharAt(curr.length()-1);
+        }
+    }
+}
