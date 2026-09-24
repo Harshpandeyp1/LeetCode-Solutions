@@ -1,0 +1,93 @@
+Given a string containing digits from 2-9 inclusive, return all possible letter combinations that the number could represent. Return the answer in any order.
+
+A mapping of digits to letters (just like on the telephone buttons) is given below. Note that 1 does not map to any letters.
+
+
+
+
+
+class Solution {
+
+    // APPROACH:
+    // Use backtracking to generate every possible combination.
+    // For each digit, try every letter mapped to that digit.
+    // Choose one letter, recursively process the next digit,
+    // and then remove the chosen letter to try the next possibility.
+
+    public List<String> letterCombinations(String digits) {
+
+        // Create a map to store each digit and its corresponding letters
+        HashMap<Character,String>map=new HashMap<>();
+
+        // Store phone keypad mappings
+        map.put('2',"abc");
+        map.put('3',"def");
+        map.put('4',"ghi");
+        map.put('5',"jkl");
+        map.put('6',"mno");
+        map.put('7',"pqrs");
+        map.put('8',"tuv");
+        map.put('9',"wxyz");
+
+        // Store all valid combinations
+        List<String>res=new ArrayList<>();
+
+        // If the input is empty, return an empty list
+        if(digits.length()==0){
+            return res;
+        }
+
+        // Start backtracking from the first digit
+        // curr is initially empty
+        backtrack(0,digits,res,"",map);
+
+        // Return all generated combinations
+        return res;
+    }
+
+    // Backtracking function
+    // index  -> current digit we are processing
+    // digits -> input digit string
+    // res    -> stores all completed combinations
+    // curr   -> current combination being built
+    // map    -> digit-to-letter mapping
+    public void backtrack(
+        int index,
+        String digits,
+        List<String>res,
+        String curr,
+        HashMap<Character,String>map
+    ){
+
+        // BASE CASE:
+        // If all digits have been processed,
+        // the current string is a complete combination
+        if(index==digits.length()){
+            res.add(curr);
+            return;
+        }
+
+        // Get the current digit
+        char digit=digits.charAt(index);
+
+        // Get all letters mapped to the current digit
+        String letter=map.get(digit);
+
+        // Try every possible letter for the current digit
+        for(int i=0;i<letter.length();i++){
+
+            // CHOOSE:
+            // Add the current letter to the combination
+            curr+=letter.charAt(i);
+
+            // EXPLORE:
+            // Move to the next digit
+            backtrack(index+1,digits,res,curr,map);
+
+            // UNDO:
+            // Remove the last chosen letter
+            // so that the next letter can be tried
+            curr=curr.substring(0,curr.length()-1);
+        }
+    }
+}
