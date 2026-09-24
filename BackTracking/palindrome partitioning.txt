@@ -1,0 +1,119 @@
+Given a string s, partition s such that every substring of the partition is a palindrome. Return all possible palindrome partitioning of s.
+
+
+
+class Solution {
+
+    // APPROACH:
+    // We use backtracking to generate all possible partitions of the string.
+    //
+    // At every index, we try every possible substring starting from that index.
+    // If the substring is a palindrome:
+    //
+    // 1. Choose the palindrome substring
+    // 2. Recursively partition the remaining string
+    // 3. Undo the choice and try another substring
+    //
+    // Example:
+    // s = "aab"
+    //
+    // Possible partitions:
+    // ["a", "a", "b"]
+    // ["aa", "b"]
+    //
+    // Time Complexity: O(N * 2^N)
+    // Space Complexity: O(N) recursion stack
+    //                  excluding the result list
+
+    public List<List<String>> partition(String s) {
+
+        // Stores all possible palindrome partitions
+        List<List<String>>res=new ArrayList<>();
+
+        // Stores the current partition
+        List<String>curr=new ArrayList<>();
+
+        // Start backtracking from index 0
+        backtrack(0,s,res,curr);
+
+        // Return all valid partitions
+        return res;
+    }
+
+    // BACKTRACKING FUNCTION:
+    //
+    // partindx -> starting index from where we need to partition
+    // s        -> original string
+    // res      -> stores all valid partitions
+    // curr     -> current partition being constructed
+    public void backtrack(
+        int partindx,
+        String s,
+        List<List<String>>res,
+        List<String>curr
+    ){
+
+        // Store the length of the string
+        int n=s.length();
+
+        // BASE CASE:
+        // If the starting index reaches the end of the string,
+        // the current partition is complete
+        if(partindx==n){
+
+            // Add a copy of the current partition
+            res.add(new ArrayList<>(curr));
+
+            // Stop this recursion branch
+            return;
+        }
+
+        // Try every possible ending index
+        // for a substring starting from partindx
+        for(int end=partindx;end<n;end++){
+
+            // Check whether the substring
+            // s[partindx...end] is a palindrome
+            if(isPalindrome(partindx,end,s)){
+
+                // CHOOSE:
+                // Add the palindrome substring to the current partition
+                curr.add(s.substring(partindx,end+1));
+
+                // EXPLORE:
+                // Recursively partition the remaining string
+                // starting from end+1
+                backtrack(end+1,s,res,curr);
+
+                // UNDO:
+                // Remove the last chosen substring
+                // so that another partition can be tried
+                curr.remove(curr.size()-1);
+            }
+        }
+    }
+
+    // Checks whether the substring from start to end is a palindrome
+    private boolean isPalindrome(int start,int end,String s){
+
+        // Compare characters from both ends
+        while(start<end){
+
+            // If characters are different,
+            // the substring is not a palindrome
+            if(s.charAt(start)!=s.charAt(end)){
+                return false;
+            }
+
+            // Move the left pointer forward
+            start++;
+
+            // Move the right pointer backward
+            end--;
+        }
+
+        // If all character pairs matched,
+        // the substring is a palindrome
+        return true;
+    }
+}
