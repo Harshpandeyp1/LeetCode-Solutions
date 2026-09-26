@@ -1,0 +1,62 @@
+class Solution {
+    /*
+        Problem: Decode Ways
+        ---------------------
+        Given a digit string s, count the number of ways to decode it
+        using the mapping 'A'->"1", 'B'->"2", ..., 'Z'->"26".
+
+        Rules:
+          - A single digit decodes validly only if it's 1-9 ('0' is invalid alone).
+          - A two-digit number decodes validly only if it's between 10 and 26.
+
+        Approach: Bottom-Up DP
+        ------------------------
+        dp[i] = number of ways to decode first i characters of s (s[0..i-1])
+
+        Base cases:
+            dp[0] = 1  -> empty prefix has exactly 1 way (do nothing)
+            dp[1] = 1 if s[0] != '0' else 0  -> first char alone must be valid
+
+        Transition (for i = 2 to n):
+            one = value of single digit s[i-1]      (last 1 character)
+            two = value of two digits s[i-2..i-1]    (last 2 characters)
+
+            if one is valid (1-9):        dp[i] += dp[i-1]
+            if two is valid (10-26):      dp[i] += dp[i-2]
+
+        Answer: dp[n] -> ways to decode the entire string
+
+        Time Complexity  : O(n)
+        Space Complexity : O(n) (can be optimized to O(1) using two variables)
+    */
+    public int numDecodings(String s) {
+        int n = s.length();
+
+        // dp[i] = number of ways to decode s[0..i-1]
+        int[] dp = new int[n + 1];
+
+        // Base case: empty string -> 1 way (do nothing)
+        dp[0] = 1;
+
+        // Base case: first character alone -> valid only if it's not '0'
+        dp[1] = s.charAt(0) == '0' ? 0 : 1;
+
+        // Fill dp from index 2 to n
+        for (int i = 2; i <= n; i++) {
+            // Extract last single digit (as substring s[i-1..i))
+            int one = Integer.valueOf(s.substring(i - 1, i));
+
+            // Extract last two digits (as substring s[i-2..i))
+            int two = Integer.valueOf(s.substring(i - 2, i));
+
+            // Case 1: last single digit is valid (1-9) -> add ways from dp[i-1]
+            if (one >= 1) dp[i] += dp[i - 1];
+
+            // Case 2: last two digits form valid letter (10-26) -> add ways from dp[i-2]
+            if (two >= 10 && two <= 26) dp[i] += dp[i - 2];
+        }
+
+        // dp[n] holds total ways to decode the entire string
+        return dp[n];
+    }
+}
