@@ -1,0 +1,80 @@
+class Solution {
+    /*
+        Problem: Partition Equal Subset Sum
+        -------------------------------------
+        Given a non-empty array of positive integers, determine if the array
+        can be partitioned into two subsets such that the sum of elements
+        in both subsets is equal.
+
+        Approach: Reduce to Subset Sum (0/1 Knapsack style DP)
+        ----------------------------------------------------------
+        Key Insight:
+            If we can find ANY subset whose sum equals exactly half of the
+            total sum, then the remaining elements automatically form the
+            other half (since total - half = half). So the problem becomes:
+            "Does a subset exist that sums to totalSum / 2?"
+
+        Step 1: If totalSum is odd, it's impossible to split into two
+                 equal integer halves -> return false immediately.
+
+        Step 2: target (mid) = totalSum / 2
+
+        Step 3: Use a boolean DP array to track ALL achievable sums:
+            dp[j] = true  -> some subset of elements processed so far
+                             sums exactly to j
+            dp[j] = false -> no subset processed so far can make sum j
+
+        Base case:
+            dp[0] = true  (empty subset always sums to 0)
+
+        Transition (for each num, iterate j from mid down to num):
+            dp[j] = dp[j] || dp[j - num]
+            
+            Meaning: "I can make sum j if I could already make it WITHOUT
+            this num (dp[j]), OR if I could make (j - num) before, and now
+            I add this num to that subset (dp[j - num])."
+
+        Why iterate j BACKWARD (high to low)?
+            This ensures each number is used at most once (0/1 knapsack).
+            Going backward guarantees dp[j - num] still holds the value
+            from BEFORE this num was processed in the current pass.
+            (Forward iteration would let the same num be reused multiple
+            times within one pass, which is wrong for this problem.)
+
+        Answer: dp[mid] -> true if a subset summing to mid exists,
+                which means the array can be partitioned into two equal halves.
+
+        Time Complexity  : O(n * mid) where mid = totalSum / 2
+        Space Complexity : O(mid)
+    */
+    public boolean canPartition(int[] nums) {
+        int n = nums.length;
+        int sum = 0;
+
+        // Step 1: compute total sum of the array
+        for (int i = 0; i < n; i++) {
+            sum += nums[i];
+        }
+
+        // Step 2: odd sum can never be split into two equal integer halves
+        if (sum % 2 != 0) return false;
+
+        // target sum each subset must achieve
+        int mid = sum / 2;
+
+        // dp[j] = true if some subset of processed elements sums exactly to j
+        boolean[] dp = new boolean[mid + 1];
+        dp[0] = true; // empty subset always sums to 0
+
+        // Step 3: process each number, updating dp from high to low
+        // (backward iteration ensures each number is used at most once)
+        for (int i = 0; i < n; i++) {
+            for (int j = mid; j >= nums[i]; j--) {
+                dp[j] = dp[j] || dp[j - nums[i]];
+            }
+        }
+
+        // dp[mid] tells us whether a subset summing to mid exists
+        return dp[mid];
+    }
+}
