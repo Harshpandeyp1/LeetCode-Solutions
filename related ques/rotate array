@@ -1,0 +1,57 @@
+/**
+ * PROBLEM: LeetCode 189 - Rotate Array
+ * 
+ * Given an integer array 'nums', rotate the array to the right by 'k' steps, 
+ * where 'k' is non-negative. Modifies the array in-place.
+ * 
+ * APPROACH: Three-Step Reversal Pattern (O(1) Auxiliary Space)
+ * -------------------------------------------------------------
+ * To shift an array right by k steps without allocating extra memory:
+ * 1. Normalize k using (k % n) so it stays within range [0, n - 1].
+ * 2. Reverse the ENTIRE array. This moves the last k elements to the front, 
+ *    but in reverse order, and shifts the first (n - k) elements to the back in reverse order.
+ * 3. Reverse the FIRST k elements (indices 0 to k-1) to restore their original order.
+ * 4. Reverse the REMAINING (n - k) elements (indices k to n-1) to restore their original order.
+ * 
+ * TIME COMPLEXITY:  O(N) - Every element is visited and swapped a constant number of times.
+ * SPACE COMPLEXITY: O(1) - Performed in-place using two pointers and a temporary variable.
+ */
+class Solution {
+    public void rotate(int[] nums, int k) {
+        int n = nums.length;
+        if (n <= 1) return; // Edge case: arrays of size 0 or 1 need no rotation
+
+        // 1. Normalize k in case k >= n (e.g., rotating 7 elements by 10 steps is equivalent to 3 steps)
+        k %= n;
+
+        // 2. Handle negative k values (left rotation conversion)
+        if (k < 0) {
+            k += n;
+        }
+
+        // 3. Step 1: Reverse the entire array
+        // Example: [1, 2, 3, 4, 5, 6, 7] -> [7, 6, 5, 4, 3, 2, 1]
+        reverse(nums, 0, n - 1);
+
+        // 4. Step 2: Reverse the first k elements
+        // Example (k=3): [7, 6, 5] -> [5, 6, 7] | Array: [5, 6, 7, 4, 3, 2, 1]
+        reverse(nums, 0, k - 1);
+
+        // 5. Step 3: Reverse the remaining n - k elements
+        // Example: [4, 3, 2, 1] -> [1, 2, 3, 4] | Array: [5, 6, 7, 1, 2, 3, 4]
+        reverse(nums, k, n - 1);
+    }
+
+    /**
+     * Helper method to reverse a subarray in-place between left and right pointers.
+     */
+    private void reverse(int[] nums, int left, int right) {
+        while (left < right) {
+            int temp = nums[left];
+            nums[left] = nums[right];
+            nums[right] = temp;
+            left++;
+            right--;
+        }
+    }
+}
