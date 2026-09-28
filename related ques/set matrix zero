@@ -1,0 +1,76 @@
+/**
+ * PROBLEM: LeetCode 73 - Set Matrix Zeroes
+ * 
+ * Given an m x n integer matrix, if an element is 0, set its entire row and column to 0.
+ * Must be done in-place.
+ * 
+ * APPROACH: In-Place Markers in First Row & First Column
+ * ------------------------------------------------------
+ * 1. Use matrix[0][j] to mark if column 'j' should be zeroed.
+ * 2. Use matrix[i][0] to mark if row 'i' should be zeroed.
+ * 3. Use 2 boolean variables to track if row 0 and col 0 initially contained any 0s.
+ * 4. Traverse matrix (from 1,1) to populate markers in row 0 and col 0.
+ * 5. Update submatrix (1,1 to m-1, n-1) based on markers.
+ * 6. Finally, zero out row 0 and col 0 if their booleans are true.
+ * 
+ * TIME COMPLEXITY:  O(M * N) - Two passes over the matrix.
+ * SPACE COMPLEXITY: O(1) - Uses existing matrix space for tracking.
+ */
+class Solution {
+    public void setZeroes(int[][] matrix) {
+        int m = matrix.length;
+        int n = matrix[0].length;
+
+        boolean firstRowZero = false;
+        boolean firstColZero = false;
+
+        // Step 1: Check if first column has any zero
+        for (int i = 0; i < m; i++) {
+            if (matrix[i][0] == 0) {
+                firstColZero = true;
+                break;
+            }
+        }
+
+        // Step 2: Check if first row has any zero
+        for (int j = 0; j < n; j++) {
+            if (matrix[0][j] == 0) {
+                firstRowZero = true;
+                break;
+            }
+        }
+
+        // Step 3: Use first row and col as markers for the rest of the matrix
+        for (int i = 1; i < m; i++) {
+            for (int j = 1; j < n; j++) {
+                if (matrix[i][j] == 0) {
+                    matrix[i][0] = 0; // Mark row i
+                    matrix[0][j] = 0; // Mark col j
+                }
+            }
+        }
+
+        // Step 4: Zero out inner cells based on markers
+        for (int i = 1; i < m; i++) {
+            for (int j = 1; j < n; j++) {
+                if (matrix[i][0] == 0 || matrix[0][j] == 0) {
+                    matrix[i][j] = 0;
+                }
+            }
+        }
+
+        // Step 5: Zero out first column if needed
+        if (firstColZero) {
+            for (int i = 0; i < m; i++) {
+                matrix[i][0] = 0;
+            }
+        }
+
+        // Step 6: Zero out first row if needed
+        if (firstRowZero) {
+            for (int j = 0; j < n; j++) {
+                matrix[0][j] = 0;
+            }
+        }
+    }
+}
