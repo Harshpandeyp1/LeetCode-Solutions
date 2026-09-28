@@ -1,0 +1,75 @@
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * PROBLEM: LeetCode 54 - Spiral Matrix
+ * 
+ * Given an m x n matrix, return all elements of the matrix in spiral order 
+ * (clockwise: Right -> Down -> Left -> Up).
+ * 
+ * APPROACH: 4-Boundary Simulation / Shrinking Boundaries
+ * --------------------------------------------------------
+ * 1. Define four boundaries: 'rowBegin', 'rowEnd', 'colBegin', and 'colEnd'.
+ * 2. Traverse clockwise along the outer boundaries in four steps:
+ *    - Step 1: Move Right along 'rowBegin' (from colBegin to colEnd), then increment rowBegin.
+ *    - Step 2: Move Down along 'colEnd' (from rowBegin to rowEnd), then decrement colEnd.
+ *    - Step 3: Move Left along 'rowEnd' (from colEnd to colBegin), then decrement rowEnd.
+ *    - Step 4: Move Up along 'colBegin' (from rowEnd to rowBegin), then increment colBegin.
+ * 3. CRITICAL EDGE-CASE CHECKS: Before traversing Left or Up, verify that rowBegin <= rowEnd 
+ *    and colBegin <= colEnd to avoid duplicate traversals on non-square (m x n) matrices.
+ * 
+ * TIME COMPLEXITY:  O(M * N) - Every cell in the matrix is visited exactly once.
+ * SPACE COMPLEXITY: O(1) auxiliary space (excluding the output list of size M * N).
+ */
+class Solution {
+    public List spiralOrder(int[][] matrix) {
+        List res = new ArrayList<>();
+
+        // Base case check for empty matrix
+        if (matrix == null || matrix.length == 0) {
+            return res;
+        }
+
+        // Initialize grid boundaries
+        int rowBegin = 0;
+        int rowEnd = matrix.length - 1;
+        int colBegin = 0;
+        int colEnd = matrix[0].length - 1;
+
+        // Continue loop until all boundary conditions collapse/overlap
+        while (rowBegin <= rowEnd && colBegin <= colEnd) {
+            
+            // 1. Traverse Right along top boundary
+            for (int j = colBegin; j <= colEnd; j++) {
+                res.add(matrix[rowBegin][j]);
+            }
+            rowBegin++; // Top boundary shifts down
+
+            // 2. Traverse Down along right boundary
+            for (int j = rowBegin; j <= rowEnd; j++) {
+                res.add(matrix[j][colEnd]);
+            }
+            colEnd--; // Right boundary shifts left
+
+            // 3. Traverse Left along bottom boundary
+            // Check required: rowBegin <= rowEnd prevents re-traversing a single remaining row
+            if (rowBegin <= rowEnd) {
+                for (int j = colEnd; j >= colBegin; j--) {
+                    res.add(matrix[rowEnd][j]);
+                }
+            }
+            rowEnd--; // Bottom boundary shifts up
+
+            // 4. Traverse Up along left boundary
+            // Check required: colBegin <= colEnd prevents re-traversing a single remaining column
+            if (colBegin <= colEnd) {
+                for (int j = rowEnd; j >= rowBegin; j--) {
+                    res.add(matrix[j][colBegin]);
+                }
+            }
+            colBegin++; // Left boundary shifts right
+        }
+
+        return res;
+    }
+}
