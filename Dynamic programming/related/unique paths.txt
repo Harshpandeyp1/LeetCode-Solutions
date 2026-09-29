@@ -1,0 +1,101 @@
+There is a robot located at the top-left corner of an m x n grid (grid[0][0]).
+The robot tries to move to the bottom-right corner (grid[m-1][n-1]). The robot can
+only move either down or right at any point in time.
+
+Given two integers m and n, return the number of possible unique paths that the robot
+can take to reach the bottom-right corner.
+APPROACH: Dynamic Programming (Tabulation - Bottom Up)
+
+State Definition:
+grid[i][j] represents the number of unique paths to reach cell (i, j) from (0, 0).
+
+Base Cases:
+
+Any cell in the first row (i = 0) can only be reached by moving RIGHT repeatedly.
+Hence, grid[0][j] = 1 for all j.
+
+Any cell in the first column (j = 0) can only be reached by moving DOWN repeatedly.
+Hence, grid[i][0] = 1 for all i.
+
+Recurrence Relation:
+To reach cell (i, j), the robot could only have come from either:
+
+The top cell: grid[i - 1][j]
+
+The left cell: grid[i][j - 1]
+Therefore: grid[i][j] = grid[i - 1][j] + grid[i][j - 1]
+
+Target:
+The value at grid[m - 1][n - 1] stores the total unique paths to the destination.
+
+Complexity:
+
+Time Complexity:  O(m * n) - We iterate through each cell of the m x n grid once.
+
+Space Complexity: O(m * n) - 2D DP table storage.
+=========================================================================================
+*/
+
+class Solution { // Define the Solution class to contain the pathfinding logic
+public int uniquePaths(int m, int n) { // Method takes grid dimensions m (rows) and n (columns) and returns total unique paths
+int[][]grid=new int[m][n]; // Instantiate a 2D integer array 'grid' of size m x n to store path counts for each cell
+for(int i=0;i 0 and j > 0)
+grid[i][j]=grid[i][j-1]+grid[i-1][j]; // State transition: Total paths to (i, j) = paths from left cell (i, j-1) + paths from top cell (i-1, j)
+} // End of conditional check for cell (i, j)
+} // End of inner column loop for row 'i'
+} // End of outer row loop
+return grid[m-1][n-1]; // Return the total unique paths accumulated at the bottom-right destination cell (m-1, n-1)
+} // End of uniquePaths method
+} // End of Solution class
+
+/*
+DRY RUN
+
+Input Parameters: m = 3, n = 3 (3x3 Grid)
+
+Matrix Initialization:
+grid = [
+[0, 0, 0],
+[0, 0, 0],
+[0, 0, 0]
+]
+
+Step-by-Step Outer & Inner Loop Execution:
+
+Row i = 0:
+j = 0 -> i == 0 is True -> grid[0][0] = 1
+j = 1 -> i == 0 is True -> grid[0][1] = 1
+j = 2 -> i == 0 is True -> grid[0][2] = 1
+Grid state after i = 0:
+[
+[1, 1, 1],
+[0, 0, 0],
+[0, 0, 0]
+]
+
+Row i = 1:
+j = 0 -> j == 0 is True  -> grid[1][0] = 1
+j = 1 -> Else block      -> grid[1][1] = grid[1][0] + grid[0][1] = 1 + 1 = 2
+j = 2 -> Else block      -> grid[1][2] = grid[1][1] + grid[0][2] = 2 + 1 = 3
+Grid state after i = 1:
+[
+[1, 1, 1],
+[1, 2, 3],
+[0, 0, 0]
+]
+
+Row i = 2:
+j = 0 -> j == 0 is True  -> grid[2][0] = 1
+j = 1 -> Else block      -> grid[2][1] = grid[2][0] + grid[1][1] = 1 + 2 = 3
+j = 2 -> Else block      -> grid[2][2] = grid[2][1] + grid[1][2] = 3 + 3 = 6
+Grid state after i = 2:
+[
+[1, 1, 1],
+[1, 2, 3],
+[1, 3, 6]
+]
+
+Return Value:
+grid[m-1][n-1] = grid[2][2] = 6
+
+Final Output: 6
