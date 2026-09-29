@@ -1,0 +1,52 @@
+/**
+ * LEETCODE 647: Palindromic Substrings
+ * 
+ * QUESTION:
+ * Given a string s, return the number of palindromic substrings in it.
+ * A string is a palindrome when it reads the same backward as forward.
+ * A substring is a contiguous sequence of characters within the string.
+ *
+ * APPROACH: Expand Around Center
+ * 1. A palindrome mirrors around its center. There are 2N - 1 possible centers for a string of length N:
+ *    - N odd-length centers (single characters like "a", "b")
+ *    - N - 1 even-length centers (gaps between adjacent characters like "ab")
+ * 2. We iterate through each index `i` in the string and consider:
+ *    - `palindrome(s, i, i)` -> Odd-length palindromes centered at index `i`.
+ *    - `palindrome(s, i, i + 1)` -> Even-length palindromes centered between `i` and `i + 1`.
+ * 3. The helper method expands outward (`left--`, `right++`) as long as the boundary conditions 
+ *    are satisfied (`left >= 0` and `right < s.length()`) and `s.charAt(left) == s.charAt(right)`.
+ * 4. We accumulate the count of valid palindromes found from both odd and even expansions.
+ *
+ * TIME COMPLEXITY:  O(N^2) — each center can expand up to N/2 times.
+ * SPACE COMPLEXITY: O(1)   — only a few variables are used.
+ */
+class Solution {
+    public int countSubstrings(String s) {
+        // Keeps track of total palindromes across the entire string
+        int count = 0;
+
+        for (int i = 0; i < s.length(); i++) {
+            // Count odd-length palindromes (e.g., "aba" centered at 'b')
+            count += palindrome(s, i, i);
+
+            // Count even-length palindromes (e.g., "abba" centered at "bb")
+            count += palindrome(s, i, i + 1);
+        }
+
+        return count;
+    }
+
+    // Helper method to expand around a given center and return the count of valid palindromes
+    private int palindrome(String s, int left, int right) {
+        // Local count for palindromes formed specifically around this center (left, right)
+        int count = 0;
+
+        while (left >= 0 && right < s.length() && s.charAt(left) == s.charAt(right)) {
+            count++;   // Found a valid palindrome, increment local count
+            left--;    // Move left boundary outward
+            right++;   // Move right boundary outward
+        }
+
+        return count;
+    }
+}
