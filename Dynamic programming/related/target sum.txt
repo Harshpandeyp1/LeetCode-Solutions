@@ -1,0 +1,67 @@
+class Solution {
+    /*
+        Problem: Target Sum
+        ----------------------
+        Given an array of integers nums and an integer target, you want to
+        assign a '+' or '-' sign in front of each number in nums, then
+        sum all the numbers. Return the number of different ways you can
+        assign signs so the resulting sum equals target.
+
+        Approach: DP using HashMap (sum -> number of ways to reach that sum)
+        --------------------------------------------------------------------
+        Key Insight:
+            At each step, every number can either be added or subtracted.
+            So the set of "reachable sums" branches in two directions for
+            every number. We track how many ways lead to each possible sum
+            using a HashMap: key = sum, value = number of ways to reach it.
+
+        Base case:
+            map = {0: 1} -> before processing any number, sum=0 is
+            achievable in exactly 1 way (using no numbers yet).
+
+        Transition (for each num in nums):
+            Build a NEW map (dp) representing the state AFTER including
+            this num's choice of sign, based on the OLD map (map) which
+            represents the state BEFORE this num was considered.
+
+            For every (sum, count) pair in the OLD map:
+                - adding num:      dp[sum + num] += count
+                - subtracting num: dp[sum - num] += count
+
+            After processing this num, replace map with dp (the new state).
+
+        Answer: map.getOrDefault(target, 0)
+                -> number of ways to reach exactly `target` after
+                   processing all numbers.
+
+        Time Complexity  : O(n * S) where S = range of possible sums
+        Space Complexity : O(S)
+    */
+    public int findTargetSumWays(int[] nums, int target) {
+        // map: sum -> number of ways to achieve that sum so far
+        Map<Integer, Integer> map = new HashMap<>();
+        map.put(0, 1); // base case: sum=0 achievable in 1 way (before any numbers)
+
+        for (int num : nums) {
+            // dp represents the NEW state after deciding +num or -num
+            Map<Integer, Integer> dp = new HashMap<>();
+
+            // iterate over the PREVIOUS state (map), not the empty new one!
+            for (int sum : map.keySet()) {
+                int count = map.get(sum);
+
+                // choice 1: add num to this sum
+                dp.put(sum + num, dp.getOrDefault(sum + num, 0) + count);
+
+                // choice 2: subtract num from this sum
+                dp.put(sum - num, dp.getOrDefault(sum - num, 0) + count);
+            }
+
+            // move to the new state for the next number
+            map = dp;
+        }
+
+        // number of ways to reach exactly target after processing all numbers
+        return map.getOrDefault(target, 0);
+    }
+}
