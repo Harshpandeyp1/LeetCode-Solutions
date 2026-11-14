@@ -30,7 +30,7 @@ The repository is structured pattern-by-pattern to streamline revision and highl
 
 ## 🛠️ Languages & Tools
 
-- **Language**: [Java / C++ / Python] *(Update based on your primary language)*
+- **Language**: [Java] *(Update based on your primary language)*
 - **Platform**: [LeetCode](https://leetcode.com/)
 
 ---
